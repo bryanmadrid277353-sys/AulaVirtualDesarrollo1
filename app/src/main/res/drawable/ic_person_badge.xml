@@ -4,13 +4,33 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- Cabeza -->
+    <!-- Cabeza principal -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M12,4.25A3.75,3.75 0,1 0,12,11.75A3.75,3.75 0,1 0,12,4.25z"/>
+        android:fillColor="#00000000"
+        android:strokeColor="#F9A00A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M10.45,3.4 A4,4 0 1,1 10.45,11.4 A4,4 0 1,1 10.45,3.4Z" />
 
-    <!-- Hombros -->
+    <!-- Hombros principales -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M12,14C7.9,14 4.5,16.1 4.5,18.8V20.5H19.5V18.8C19.5,16.1 16.1,14 12,14z"/>
+        android:fillColor="#00000000"
+        android:strokeColor="#F9A00A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M4,17.9 A6.45,6.45 0 0,1 16.9,17.9" />
+
+    <!-- Segunda persona (cabeza parcial + hombros) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#F9A00A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="miter"
+        android:strokeMiterLimit="10"
+        android:pathData="M16.4,3.9
+                     A4,4 0 0,1 16.4,10.7
+                     C18.3,12 20,14.5 20,17.1" />
 </vector>

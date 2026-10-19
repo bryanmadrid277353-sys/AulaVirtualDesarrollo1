@@ -151,9 +151,6 @@ public class AdminFacilityTimetableFragment extends Fragment {
                         if (subject.description != null && !subject.description.isEmpty()) {
                             details.append("📝 Descripción: ").append(subject.description).append("\n");
                         }
-                        if (subject.faculty != null && !subject.faculty.isEmpty()) {
-                            details.append("🏛️ Facultad: ").append(subject.faculty).append("\n");
-                        }
                         details.append("📌 Sección: ").append(subject.section != null ? subject.section : "01").append("\n");
                     }
                     details.append("👨‍🏫 Profesor: ").append(info.professorName != null && !info.professorName.isEmpty() ? info.professorName : "N/A").append("\n");

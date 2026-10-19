@@ -110,9 +110,8 @@ public class StudentDashboardFragment extends Fragment {
         List<Subject> filtered = allStudentSubjects.stream().filter(s -> {
             if (s == null) return false;
             String name = s.name != null ? s.name.toLowerCase() : "";
-            String faculty = s.faculty != null ? s.faculty.toLowerCase() : "";
             String desc = s.description != null ? s.description.toLowerCase() : "";
-            return name.contains(query) || faculty.contains(query) || desc.contains(query);
+            return name.contains(query) || desc.contains(query);
         }).collect(Collectors.toList());
 
         adapter.setSubjects(filtered);

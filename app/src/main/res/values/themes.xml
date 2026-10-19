@@ -4,9 +4,12 @@
         <item name="colorPrimary">@color/accent_blue</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/bs_secondary</item>
-        <item name="android:statusBarColor">@color/bs_dark</item>
+        <item name="android:statusBarColor">@color/bs_light</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowBackground">@color/bs_light</item>
         <item name="colorSurface">@color/surface_light</item>
+        <item name="android:textColorPrimary">@color/bs_dark</item>
+        <item name="android:textColorSecondary">@color/bs_secondary</item>
         <item name="materialCardViewStyle">@style/Widget.Bootstrap.Card</item>
         <item name="cardViewStyle">@style/Widget.Bootstrap.Card</item>
         <item name="alertDialogTheme">@style/Theme.MyApplication.Dialog</item>

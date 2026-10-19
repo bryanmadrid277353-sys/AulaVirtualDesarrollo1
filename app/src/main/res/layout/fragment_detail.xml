@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
@@ -9,9 +10,108 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp">
 
-        <!-- 1. Notas -->
+        <!-- Top Header with Back Button and Title -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <ImageButton
+                android:id="@+id/btnBackDetail"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_back"
+                app:tint="?android:attr/textColorPrimary"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Atrás" />
+
+            <TextView
+                android:id="@+id/tvDetailTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Detalle"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 1. Top Avatar / User Header Card (Outside Cards) -->
+        <LinearLayout
+            android:id="@+id/layoutProfileHeaderContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <FrameLayout
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_circle_primary"
+                android:layout_marginEnd="16dp">
+
+                <TextView
+                    android:id="@+id/tvDetailInitials"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    tools:text="BM"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardProfileImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:cardBackgroundColor="@android:color/transparent">
+                    <ImageView
+                        android:id="@+id/ivProfileImageDetail"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_person_badge"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Foto de perfil"/>
+                </com.google.android.material.card.MaterialCardView>
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvDetailRoleHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Encargado del estudiante"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDetailCarnetHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="ENC1444444"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="13sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 2. Notes / Grades section (for student profile view) -->
         <LinearLayout
             android:id="@+id/layoutStudentGrades"
             android:layout_width="match_parent"
@@ -36,403 +136,459 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P1" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     <TextView android:id="@+id/tvDetailP1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="16sp" android:textColor="?android:attr/textColorPrimary"/>
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P2" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     <TextView android:id="@+id/tvDetailP2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="16sp" android:textColor="?android:attr/textColorPrimary"/>
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P3" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     <TextView android:id="@+id/tvDetailP3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="16sp" android:textColor="?android:attr/textColorPrimary"/>
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P4" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     <TextView android:id="@+id/tvDetailP4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="16sp" android:textColor="?android:attr/textColorPrimary"/>
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P5" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
                     <TextView android:id="@+id/tvDetailP5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="16sp" android:textColor="?android:attr/textColorPrimary"/>
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AVG" android:textSize="12sp" android:textStyle="bold" android:textColor="?attr/colorPrimary"/>
                     <TextView android:id="@+id/tvDetailAverage" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="N/A" android:textSize="16sp" android:textStyle="bold" android:textColor="?attr/colorPrimary"/>
                 </LinearLayout>
-
             </LinearLayout>
         </LinearLayout>
 
-
-
-        <!-- 3. Detalle Materia -->
-        <TextView
-            android:id="@+id/tvDetailTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Detalle Materia"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
-
-        <RelativeLayout
-            android:id="@+id/layoutProfileHeaderContainer"
+        <!-- 3. Form Card Container (Main Input Fields inside single CardView) -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardFormContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:visibility="gone">
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border">
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardProfileImage"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_centerHorizontal="true"
-                app:cardCornerRadius="50dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp"
-                app:cardBackgroundColor="?attr/colorPrimary"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <ImageView
-                    android:id="@+id/ivProfileImageDetail"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Field 1 -->
+                <TextView
+                    android:id="@+id/tvLabelField1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre completo"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_person_badge"
-                    android:scaleType="centerCrop"
-                    android:padding="0dp"
-                    android:contentDescription="Foto de perfil"/>
-            </com.google.android.material.card.MaterialCardView>
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnImpersonateAction"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="wrap_content"
-                android:layout_height="38dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:text="Ingresar"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                android:textAllCaps="false"
-                android:paddingHorizontal="10dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:insetLeft="0dp"
-                android:insetRight="0dp"
-                app:cornerRadius="19dp"
-                app:icon="@drawable/ic_login"
-                app:iconGravity="textStart"
-                app:iconPadding="6dp"
-                app:iconSize="18dp"
-                app:iconTint="@color/white"
-                app:backgroundTint="?attr/colorPrimary"
-                android:contentDescription="Ingresar"
-                android:visibility="gone"/>
+                    <EditText
+                        android:id="@+id/etField1"
+                        style="@style/Widget.Bootstrap.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:hint="Campo 1"
+                        android:paddingEnd="44dp"
+                        android:singleLine="true"/>
 
-        </RelativeLayout>
+                    <ImageButton
+                        android:id="@+id/btnCopyField1"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="5dp"
+                        android:background="@drawable/bg_input_field"
+                        android:src="@drawable/ic_copy"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Copiar"/>
+                </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <EditText
-                android:id="@+id/etField1"
-                style="@style/Widget.Bootstrap.EditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Campo 1"
-                android:paddingEnd="48dp"/>
-            <ImageButton
-                android:id="@+id/btnCopyField1"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_copy"
-                app:tint="?attr/colorPrimary"
-                android:contentDescription="Copiar"/>
-        </RelativeLayout>
+                <!-- Field 2 -->
+                <TextView
+                    android:id="@+id/tvLabelField2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Carnet"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
 
-            <TextView
-                android:id="@+id/tvRolePrefix"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="8dp"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="14dp">
 
-            <EditText
-                android:id="@+id/etField2"
-                style="@style/Widget.Bootstrap.EditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_toEndOf="@id/tvRolePrefix"
-                android:hint="Campo 2"
-                android:paddingEnd="48dp" />
+                        <TextView
+                            android:id="@+id/tvRolePrefix"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="6dp"
+                            android:visibility="gone"
+                            tools:text="ENC" />
 
-            <ImageButton
-                android:id="@+id/btnCopyField2"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_copy"
-                app:tint="?attr/colorPrimary"
-                android:contentDescription="Copiar" />
-        </RelativeLayout>
+                        <EditText
+                            android:id="@+id/etField2"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="Campo 2"
+                            android:singleLine="true"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textColorHint="@color/input_hint"
+                            android:textSize="15sp" />
+                    </LinearLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
-            <EditText
-                android:id="@+id/etField3"
-                style="@style/Widget.Bootstrap.EditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Campo 3"
-                android:inputType="textPassword"
-                android:paddingEnd="88dp"
-                android:visibility="gone"/>
-            <LinearLayout
-                android:id="@+id/layoutCopyToggles"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:orientation="horizontal"
-                android:visibility="gone">
-                <ImageButton
-                    android:id="@+id/btnCopyField3"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_copy"
-                    app:tint="?attr/colorPrimary"
-                    android:contentDescription="Copiar"/>
-                <ImageButton
-                    android:id="@+id/btnTogglePassword"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_visibility_off"
-                    app:tint="?attr/colorPrimary"
-                    android:contentDescription="Ver contraseña"/>
+                    <ImageButton
+                        android:id="@+id/btnCopyField2"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="5dp"
+                        android:background="@drawable/bg_input_field"
+                        android:src="@drawable/ic_copy"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Copiar"/>
+                </RelativeLayout>
+
+                <!-- Field 3 -->
+                <TextView
+                    android:id="@+id/tvLabelField3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Contraseña"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp">
+
+                    <EditText
+                        android:id="@+id/etField3"
+                        style="@style/Widget.Bootstrap.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:hint="Campo 3"
+                        android:inputType="textPassword"
+                        android:paddingEnd="80dp"
+                        android:singleLine="true"
+                        android:visibility="gone"/>
+
+                    <LinearLayout
+                        android:id="@+id/layoutCopyToggles"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:orientation="horizontal"
+                        android:visibility="gone"
+                        android:gravity="center_vertical"
+                        android:paddingEnd="5dp">
+
+                        <ImageButton
+                            android:id="@+id/btnTogglePassword"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@drawable/bg_input_field"
+                            android:src="@drawable/ic_visibility_off"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Ver contraseña"
+                            android:layout_marginEnd="5dp"/>
+
+                        <ImageButton
+                            android:id="@+id/btnCopyField3"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:background="@drawable/bg_input_field"
+                            android:src="@drawable/ic_copy"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Copiar"/>
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/tvPasswordStrength"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:textSize="12sp"
+                    android:textStyle="italic"
+                    android:visibility="gone"
+                    tools:text="Fuerte" />
+
+                <!-- Field 4 -->
+                <EditText
+                    android:id="@+id/etField4"
+                    style="@style/Widget.Bootstrap.EditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginBottom="16dp"
+                    android:hint="Campo 4"
+                    android:visibility="gone"/>
+
+                <!-- Address -->
+                <LinearLayout
+                    android:id="@+id/layoutAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvLabelAddress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dirección"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/etAddress"
+                            style="@style/Widget.Bootstrap.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:hint="Dirección"
+                            android:paddingEnd="44dp"
+                            android:singleLine="true"/>
+
+                        <ImageButton
+                            android:id="@+id/btnCopyAddress"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="5dp"
+                            android:background="@drawable/bg_input_field"
+                            android:src="@drawable/ic_copy"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Copiar"/>
+                    </RelativeLayout>
+                </LinearLayout>
+
+                <!-- Personal Email -->
+                <LinearLayout
+                    android:id="@+id/layoutPersonalEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvLabelPersonalEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Correo personal"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/etPersonalEmail"
+                            style="@style/Widget.Bootstrap.EditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:hint="Correo Personal"
+                            android:paddingEnd="44dp"
+                            android:singleLine="true"/>
+
+                        <ImageButton
+                            android:id="@+id/btnCopyPersonalEmail"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="5dp"
+                            android:background="@drawable/bg_input_field"
+                            android:src="@drawable/ic_copy"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Copiar"/>
+                    </RelativeLayout>
+                </LinearLayout>
+
+                <!-- Color Selector -->
+                <LinearLayout
+                    android:id="@+id/layoutColorSelector"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvColorLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Color Materia"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="12dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor1" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue_light" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor2" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red_light" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor3" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green_light" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor4" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple_light" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor5" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan_light" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor6" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow_light" android:layout_marginHorizontal="4dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor7" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor8" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor9" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor10" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor11" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor12" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow" android:layout_marginHorizontal="4dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor13" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue_dark" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor14" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red_dark" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor15" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green_dark" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor16" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple_dark" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor17" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan_dark" android:layout_marginHorizontal="4dp"/>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnColor18" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow_dark" android:layout_marginHorizontal="4dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+
             </LinearLayout>
-        </RelativeLayout>
+        </androidx.cardview.widget.CardView>
 
-        <TextView
-            android:id="@+id/tvPasswordStrength"
+        <!-- 4. Switch Lock Photo Card Container -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardLockPhotoContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:visibility="gone"/>
-
-        <EditText
-            android:id="@+id/etField4"
-            style="@style/Widget.Bootstrap.EditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Campo 4"
-            android:visibility="gone"/>
-
-        <RelativeLayout
-            android:id="@+id/layoutAddress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
             android:visibility="gone">
-            <EditText
-                android:id="@+id/etAddress"
-                style="@style/Widget.Bootstrap.EditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Dirección"
-                android:paddingEnd="48dp"/>
-            <ImageButton
-                android:id="@+id/btnCopyAddress"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_copy"
-                app:tint="?attr/colorPrimary"
-                android:contentDescription="Copiar"/>
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/layoutPersonalEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:visibility="gone">
-            <EditText
-                android:id="@+id/etPersonalEmail"
-                style="@style/Widget.Bootstrap.EditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Correo Personal"
-                android:paddingEnd="48dp"/>
-            <ImageButton
-                android:id="@+id/btnCopyPersonalEmail"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_copy"
-                app:tint="?attr/colorPrimary"
-                android:contentDescription="Copiar"/>
-        </RelativeLayout>
-
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchLockPhoto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Bloquear cambio de foto"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
-            android:visibility="gone"
-            app:useMaterialThemeColors="true"/>
-
-        <!-- 4. Color Materia (Al fondo) -->
-        <LinearLayout
-            android:id="@+id/layoutColorSelector"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="24dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/tvColorLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Color Materia"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary"
-                android:layout_marginBottom="12dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center"
-                android:layout_marginBottom="8dp">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor1" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue_light" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor2" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red_light" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor3" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green_light" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor4" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple_light" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor5" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan_light" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor6" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow_light" android:layout_marginHorizontal="4dp"/>
-            </LinearLayout>
+                android:gravity="center_vertical"
+                android:padding="16dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:layout_marginBottom="8dp">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor7" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor8" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor9" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor10" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor11" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor12" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow" android:layout_marginHorizontal="4dp"/>
-            </LinearLayout>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Bloquear cambio de foto"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor13" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue_dark" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor14" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red_dark" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor15" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green_dark" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor16" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple_dark" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor17" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan_dark" android:layout_marginHorizontal="4dp"/>
-                <com.google.android.material.button.MaterialButton android:id="@+id/btnColor18" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow_dark" android:layout_marginHorizontal="4dp"/>
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchLockPhoto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:useMaterialThemeColors="true"/>
             </LinearLayout>
-        </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
+        <!-- 5. Action Buttons Grid / Row -->
         <GridLayout
             android:id="@+id/layoutActionButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:columnCount="2"
-            android:layout_marginTop="24dp">
+            android:layout_marginBottom="20dp">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
-                style="@style/Widget.Bootstrap.Button.Success"
+                style="@style/Widget.Bootstrap.Button.Primary"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_columnWeight="1"
                 android:layout_margin="4dp"
-                android:text="Guardar Cambios"
-                android:textAllCaps="false"/>
+                android:text="Guardar cambios"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                app:cornerRadius="12dp"
+                app:elevation="0dp"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDelete"
-                style="@style/Widget.Bootstrap.Button.Danger"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_columnWeight="1"
                 android:layout_margin="4dp"
-                android:text="Eliminar Registro"
-                android:textAllCaps="false"/>
+                android:text="Eliminar registro"
+                android:textColor="#FF6B6B"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                app:cornerRadius="12dp"
+                app:strokeColor="#52242B"
+                app:strokeWidth="1dp"
+                android:backgroundTint="@color/input_bg"/>
 
             <Button
                 android:id="@+id/btnManageStudents"
@@ -443,9 +599,6 @@
                 android:layout_margin="4dp"
                 android:text="Alumnos y Notas"
                 android:textAllCaps="false"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:backgroundTint="?attr/colorPrimary"
                 android:visibility="gone"/>
 
             <Button
@@ -457,11 +610,7 @@
                 android:layout_margin="4dp"
                 android:text="Desinscribir Integrante"
                 android:textAllCaps="false"
-                android:textSize="14sp"
-                android:textStyle="bold"
                 android:visibility="gone"/>
-
-
 
             <Button
                 android:id="@+id/btnManageGrades"
@@ -483,10 +632,79 @@
                 android:layout_margin="4dp"
                 android:text="Ver como Estudiante"
                 android:textAllCaps="false"
-                android:backgroundTint="@color/bs_info"
                 android:visibility="gone"/>
-
         </GridLayout>
+
+        <!-- 6. Solo Administrador Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardImpersonateContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_shield_check"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Admin"
+                        android:layout_marginEnd="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Solo Administrador"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvImpersonateDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ingresa con el perfil y menú del encargado. Esta acción no edita su registro."
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="16dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnImpersonateAction"
+                    style="@style/Widget.Bootstrap.Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="Acceder como encargado"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/ic_login"
+                    app:iconGravity="textStart"
+                    app:iconSize="20dp"
+                    app:cornerRadius="12dp"
+                    app:elevation="0dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 </ScrollView>

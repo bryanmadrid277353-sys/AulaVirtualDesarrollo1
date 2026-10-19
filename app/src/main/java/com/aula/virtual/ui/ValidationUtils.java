@@ -8,7 +8,7 @@ public class ValidationUtils {
     }
 
     public static PasswordStrength getPasswordStrength(String password) {
-        if (password == null || password.length() < 6) {
+        if (password == null || password.length() < 4) {
             return PasswordStrength.WEAK;
         }
 
@@ -17,7 +17,7 @@ public class ValidationUtils {
 
         if (hasUppercase && hasSymbol) {
             return PasswordStrength.STRONG;
-        } else if (hasUppercase || hasSymbol) {
+        } else if (hasUppercase || hasSymbol || password.length() >= 6) {
             return PasswordStrength.MEDIUM;
         } else {
             return PasswordStrength.WEAK;
@@ -25,8 +25,8 @@ public class ValidationUtils {
     }
 
     public enum PasswordStrength {
-        WEAK("Débil (mín. 6 caracteres)", 0xFFFF4444),
-        MEDIUM("Media (añade símbolos o mayúsculas)", 0xFFFFBB33),
+        WEAK("Débil (mín. 4 caracteres)", 0xFFFF4444),
+        MEDIUM("Aceptable", 0xFFFFBB33),
         STRONG("Fuerte", 0xFF00C851);
 
         public final String label;

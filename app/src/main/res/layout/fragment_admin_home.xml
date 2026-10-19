@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
@@ -9,42 +10,87 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <com.google.android.material.card.MaterialCardView
+        <!-- Top Header: Logo + Title -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:strokeWidth="0dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="?attr/colorPrimary">
-            <RelativeLayout
-                android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_login_logo"
+                android:layout_marginEnd="12dp">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_open_book"
+                    android:contentDescription="Logo" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:text="Aula Virtual"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Welcome Section with Profile Avatar on Right -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@+id/layoutProfileHeaderNav"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bienvenido,"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/tvAdminName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_toStartOf="@id/btnGoToProfileAdmin"
-                    android:layout_centerVertical="true"
-                    android:text="Bienvenido Administrador"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:text="Admin Maestro"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    tools:text="Admin Maestro" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutProfileHeaderNav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true">
 
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/btnGoToProfileAdmin"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    app:cardCornerRadius="24dp"
+                    android:id="@+id/profileAvatarContainer"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    app:cardCornerRadius="26dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="?attr/colorOnPrimary"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
+                    app:cardBackgroundColor="@color/input_bg"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?android:attr/selectableItemBackground">
@@ -52,300 +98,485 @@
                         android:id="@+id/ivProfileImageAdmin"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:src="@drawable/ic_person_badge"
+                        android:src="@drawable/ic_person"
                         android:scaleType="centerCrop"
-                        android:padding="0dp"
                         android:contentDescription="Perfil"/>
                 </androidx.cardview.widget.CardView>
 
-            </RelativeLayout>
-        </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Perfil"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- Gestiona tu aula Section Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gestiona tu aula"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gestión Académica"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginBottom="12dp"/>
+            android:text="Todo lo que necesitas, en un solo lugar."
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
 
-        <GridLayout
+        <!-- ================= CATEGORY 1: PERSONAS ================= -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PERSONAS"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="4dp" />
+
+        <!-- Card 1: Encargados -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardEncargados"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:columnCount="2">
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
-            <!-- 0. ENCARGADOS (AMARILLO/NARANJA) -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardEncargados"
-                style="@style/Widget.Bootstrap.Card"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_columnWeight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_input_field"
+                    android:layout_marginEnd="14dp">
+
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_person_badge"
-                        app:tint="@color/bs_warning"/>
+                        app:tint="@color/bs_warning"
+                        android:contentDescription="Encargados" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Encargados"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-            <!-- 1. ALUMNOS (AZUL) -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardStudents"
-                style="@style/Widget.Bootstrap.Card"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_columnWeight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Familias y tutores"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Navegar" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card 2: Alumnos -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardStudents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_input_field"
+                    android:layout_marginEnd="14dp">
+
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_person"
-                        app:tint="@color/accent_blue"/>
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_book"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Alumnos" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Alumnos"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-            <!-- 2. PROFESORES (VERDE) -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardProfessors"
-                style="@style/Widget.Bootstrap.Card"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_columnWeight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Estudiantes de primaria"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Navegar" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card 3: Profesores -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardProfessors"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_input_field"
+                    android:layout_marginEnd="14dp">
+
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
                         android:src="@drawable/ic_person"
-                        app:tint="@color/bs_success"/>
+                        app:tint="@color/bs_success"
+                        android:contentDescription="Profesores" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Profesores"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-            <!-- 3. FACULTADES (MORADO) -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardFaculties"
-                style="@style/Widget.Bootstrap.Card"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_columnWeight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_book"
-                        app:tint="@color/accent_purple"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Facultades"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary"/>
+                        android:text="Equipo docente"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
 
-            <!-- 4. MATERIAS (CELESTE) -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardSubjects"
-                style="@style/Widget.Bootstrap.Card"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_columnWeight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Navegar" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+
+        <!-- ================= CATEGORY 2: ORGANIZACIÓN ================= -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ORGANIZACIÓN"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Card 4: Materias -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardSubjects"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_input_field"
+                    android:layout_marginEnd="14dp">
+
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_book"
-                        app:tint="@color/accent_cyan"/>
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_open_book"
+                        app:tint="@color/accent_cyan"
+                        android:contentDescription="Materias" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Materias"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-            <!-- 5. INSTALACIONES (AMARILLO) -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardFacilities"
-                style="@style/Widget.Bootstrap.Card"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_columnWeight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Asignaturas del aula"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Navegar" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Card 5: Instalaciones -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardFacilities"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_input_field"
+                    android:layout_marginEnd="14dp">
+
                     <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_settings"
-                        app:tint="@color/accent_yellow"/>
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_building"
+                        app:tint="@color/accent_yellow"
+                        android:contentDescription="Instalaciones" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Instalaciones"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-            <!-- 6. ADMINS (ROJO) -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardAdmins"
-                style="@style/Widget.Bootstrap.Card"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_columnWeight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_lock"
-                        app:tint="@color/bs_danger"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Admins"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary"/>
+                        android:text="Espacios educativos"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
 
-        </GridLayout>
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Navegar" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
+
+        <!-- ================= CATEGORY 3: ADMINISTRACIÓN ================= -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Opciones"
-            android:textSize="20sp"
+            android:text="ADMINISTRACIÓN"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp" />
 
+        <!-- Card 6: Administradores -->
         <androidx.cardview.widget.CardView
-            android:id="@+id/cardSettings"
-            style="@style/Widget.Bootstrap.Card"
+            android:id="@+id/cardAdmins"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground">
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="16dp">
-                <ImageView
-                    android:id="@+id/iconSettings"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_settings"
-                    app:tint="@color/bs_secondary"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@id/iconSettings"
-                    android:layout_marginStart="16dp"
-                    android:text="Ajustes"
-                    android:textSize="16sp"
-                    android:textColor="?android:attr/textColorPrimary"/>
-            </RelativeLayout>
-        </androidx.cardview.widget.CardView>
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardLogout"
-            style="@style/Widget.Bootstrap.Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:padding="16dp">
-                <ImageView
-                    android:id="@+id/iconLogout"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_login"
-                    app:tint="@color/bs_danger"/>
-                <TextView
-                    android:layout_width="wrap_content"
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_input_field"
+                    android:layout_marginEnd="14dp">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_shield_check"
+                        app:tint="@color/bs_danger"
+                        android:contentDescription="Administradores" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_toEndOf="@id/iconLogout"
-                    android:layout_marginStart="16dp"
-                    android:text="Cerrar Sesión"
-                    android:textColor="@color/bs_danger"
-                    android:textSize="16sp"/>
-            </RelativeLayout>
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Administradores"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Accesos y permisos"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Navegar" />
+            </LinearLayout>
         </androidx.cardview.widget.CardView>
 
     </LinearLayout>

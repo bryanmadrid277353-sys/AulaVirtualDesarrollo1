@@ -7,12 +7,14 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,7 +25,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.aula.virtual.R;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentAdminDashboardBinding;
 import java.util.ArrayList;
@@ -35,7 +36,6 @@ public class AdminProfessorListFragment extends Fragment {
     private MainViewModel viewModel;
     private StudentAdapter adapter;
     private List<User> allProfessors = new ArrayList<>();
-    private List<Faculty> availableFaculties = new ArrayList<>();
 
     @Nullable
     @Override
@@ -59,12 +59,6 @@ public class AdminProfessorListFragment extends Fragment {
         viewModel.getAllProfessors().observe(getViewLifecycleOwner(), professors -> {
             allProfessors = professors;
             applyFilter();
-        });
-
-        viewModel.getAllFaculties().observe(getViewLifecycleOwner(), faculties -> {
-            if (faculties != null) {
-                availableFaculties = faculties;
-            }
         });
 
         viewModel.getModificationError().observe(getViewLifecycleOwner(), error -> {
@@ -132,23 +126,36 @@ public class AdminProfessorListFragment extends Fragment {
     }
 
     private void showAddProfessorDialog() {
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), "Añadir Profesor");
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_professor, null);
 
-        final EditText etName = DialogUtils.createStyledEditText(requireContext(), "Nombre Completo", 0);
-        layout.addView(etName);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
-        final EditText etCarnet = DialogUtils.createStyledEditText(requireContext(), "Ingrese los 6 dígitos numéricos del carnet", InputType.TYPE_CLASS_NUMBER);
-        etCarnet.setFilters(new InputFilter[]{new InputFilter.LengthFilter(6)});
-        layout.addView(etCarnet);
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        final EditText etPass = DialogUtils.createStyledEditText(requireContext(), "Contraseña", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(etPass);
+        EditText etName = dialogView.findViewById(R.id.etName);
+        EditText etCarnet = dialogView.findViewById(R.id.etCarnet);
+        EditText etPass = dialogView.findViewById(R.id.etPass);
+        TextView tvStrength = dialogView.findViewById(R.id.tvPasswordStrength);
+        ImageView btnTogglePass = dialogView.findViewById(R.id.btnTogglePassword);
+        EditText etAddress = dialogView.findViewById(R.id.etAddress);
+        EditText etEmail = dialogView.findViewById(R.id.etEmail);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnAdd = dialogView.findViewById(R.id.btnAddDialog);
 
-        final TextView tvStrength = new TextView(getContext());
-        tvStrength.setTextSize(12);
-        tvStrength.setVisibility(View.GONE);
-        layout.addView(tvStrength);
+        btnTogglePass.setOnClickListener(v -> {
+            if (etPass.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                etPass.setTransformationMethod(null);
+                btnTogglePass.setImageResource(R.drawable.ic_visibility);
+            } else {
+                etPass.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                btnTogglePass.setImageResource(R.drawable.ic_visibility_off);
+            }
+            etPass.setSelection(etPass.getText().length());
+        });
 
         etPass.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -165,25 +172,9 @@ public class AdminProfessorListFragment extends Fragment {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        final TextView tvFaculty = DialogUtils.createDialogOptionButton(requireContext(), "Facultad: Docencia", false);
-        tvFaculty.setClickable(false);
-        tvFaculty.setFocusable(false);
-        layout.addView(tvFaculty);
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        final EditText etAddress = DialogUtils.createStyledEditText(requireContext(), "Dirección (Opcional)", 0);
-        layout.addView(etAddress);
-
-        final EditText etEmail = DialogUtils.createStyledEditText(requireContext(), "Email Personal (Opcional)", 0);
-        layout.addView(etEmail);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Añadir", null);
-        builder.setNegativeButton("Cancelar", null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v1 -> {
+        btnAdd.setOnClickListener(v1 -> {
             String name = etName.getText().toString().trim();
             String carnet = etCarnet.getText().toString().trim();
             String pass = etPass.getText().toString().trim();
@@ -208,7 +199,7 @@ public class AdminProfessorListFragment extends Fragment {
                 String email = etEmail.getText().toString().trim();
 
                 viewModel.performOnlineAction(() -> {
-                    User newProf = new User(fullCarnet, name, pass, "PROFESSOR", "Docencia");
+                    User newProf = new User(fullCarnet, name, pass, "PROFESSOR");
                     newProf.address = address.isEmpty() ? null : address;
                     newProf.personal_email = email.isEmpty() ? null : email;
                     viewModel.insertUser(newProf);
@@ -216,6 +207,8 @@ public class AdminProfessorListFragment extends Fragment {
                 });
             }
         });
+
+        dialog.show();
     }
 
     @Override

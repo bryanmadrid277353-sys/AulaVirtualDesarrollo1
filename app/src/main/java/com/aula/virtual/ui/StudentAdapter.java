@@ -3,12 +3,12 @@ package com.aula.virtual.ui;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.aula.virtual.R;
 import com.aula.virtual.data.entity.User;
+import com.google.android.material.button.MaterialButton;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
     }
 
     public void setStudents(List<User> students) {
-        this.students = students;
+        this.students = students != null ? students : new ArrayList<>();
         notifyDataSetChanged();
     }
 
@@ -59,11 +59,29 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         }
 
         holder.tvCarnet.setText("Carnet: " + carnetDisplay);
-        holder.tvFaculty.setText(user.faculty != null ? user.faculty : "Sin facultad");
+
+        if (holder.tvAvatarInitials != null) {
+            holder.tvAvatarInitials.setText(getInitials(user.name));
+        }
         
-        holder.btnManage.setOnClickListener(v -> {
+        holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(user);
         });
+        if (holder.btnManage != null) {
+            holder.btnManage.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(user);
+            });
+        }
+    }
+
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "AV";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
     }
 
     @Override
@@ -74,14 +92,14 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName;
         TextView tvCarnet;
-        TextView tvFaculty;
-        Button btnManage;
+        TextView tvAvatarInitials;
+        View btnManage;
 
         ViewHolder(View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
             tvCarnet = itemView.findViewById(R.id.tvCarnet);
-            tvFaculty = itemView.findViewById(R.id.tvFaculty);
+            tvAvatarInitials = itemView.findViewById(R.id.tvAvatarInitials);
             btnManage = itemView.findViewById(R.id.btnManage);
         }
     }

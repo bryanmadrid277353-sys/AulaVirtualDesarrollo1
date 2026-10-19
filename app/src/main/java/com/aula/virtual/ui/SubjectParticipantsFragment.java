@@ -39,8 +39,13 @@ public class SubjectParticipantsFragment extends Fragment {
 
         adapter = new ParticipantAdapter(user -> {
             Bundle args = new Bundle();
-            args.putInt("studentId", user.id);
-            Navigation.findNavController(view).navigate(R.id.action_subjectParticipantsFragment_to_studentProfileFragment, args);
+            if ("STUDENT".equals(user.role)) {
+                args.putInt("studentId", user.id);
+                Navigation.findNavController(view).navigate(R.id.action_subjectParticipantsFragment_to_studentDetailFragment, args);
+            } else {
+                args.putInt("adminId", user.id);
+                Navigation.findNavController(view).navigate(R.id.action_subjectParticipantsFragment_to_adminDetailFragment, args);
+            }
         });
         
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));

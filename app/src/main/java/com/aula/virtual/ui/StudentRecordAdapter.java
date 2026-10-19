@@ -41,14 +41,34 @@ public class StudentRecordAdapter extends RecyclerView.Adapter<StudentRecordAdap
         if (student == null) return;
 
         holder.tvName.setText(student.name != null ? student.name : "Sin nombre");
-        holder.tvCarnet.setText(student.carnet != null ? "Carnet: " + student.carnet : "-");
-        String detail = (student.grade != null ? student.grade : "") + 
-                         (student.faculty != null ? " • " + student.faculty : "");
-        holder.tvFaculty.setText(detail.isEmpty() ? "Sin grado/escuela" : detail);
+        String carnetStr = student.carnet != null ? "Carnet: " + student.carnet : "-";
+        if (student.grade != null && !student.grade.isEmpty()) {
+            carnetStr += " • " + student.grade;
+        }
+        holder.tvCarnet.setText(carnetStr);
 
-        holder.btnManage.setOnClickListener(v -> {
+        if (holder.tvAvatarInitials != null) {
+            holder.tvAvatarInitials.setText(getInitials(student.name));
+        }
+
+        holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(student);
         });
+        if (holder.btnManage != null) {
+            holder.btnManage.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(student);
+            });
+        }
+    }
+
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "AV";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
     }
 
     @Override
@@ -59,14 +79,14 @@ public class StudentRecordAdapter extends RecyclerView.Adapter<StudentRecordAdap
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName;
         TextView tvCarnet;
-        TextView tvFaculty;
+        TextView tvAvatarInitials;
         View btnManage;
 
         ViewHolder(View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
             tvCarnet = itemView.findViewById(R.id.tvCarnet);
-            tvFaculty = itemView.findViewById(R.id.tvFaculty);
+            tvAvatarInitials = itemView.findViewById(R.id.tvAvatarInitials);
             btnManage = itemView.findViewById(R.id.btnManage);
         }
     }

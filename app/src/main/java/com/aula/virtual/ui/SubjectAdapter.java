@@ -80,10 +80,21 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
         if (subject == null) return;
         
         holder.tvName.setText(subject.name != null ? subject.name : "Sin nombre");
-        holder.tvFaculty.setText(subject.faculty != null ? subject.faculty : "Sin Facultad");
-        String sec = (subject.section != null && !subject.section.isEmpty()) ? subject.section : "01";
-        holder.tvSection.setText("Sección " + sec);
-        holder.tvDescription.setText(subject.description != null ? subject.description : "");
+
+        String secRaw = (subject.section != null && !subject.section.isEmpty()) ? subject.section : "1";
+        String secNum = secRaw;
+        try {
+            secNum = String.valueOf(Integer.parseInt(secRaw));
+        } catch (Exception ignored) {}
+
+        holder.tvSection.setText("Sección: " + secNum);
+
+        if (subject.description != null && !subject.description.isEmpty()) {
+            holder.tvDescription.setText(subject.description);
+            holder.tvDescription.setVisibility(View.VISIBLE);
+        } else {
+            holder.tvDescription.setVisibility(View.GONE);
+        }
 
         if (holder.tvFacility != null) {
             String facName = facilityMap.get(subject.id);
@@ -95,9 +106,14 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
             }
         }
         
-        holder.btnManage.setOnClickListener(v -> {
+        holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(subject);
         });
+        if (holder.btnManage != null) {
+            holder.btnManage.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(subject);
+            });
+        }
 
         if (holder.btnDelete != null) {
             holder.btnDelete.setVisibility(showDeleteButton ? View.VISIBLE : View.GONE);
@@ -114,7 +130,8 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvFaculty, tvDescription, tvSection, tvFacility;
-        Button btnManage, btnDelete;
+        View btnManage;
+        Button btnDelete;
         View layoutButtons;
 
         ViewHolder(View itemView) {

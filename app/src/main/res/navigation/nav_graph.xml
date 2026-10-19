@@ -51,8 +51,8 @@
     <fragment
         android:id="@+id/professorSubjectListFragment"
         android:name="com.aula.virtual.ui.ProfessorSubjectListFragment"
-        android:label="Gestión de Profesor"
-        tools:layout="@layout/fragment_admin_dashboard">
+        android:label="Gestión del Profesor"
+        tools:layout="@layout/fragment_admin_professor_detail">
         <action
             android:id="@+id/action_professorSubjectListFragment_to_professorStudentListFragment"
             app:destination="@id/professorStudentListFragment" />
@@ -100,9 +100,6 @@
         <action
             android:id="@+id/action_adminHomeFragment_to_adminSubjectListFragment"
             app:destination="@id/adminSubjectListFragment" />
-        <action
-            android:id="@+id/action_adminHomeFragment_to_adminFacultyListFragment"
-            app:destination="@id/adminFacultyListFragment" />
         <action
             android:id="@+id/action_adminHomeFragment_to_adminAdminListFragment"
             app:destination="@id/adminAdminListFragment" />
@@ -157,6 +154,12 @@
         <action
             android:id="@+id/action_studentHomeFragment_to_studentProfileFragment"
             app:destination="@id/studentProfileFragment" />
+        <action
+            android:id="@+id/action_studentHomeFragment_to_adminEnrollmentListFragment"
+            app:destination="@id/adminEnrollmentListFragment" />
+        <action
+            android:id="@+id/action_studentHomeFragment_to_adminFacilityTimetableFragment"
+            app:destination="@id/adminFacilityTimetableFragment" />
     </fragment>
 
     <fragment
@@ -205,16 +208,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/adminFacultyListFragment"
-        android:name="com.aula.virtual.ui.AdminFacultyListFragment"
-        android:label="Listado de Facultades"
-        tools:layout="@layout/fragment_admin_dashboard">
-        <action
-            android:id="@+id/action_adminFacultyListFragment_to_facultyDetailFragment"
-            app:destination="@id/facultyDetailFragment" />
-    </fragment>
-
-    <fragment
         android:id="@+id/adminAdminListFragment"
         android:name="com.aula.virtual.ui.AdminAdminListFragment"
         android:label="Listado de Administradores"
@@ -251,6 +244,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_settingsAdvancedFragment"
             app:destination="@id/settingsAdvancedFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_notificationSettingsFragment"
+            app:destination="@id/notificationSettingsFragment" />
     </fragment>
 
     <fragment
@@ -292,16 +288,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/facultyDetailFragment"
-        android:name="com.aula.virtual.ui.FacultyDetailFragment"
-        android:label="Detalle Facultad"
-        tools:layout="@layout/fragment_detail">
-        <argument
-            android:name="facultyId"
-            app:argType="integer" />
-    </fragment>
-
-    <fragment
         android:id="@+id/adminDetailFragment"
         android:name="com.aula.virtual.ui.AdminDetailFragment"
         android:label="Detalle Administrador"
@@ -326,8 +312,8 @@
     <fragment
         android:id="@+id/adminEnrollmentListFragment"
         android:name="com.aula.virtual.ui.AdminEnrollmentListFragment"
-        android:label="Gestión de Alumno"
-        tools:layout="@layout/fragment_admin_dashboard">
+        android:label="Gestión del Estudiante"
+        tools:layout="@layout/fragment_admin_student_detail">
         <argument
             android:name="studentId"
             app:argType="integer" />
@@ -404,6 +390,15 @@
         <action
             android:id="@+id/action_subjectParticipantsFragment_to_studentProfileFragment"
             app:destination="@id/studentProfileFragment" />
+        <action
+            android:id="@+id/action_subjectParticipantsFragment_to_adminEnrollmentListFragment"
+            app:destination="@id/adminEnrollmentListFragment" />
+        <action
+            android:id="@+id/action_subjectParticipantsFragment_to_adminDetailFragment"
+            app:destination="@id/adminDetailFragment" />
+        <action
+            android:id="@+id/action_subjectParticipantsFragment_to_studentDetailFragment"
+            app:destination="@id/studentDetailFragment" />
     </fragment>
 
     <fragment
@@ -502,6 +497,15 @@
         <action
             android:id="@+id/action_notificationListFragment_to_studentProfileFragment"
             app:destination="@id/studentProfileFragment" />
+        <action
+            android:id="@+id/action_notificationListFragment_to_notificationSettingsFragment"
+            app:destination="@id/notificationSettingsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/notificationSettingsFragment"
+        android:name="com.aula.virtual.ui.NotificationSettingsFragment"
+        android:label="Ajustes de Notificaciones"
+        tools:layout="@layout/fragment_notification_settings" />
 
 </navigation>

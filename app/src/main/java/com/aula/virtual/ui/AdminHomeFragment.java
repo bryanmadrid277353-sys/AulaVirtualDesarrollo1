@@ -1,13 +1,9 @@
 package com.aula.virtual.ui;
 
-import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,9 +43,6 @@ public class AdminHomeFragment extends Fragment {
         binding.cardSubjects.setOnClickListener(v -> 
             Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminSubjectListFragment));
 
-        binding.cardFaculties.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminFacultyListFragment));
-
         binding.cardAdmins.setOnClickListener(v -> 
             Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminAdminListFragment));
 
@@ -58,29 +51,15 @@ public class AdminHomeFragment extends Fragment {
 
         binding.cardFacilities.setOnClickListener(v -> 
             Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminFacilityListFragment));
-            
-        binding.cardSettings.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_settingsFragment));
 
-        binding.cardLogout.setOnClickListener(v -> {
-            viewModel.logout();
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_loginFragment);
-        });
 
-        binding.btnGoToProfileAdmin.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_studentProfileFragment));
 
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
-                binding.tvAdminName.setText("Bienvenido " + user.name);
-                updateProfileImage(user.profile_image, binding.ivProfileImageAdmin);
+                binding.tvAdminName.setText(user.name);
+                ImageUtils.setProfileImage(binding.ivProfileImageAdmin, user.profile_image, user.name);
             }
         });
-    }
-
-    private void updateProfileImage(String profileImage, ImageView iv) {
-        int paddingPx = (int) (8 * getResources().getDisplayMetrics().density);
-        ImageUtils.setProfileImage(iv, profileImage, paddingPx);
     }
 
     @Override

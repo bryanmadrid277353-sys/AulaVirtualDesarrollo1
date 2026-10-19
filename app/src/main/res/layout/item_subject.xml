@@ -1,132 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="12dp"
-    android:layout_marginBottom="10dp"
-    android:layout_marginHorizontal="2dp"
-    android:background="@drawable/bg_list_item">
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/input_bg"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/input_border"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@id/layoutButtons"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvSubjectName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_input_field"
+            android:layout_marginEnd="14dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_open_book"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="Materia" />
+        </FrameLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="2dp">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tvFaculty"
+                android:id="@+id/tvSubjectName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="12sp"
-                android:textStyle="italic" />
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="Matemática" />
 
             <TextView
                 android:id="@+id/tvSection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:textSize="11sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:layout_marginTop="2dp"
+                tools:text="Sección: 8" />
+
+            <TextView
+                android:id="@+id/tvFaculty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvFacility"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="1dp"
-                android:background="@drawable/bg_badge_primary"
-                android:textColor="@color/white" />
+                android:layout_marginTop="2dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:layout_marginTop="2dp"
+                tools:text="Descripción de la materia" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvFacility"
+        <LinearLayout
+            android:id="@+id/layoutButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:layout_marginTop="2dp"
-            android:visibility="gone" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/tvDescription"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
-            android:layout_marginTop="2dp" />
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeleteSubject"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                app:cornerRadius="19dp"
+                app:icon="@drawable/ic_delete"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/bs_danger"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="Desinscribir"
+                android:visibility="gone"/>
 
-    <LinearLayout
-        android:id="@+id/layoutButtons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnManage"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="38dp"
-            android:layout_gravity="center_vertical"
-            android:text="Gestionar"
-            android:textColor="@color/white"
-            android:textSize="12sp"
-            android:textAllCaps="false"
-            android:paddingHorizontal="10dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            app:cornerRadius="19dp"
-            app:icon="@drawable/ic_manage"
-            app:iconGravity="textStart"
-            app:iconPadding="6dp"
-            app:iconSize="18dp"
-            app:iconTint="@color/white"
-            app:backgroundTint="?attr/colorPrimary"
-            android:layout_marginEnd="4dp"
-            android:contentDescription="Gestionar"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDeleteSubject"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_gravity="center_vertical"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:padding="0dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            app:cornerRadius="22dp"
-            app:icon="@drawable/ic_delete"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="22dp"
-            app:iconTint="@color/white"
-            app:backgroundTint="@color/bs_danger"
-            android:layout_marginStart="4dp"
-            android:contentDescription="Desinscribir"
-            android:visibility="gone"/>
+            <ImageView
+                android:id="@+id/btnManage"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?android:attr/textColorSecondary"
+                android:contentDescription="Navegar" />
+        </LinearLayout>
 
     </LinearLayout>
-
-</RelativeLayout>
+</androidx.cardview.widget.CardView>

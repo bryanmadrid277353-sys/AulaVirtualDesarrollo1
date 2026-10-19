@@ -1,0 +1,40 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Cuerpo de la llave: aro, tallo y dientes -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="?attr/colorPrimary"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M8.9,10.5
+                         A6,6 0 1,1 12.5,14.2
+                         L11,15.3
+                         Q9,15.3 9,17.3
+                         Q9,18.5 7.8,18.5
+                         L7.3,18.5
+                         Q5.5,18.5 5.5,20
+                         L5.5,20.2
+                         Q5.5,21.2 4.5,21.2
+                         L2.6,21.2
+                         Q1.6,21.2 1.6,20.2
+                         L1.6,17.8
+                         Q1.6,17 2.2,16.4
+                         L8.9,10.5Z" />
+
+    <!-- Ojal del aro -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="?attr/colorPrimary"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M15.2,7.5
+                         m-0.9,0
+                         a0.9,0.9 0 1,0 1.8,0
+                         a0.9,0.9 0 1,0 -1.8,0" />
+</vector>

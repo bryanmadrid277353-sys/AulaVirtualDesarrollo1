@@ -11,16 +11,14 @@ public class Student {
     public String carnet;
     public String name;
     public String grade;
-    public String faculty;
     public String profile_image;
 
     public Student() {}
 
-    public Student(String carnet, String name, String grade, String faculty, Integer encargadoId) {
+    public Student(String carnet, String name, String grade, Integer encargadoId) {
         this.carnet = carnet;
         this.name = name;
         this.grade = grade;
-        this.faculty = faculty;
         this.encargadoId = encargadoId;
     }
 }

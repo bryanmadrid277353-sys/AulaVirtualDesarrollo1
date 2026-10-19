@@ -27,7 +27,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.databinding.FragmentAdminDashboardBinding;
 
@@ -36,7 +35,6 @@ public class AdminSubjectListFragment extends Fragment {
     private MainViewModel viewModel;
     private SubjectAdapter adapter;
     private List<Subject> allSubjects = new ArrayList<>();
-    private List<Faculty> availableFaculties = new ArrayList<>();
 
     @Nullable
     @Override
@@ -70,12 +68,6 @@ public class AdminSubjectListFragment extends Fragment {
             }
         });
 
-        viewModel.getAllFaculties().observe(getViewLifecycleOwner(), faculties -> {
-            if (faculties != null) {
-                availableFaculties = faculties;
-            }
-        });
-
         viewModel.refreshData();
 
         adapter.setOnItemClickListener(subject -> {
@@ -88,7 +80,7 @@ public class AdminSubjectListFragment extends Fragment {
     }
 
     private void setupSearch() {
-        String[] options = {"Todo", "Nombre", "Facultad"};
+        String[] options = {"Todo", "Nombre"};
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, options);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.spinnerFilter.setAdapter(spinnerAdapter);
@@ -121,18 +113,12 @@ public class AdminSubjectListFragment extends Fragment {
 
         List<Subject> filtered = allSubjects.stream().filter(s -> {
             if (s == null) return false;
-            boolean match = false;
             String name = s.name != null ? s.name.toLowerCase() : "";
-            String faculty = s.faculty != null ? s.faculty.toLowerCase() : "";
 
-            if (filterType.equals("Todo")) {
-                match = name.contains(query) || faculty.contains(query);
-            } else if (filterType.equals("Nombre")) {
-                match = name.contains(query);
-            } else if (filterType.equals("Facultad")) {
-                match = faculty.contains(query);
+            if (filterType.equals("Todo") || filterType.equals("Nombre")) {
+                return name.contains(query);
             }
-            return match;
+            return false;
         }).collect(Collectors.toList());
 
         adapter.setSubjects(filtered);
@@ -140,53 +126,27 @@ public class AdminSubjectListFragment extends Fragment {
     }
 
     private void showAddSubjectDialog() {
-        if (availableFaculties == null || availableFaculties.isEmpty()) {
-            Toast.makeText(getContext(), "Cree una facultad primero", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        showAddSubjectAlertDialog(availableFaculties);
-    }
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_subject, null);
 
-    private void showAddSubjectAlertDialog(List<Faculty> faculties) {
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), "Añadir Materia");
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
-
-        final EditText etName = DialogUtils.createStyledEditText(requireContext(), "Nombre de la Materia", 0);
-        layout.addView(etName);
-
-        final EditText etDesc = DialogUtils.createStyledEditText(requireContext(), "Descripción", 0);
-        layout.addView(etDesc);
-
-        final EditText etSection = DialogUtils.createStyledEditText(requireContext(), "Sección (Número del 1 al 9)", InputType.TYPE_CLASS_NUMBER);
-        layout.addView(etSection);
-
-        final TextView tvFaculty = DialogUtils.createDialogOptionButton(requireContext(), "Seleccionar Facultad...", true);
-        layout.addView(tvFaculty);
-
-        final String[] facultyNames = new String[faculties.size()];
-        for (int i = 0; i < faculties.size(); i++) facultyNames[i] = faculties.get(i).name;
-        final String[] selectedFaculty = {null};
-
-        tvFaculty.setOnClickListener(v -> {
-            new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Facultades")
-                .setItems(facultyNames, (dialog, which) -> {
-                    selectedFaculty[0] = facultyNames[which];
-                    tvFaculty.setError(null);
-                    DialogUtils.setOptionState(tvFaculty, "Facultad: " + selectedFaculty[0], false, requireContext());
-                }).show();
-        });
-
-        builder.setView(layout);
-        builder.setPositiveButton("Añadir", null);
-        builder.setNegativeButton("Cancelar", null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
         AlertDialog dialog = builder.create();
-        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v1 -> {
-            String name = etName.getText().toString();
-            String desc = etDesc.getText().toString();
+        EditText etName = dialogView.findViewById(R.id.etName);
+        EditText etDesc = dialogView.findViewById(R.id.etDesc);
+        EditText etSection = dialogView.findViewById(R.id.etSection);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnAdd = dialogView.findViewById(R.id.btnAddDialog);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnAdd.setOnClickListener(v1 -> {
+            String name = etName.getText().toString().trim();
+            String desc = etDesc.getText().toString().trim();
             String sectionStr = etSection.getText().toString().trim();
 
             boolean isValid = true;
@@ -194,11 +154,7 @@ public class AdminSubjectListFragment extends Fragment {
                 etName.setError("El nombre es obligatorio");
                 isValid = false;
             }
-            if (selectedFaculty[0] == null) {
-                tvFaculty.setError("Seleccione una facultad");
-                isValid = false;
-            }
-            
+
             String finalSection = "01";
             if (sectionStr.isEmpty()) {
                 etSection.setError("La sección es obligatoria");
@@ -221,13 +177,15 @@ public class AdminSubjectListFragment extends Fragment {
             if (isValid) {
                 String sectionParam = finalSection;
                 viewModel.performOnlineAction(() -> {
-                    Subject newSub = new Subject(name, desc, selectedFaculty[0], null);
+                    Subject newSub = new Subject(name, desc, null);
                     newSub.section = sectionParam;
                     viewModel.insertSubject(newSub);
                     dialog.dismiss();
                 });
             }
         });
+
+        dialog.show();
     }
 
 

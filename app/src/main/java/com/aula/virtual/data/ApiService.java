@@ -5,7 +5,6 @@ import com.aula.virtual.data.entity.BlogEntry;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
 import com.aula.virtual.data.entity.Enrollment;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.Notification;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.entity.User;
@@ -87,22 +86,6 @@ public interface ApiService {
 
     @GET("subjects/{sub_id}/participants")
     Call<List<User>> getSubjectParticipants(@Path("sub_id") int subjectId);
-
-    // --- Faculties ---
-    @GET("faculties")
-    Call<List<Faculty>> getFaculties();
-
-    @POST("faculties")
-    Call<Faculty> createFaculty(@Body Faculty faculty);
-
-    @PUT("faculties/{id}")
-    Call<Faculty> updateFaculty(@Path("id") int id, @Body Faculty faculty);
-
-    @DELETE("faculties/{id}")
-    Call<Void> deleteFaculty(@Path("id") int id);
-
-    @GET("faculties/{id}")
-    Call<Faculty> getFacultyById(@Path("id") int id);
 
     // --- Enrollments ---
     @GET("enrollments/student/{student_id}")

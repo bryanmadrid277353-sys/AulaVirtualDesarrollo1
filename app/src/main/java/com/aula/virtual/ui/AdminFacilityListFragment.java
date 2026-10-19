@@ -109,26 +109,25 @@ public class AdminFacilityListFragment extends Fragment {
     }
 
     private void showAddFacilityDialog() {
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), "Nueva Instalación");
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_facility, null);
 
-        final EditText etName = DialogUtils.createStyledEditText(requireContext(), "Nombre (Ej: Aula 01)", 0);
-        layout.addView(etName);
-
-        final EditText etType = DialogUtils.createStyledEditText(requireContext(), "Tipo (Ej: Edificio, Laboratorio)", 0);
-        layout.addView(etType);
-
-        final EditText etDesc = DialogUtils.createStyledEditText(requireContext(), "Descripción", 0);
-        layout.addView(etDesc);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Añadir", null);
-        builder.setNegativeButton("Cancelar", null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
         AlertDialog dialog = builder.create();
-        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v1 -> {
+        EditText etName = dialogView.findViewById(R.id.etName);
+        EditText etType = dialogView.findViewById(R.id.etType);
+        EditText etDesc = dialogView.findViewById(R.id.etDesc);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnAdd = dialogView.findViewById(R.id.btnAddDialog);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnAdd.setOnClickListener(v1 -> {
             String name = etName.getText().toString().trim();
             String type = etType.getText().toString().trim();
             String desc = etDesc.getText().toString().trim();
@@ -143,6 +142,8 @@ public class AdminFacilityListFragment extends Fragment {
                 dialog.dismiss();
             });
         });
+
+        dialog.show();
     }
 
     @Override

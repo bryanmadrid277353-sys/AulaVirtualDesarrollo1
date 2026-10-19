@@ -1,9 +1,14 @@
 package com.aula.virtual.ui;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -11,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.aula.virtual.R;
 import com.aula.virtual.data.StudentGradeInfo;
 import com.aula.virtual.data.entity.Enrollment;
+import com.google.android.material.card.MaterialCardView;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +35,8 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
         void onViewBlog(StudentGradeInfo info);
         default void onDeleteEnrollment(StudentGradeInfo info) {}
         default void onStudentClick(StudentGradeInfo info) {}
+        default void onAddPeriodClick(StudentGradeInfo info) {}
+        default void onViewAttendance(StudentGradeInfo info) {}
     }
 
     private Map<Integer, String> facilityMap = new HashMap<>();
@@ -76,48 +85,28 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         StudentGradeInfo info = gradeInfos.get(position);
         if (info == null) return;
-        
-        if (isStudentList) {
-            // Professor view in ProfessorStudentListFragment: Each row is a Student
-            holder.tvName.setText(info.student != null ? info.student.name : "Alumno");
-            if (holder.tvSection != null) {
+
+        holder.tvName.setText(info.subject != null ? info.subject.name : "Materia Desconocida");
+
+        if (holder.tvSection != null) {
+            if (info.subject != null) {
+                String sec = (info.subject.section != null && !info.subject.section.isEmpty()) ? info.subject.section : "01";
+                holder.tvSection.setText("Sección: " + sec);
+                holder.tvSection.setVisibility(View.VISIBLE);
+            } else {
                 holder.tvSection.setVisibility(View.GONE);
             }
-            holder.btnBlog.setVisibility(View.GONE);
-            holder.btnProfile.setVisibility(View.VISIBLE);
-            holder.btnProfile.setOnClickListener(v -> {
-                if (listener != null) listener.onStudentClick(info);
-            });
-            holder.btnEdit.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
-            holder.btnEdit.setOnClickListener(v -> {
-                if (listener != null) listener.onEditGrades(info);
-            });
-            holder.btnDelete.setVisibility(View.GONE);
-        } else {
-            // Subject view in AdminEnrollmentListFragment & Student views: Each row is a Subject
-            holder.tvName.setText(info.subject != null ? info.subject.name : "Materia Desconocida");
-            if (holder.tvSection != null) {
-                if (info.subject != null) {
-                    String sec = (info.subject.section != null && !info.subject.section.isEmpty()) ? info.subject.section : "01";
-                    holder.tvSection.setText("Sección " + sec);
-                    holder.tvSection.setVisibility(View.VISIBLE);
-                } else {
-                    holder.tvSection.setVisibility(View.GONE);
-                }
+        }
+
+        if (holder.tvProfessor != null && info.subject != null) {
+            String profName = professorMap.get(info.subject.id);
+            if (profName != null && !profName.isEmpty()) {
+                holder.tvProfessor.setText("Prof. " + profName);
+                holder.tvProfessor.setVisibility(View.VISIBLE);
+            } else {
+                holder.tvProfessor.setText("Sin profesor asignado");
+                holder.tvProfessor.setVisibility(View.VISIBLE);
             }
-            holder.btnProfile.setVisibility(View.GONE); // No Profile button for subject cards
-            holder.btnBlog.setVisibility(View.VISIBLE);
-            holder.btnBlog.setOnClickListener(v -> {
-                if (listener != null) {
-                    if (isAdmin) listener.onViewBlog(info);
-                    else listener.onStudentClick(info);
-                }
-            });
-            holder.btnEdit.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
-            holder.btnEdit.setOnClickListener(v -> {
-                if (listener != null) listener.onEditGrades(info);
-            });
-            holder.btnDelete.setVisibility(View.GONE);
         }
 
         if (holder.tvFacility != null && info.subject != null) {
@@ -128,90 +117,205 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
             } else {
                 holder.tvFacility.setVisibility(View.GONE);
             }
-        } else if (holder.tvFacility != null) {
-            holder.tvFacility.setVisibility(View.GONE);
         }
 
-        if (holder.tvProfessor != null && info.subject != null) {
-            String profName = professorMap.get(info.subject.id);
-            if (profName != null && !profName.isEmpty()) {
-                holder.tvProfessor.setText("👨‍🏫 " + profName);
-                holder.tvProfessor.setVisibility(View.VISIBLE);
-            } else {
-                holder.tvProfessor.setVisibility(View.GONE);
-            }
-        } else if (holder.tvProfessor != null) {
-            holder.tvProfessor.setVisibility(View.GONE);
-        }
-        
-        Enrollment e = info.enrollment;
-        if (e != null) {
-            holder.tvP1.setText(formatGrade(e.grade1));
-            setGradeColor(holder.tvP1, e.grade1);
-            
-            holder.tvP2.setText(formatGrade(e.grade2));
-            setGradeColor(holder.tvP2, e.grade2);
-            
-            holder.tvP3.setText(formatGrade(e.grade3));
-            setGradeColor(holder.tvP3, e.grade3);
-            
-            holder.tvP4.setText(formatGrade(e.grade4));
-            setGradeColor(holder.tvP4, e.grade4);
-            
-            holder.tvP5.setText(formatGrade(e.grade5));
-            setGradeColor(holder.tvP5, e.grade5);
-            
-            double sum = 0;
-            int count = 0;
-            if (e.grade1 != null) { sum += e.grade1; count++; }
-            if (e.grade2 != null) { sum += e.grade2; count++; }
-            if (e.grade3 != null) { sum += e.grade3; count++; }
-            if (e.grade4 != null) { sum += e.grade4; count++; }
-            if (e.grade5 != null) { sum += e.grade5; count++; }
-            
-            if (count > 0) {
-                double avg = sum / count;
-                holder.tvAverage.setText(String.format(Locale.getDefault(), "%.1f", avg));
-                setGradeColor(holder.tvAverage, avg);
-            } else {
-                holder.tvAverage.setText("N/A");
-                holder.tvAverage.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.bs_secondary));
-            }
-        } else {
-            holder.tvP1.setText("-");
-            holder.tvP2.setText("-");
-            holder.tvP3.setText("-");
-            holder.tvP4.setText("-");
-            holder.tvP5.setText("-");
-            holder.tvAverage.setText("N/A");
-            int secondary = ContextCompat.getColor(holder.itemView.getContext(), R.color.bs_secondary);
-            holder.tvP1.setTextColor(secondary);
-            holder.tvP2.setTextColor(secondary);
-            holder.tvP3.setTextColor(secondary);
-            holder.tvP4.setTextColor(secondary);
-            holder.tvP5.setTextColor(secondary);
-            holder.tvAverage.setTextColor(secondary);
+        // Entire Card Click -> Open Subject Blog (Gestión de la materia)
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onViewBlog(info);
+        });
+
+        if (holder.btnChevronRight != null) {
+            holder.btnChevronRight.setOnClickListener(v -> {
+                if (listener != null) listener.onViewBlog(info);
+            });
         }
 
+        // Modificar Notas button click
+        if (holder.btnAddPeriod != null) {
+            holder.btnAddPeriod.setOnClickListener(v -> {
+                if (listener != null) listener.onEditGrades(info);
+            });
+        }
 
+        // Asistencia button click
+        if (holder.btnAttendance != null) {
+            holder.btnAttendance.setOnClickListener(v -> {
+                if (listener != null) listener.onViewAttendance(info);
+            });
+        }
 
-
+        // Render Periods Dynamically
+        renderPeriodsAndAverage(holder, info);
     }
 
-    private void setGradeColor(TextView tv, Double grade) {
+    private void renderPeriodsAndAverage(ViewHolder holder, StudentGradeInfo info) {
+        if (holder.layoutPeriodsContainer == null) return;
+        holder.layoutPeriodsContainer.removeAllViews();
+
+        Enrollment e = info.enrollment;
+        int periodsCount = (e != null && e.periodsCount > 0) ? e.periodsCount : 5;
+
+        double sum = 0;
+        int filledCount = 0;
+
+        for (int i = 1; i <= periodsCount; i++) {
+            Double val = getGradeForPeriod(e, i);
+            if (val != null) {
+                sum += val;
+                filledCount++;
+            }
+
+            View periodBox = createPeriodBox(holder.itemView.getContext(), "P" + i, formatGrade(val), getGradeColor(holder.itemView.getContext(), val));
+            holder.layoutPeriodsContainer.addView(periodBox);
+        }
+
+        // Real Average treating missing grades as 0
+        double avgReal = sum / periodsCount;
+        String avgStr = String.format(Locale.getDefault(), "%.1f", avgReal);
+        View avgBox = createAvgBox(holder.itemView.getContext(), "AVG", avgStr);
+        holder.layoutPeriodsContainer.addView(avgBox);
+
+        // Status Tag with Cycle Year
+        if (holder.tvStatusTag != null) {
+            String cycleStr = (e != null && e.cycle != null) ? e.cycle : "Ciclo 2025";
+            boolean isPastCycle = !cycleStr.contains("2025");
+            boolean hasPending = filledCount < periodsCount;
+
+            if (isPastCycle) {
+                if (avgReal >= 6.0) {
+                    holder.tvStatusTag.setText("🟢 Aprobado • " + cycleStr);
+                    holder.tvStatusTag.setTextColor(Color.parseColor("#10B981"));
+                } else if (!hasPending && avgReal < 6.0) {
+                    holder.tvStatusTag.setText("🔴 Reprobado • " + cycleStr);
+                    holder.tvStatusTag.setTextColor(Color.parseColor("#EF4444"));
+                } else {
+                    holder.tvStatusTag.setText("📁 Finalizado • " + cycleStr);
+                    holder.tvStatusTag.setTextColor(Color.parseColor("#94A3B8"));
+                }
+            } else {
+                if (hasPending) {
+                    holder.tvStatusTag.setText("🟡 En curso • " + cycleStr);
+                    holder.tvStatusTag.setTextColor(Color.parseColor("#F59E0B"));
+                } else if (avgReal >= 6.0) {
+                    holder.tvStatusTag.setText("🟢 Aprobado • " + cycleStr);
+                    holder.tvStatusTag.setTextColor(Color.parseColor("#10B981"));
+                } else {
+                    holder.tvStatusTag.setText("🔴 Reprobado • " + cycleStr);
+                    holder.tvStatusTag.setTextColor(Color.parseColor("#EF4444"));
+                }
+            }
+        }
+    }
+
+    private Double getGradeForPeriod(Enrollment e, int index) {
+        if (e == null) return null;
+        switch (index) {
+            case 1: return e.grade1;
+            case 2: return e.grade2;
+            case 3: return e.grade3;
+            case 4: return e.grade4;
+            case 5: return e.grade5;
+            case 6: return e.grade6;
+            case 7: return e.grade7;
+            case 8: return e.grade8;
+            default: return null;
+        }
+    }
+
+    private View createPeriodBox(android.content.Context ctx, String label, String val, int color) {
+        MaterialCardView card = new MaterialCardView(ctx);
+        int density = (int) ctx.getResources().getDisplayMetrics().density;
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(48 * density, 48 * density);
+        lp.setMargins(0, 0, 8 * density, 0);
+        card.setLayoutParams(lp);
+
+        card.setRadius(10 * density);
+        card.setCardElevation(0f);
+        card.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#162032")));
+        card.setStrokeWidth(1 * density);
+        card.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#23334F")));
+
+        LinearLayout layout = new LinearLayout(ctx);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setGravity(Gravity.CENTER);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT));
+
+        TextView tvLabel = new TextView(ctx);
+        tvLabel.setText(label);
+        tvLabel.setTextSize(10);
+        tvLabel.setGravity(Gravity.CENTER);
+        tvLabel.setTextColor(Color.parseColor("#8E9BB0"));
+
+        TextView tvVal = new TextView(ctx);
+        tvVal.setText(val);
+        tvVal.setTextSize(14);
+        tvVal.setTypeface(null, Typeface.BOLD);
+        tvVal.setGravity(Gravity.CENTER);
+        tvVal.setTextColor(color);
+
+        layout.addView(tvLabel);
+        layout.addView(tvVal);
+        card.addView(layout);
+
+        return card;
+    }
+
+    private View createAvgBox(android.content.Context ctx, String label, String val) {
+        MaterialCardView card = new MaterialCardView(ctx);
+        int density = (int) ctx.getResources().getDisplayMetrics().density;
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(58 * density, 48 * density);
+        lp.setMargins(14 * density, 0, 0, 0);
+        card.setLayoutParams(lp);
+
+        card.setRadius(10 * density);
+        card.setCardElevation(0f);
+        card.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#132540")));
+        card.setStrokeWidth((int) (1.5f * density));
+        card.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#2563EB")));
+
+        LinearLayout layout = new LinearLayout(ctx);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setGravity(Gravity.CENTER);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT));
+
+        TextView tvLabel = new TextView(ctx);
+        tvLabel.setText(label);
+        tvLabel.setTextSize(10);
+        tvLabel.setTypeface(null, Typeface.BOLD);
+        tvLabel.setGravity(Gravity.CENTER);
+        tvLabel.setTextColor(Color.parseColor("#38BDF8"));
+
+        TextView tvVal = new TextView(ctx);
+        tvVal.setText(val);
+        tvVal.setTextSize(18);
+        tvVal.setTypeface(null, Typeface.BOLD);
+        tvVal.setGravity(Gravity.CENTER);
+        tvVal.setTextColor(Color.parseColor("#38BDF8"));
+
+        layout.addView(tvLabel);
+        layout.addView(tvVal);
+        card.addView(layout);
+
+        return card;
+    }
+
+    private int getGradeColor(android.content.Context ctx, Double grade) {
         if (grade == null) {
-            tv.setTextColor(ContextCompat.getColor(tv.getContext(), R.color.bs_secondary));
-            return;
+            return Color.parseColor("#8E9BB0");
         }
-        int colorRes;
         if (grade <= 3.0) {
-            colorRes = R.color.bs_danger;
+            return ContextCompat.getColor(ctx, R.color.bs_danger);
         } else if (grade <= 6.0) {
-            colorRes = R.color.bs_warning;
+            return ContextCompat.getColor(ctx, R.color.bs_warning);
         } else {
-            colorRes = R.color.bs_success;
+            return ContextCompat.getColor(ctx, R.color.bs_success);
         }
-        tv.setTextColor(ContextCompat.getColor(tv.getContext(), colorRes));
     }
 
     private String formatGrade(Double grade) {
@@ -225,8 +329,9 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvSection, tvFacility, tvProfessor, tvP1, tvP2, tvP3, tvP4, tvP5, tvAverage;
-        Button btnBlog, btnEdit, btnDelete, btnProfile;
+        TextView tvName, tvSection, tvFacility, tvProfessor, tvStatusTag, btnAddPeriod, btnAttendance;
+        ImageView btnChevronRight;
+        LinearLayout layoutPeriodsContainer;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -234,16 +339,11 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
             tvSection = itemView.findViewById(R.id.tvSection);
             tvFacility = itemView.findViewById(R.id.tvFacility);
             tvProfessor = itemView.findViewById(R.id.tvProfessor);
-            tvP1 = itemView.findViewById(R.id.tvP1);
-            tvP2 = itemView.findViewById(R.id.tvP2);
-            tvP3 = itemView.findViewById(R.id.tvP3);
-            tvP4 = itemView.findViewById(R.id.tvP4);
-            tvP5 = itemView.findViewById(R.id.tvP5);
-            tvAverage = itemView.findViewById(R.id.tvAverage);
-            btnBlog = itemView.findViewById(R.id.btnGoToBlog);
-            btnEdit = itemView.findViewById(R.id.btnEditGrades);
-            btnDelete = itemView.findViewById(R.id.btnDeleteEnrollment);
-            btnProfile = itemView.findViewById(R.id.btnProfile);
+            tvStatusTag = itemView.findViewById(R.id.tvStatusTag);
+            btnAddPeriod = itemView.findViewById(R.id.btnAddPeriod);
+            btnAttendance = itemView.findViewById(R.id.btnAttendance);
+            btnChevronRight = itemView.findViewById(R.id.btnChevronRight);
+            layoutPeriodsContainer = itemView.findViewById(R.id.layoutPeriodsContainer);
         }
     }
 }

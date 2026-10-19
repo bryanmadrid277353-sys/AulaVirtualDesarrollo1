@@ -45,8 +45,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         holder.tvName.setText(user.name);
         holder.tvRole.setText("PROFESSOR".equals(user.role) ? "Profesor" : "Estudiante");
 
-        int paddingPx = (int) (8 * holder.itemView.getResources().getDisplayMetrics().density);
-        ImageUtils.setProfileImage(holder.ivPhoto, user.profile_image, paddingPx);
+        ImageUtils.setProfileImage(holder.ivPhoto, user.profile_image, user.name);
 
         holder.btnProfile.setOnClickListener(v -> listener.onProfileClick(user));
     }

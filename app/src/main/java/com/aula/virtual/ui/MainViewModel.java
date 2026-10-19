@@ -17,7 +17,6 @@ import com.aula.virtual.data.entity.BlogEntry;
 import com.aula.virtual.data.entity.Enrollment;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.Notification;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
@@ -41,7 +40,6 @@ public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<List<User>> allAdmins = new MutableLiveData<>();
     private final MutableLiveData<List<User>> allProfessors = new MutableLiveData<>();
     private final MutableLiveData<List<Subject>> allSubjects = new MutableLiveData<>();
-    private final MutableLiveData<List<Faculty>> allFaculties = new MutableLiveData<>();
     private final MutableLiveData<List<StudentGradeInfo>> currentStudentGrades = new MutableLiveData<>();
     private final MutableLiveData<User> currentUser = new MutableLiveData<>();
     private final MutableLiveData<List<Student>> myStudents = new MutableLiveData<>();
@@ -50,7 +48,6 @@ public class MainViewModel extends AndroidViewModel {
 
     private final MutableLiveData<User> selectedUser = new MutableLiveData<>();
     private final MutableLiveData<Subject> selectedSubject = new MutableLiveData<>();
-    private final MutableLiveData<Faculty> selectedFaculty = new MutableLiveData<>();
     private final MutableLiveData<Enrollment> selectedEnrollment = new MutableLiveData<>();
     private final MutableLiveData<List<BlogEntry>> subjectBlog = new MutableLiveData<>();
     private final MutableLiveData<List<CommentInfo>> blogComments = new MutableLiveData<>();
@@ -104,7 +101,6 @@ public class MainViewModel extends AndroidViewModel {
         fetchAdmins();
         fetchProfessors();
         fetchSubjects();
-        fetchFaculties();
         fetchFacilities();
     }
 
@@ -120,7 +116,6 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<List<User>> getAllAdmins() { return allAdmins; }
     public LiveData<List<User>> getAllProfessors() { return allProfessors; }
     public LiveData<List<Subject>> getAllSubjects() { return allSubjects; }
-    public LiveData<List<Faculty>> getAllFaculties() { return allFaculties; }
     public LiveData<User> getCurrentUser() { return currentUser; }
     public void setCurrentUser(User user) { 
         currentUser.setValue(user); 
@@ -228,14 +223,12 @@ public class MainViewModel extends AndroidViewModel {
         adminUserBeforeImpersonation = null;
         selectedUser.postValue(null);
         selectedSubject.postValue(null);
-        selectedFaculty.postValue(null);
         selectedEnrollment.postValue(null);
         subjectBlog.postValue(null);
     }
 
     public LiveData<User> getSelectedUser() { return selectedUser; }
     public LiveData<Subject> getSelectedSubject() { return selectedSubject; }
-    public LiveData<Faculty> getSelectedFaculty() { return selectedFaculty; }
     public LiveData<Enrollment> getSelectedEnrollment() { return selectedEnrollment; }
     public LiveData<List<BlogEntry>> getSubjectBlog() { return subjectBlog; }
     public LiveData<List<CommentInfo>> getBlogComments() { return blogComments; }
@@ -554,15 +547,6 @@ public class MainViewModel extends AndroidViewModel {
         });
     }
 
-    private void fetchFaculties() {
-        repository.getAllFaculties(new Callback<List<Faculty>>() {
-            @Override public void onResponse(@NonNull Call<List<Faculty>> call, @NonNull Response<List<Faculty>> response) {
-                if (response.isSuccessful() && response.body() != null) allFaculties.setValue(response.body());
-            }
-            @Override public void onFailure(@NonNull Call<List<Faculty>> call, @NonNull Throwable t) {}
-        });
-    }
-
     public void login(String carnet, String password, LoginCallback callback) {
         repository.login(carnet, password, new Callback<User>() {
             @Override public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
@@ -596,12 +580,12 @@ public class MainViewModel extends AndroidViewModel {
                 if (response.isSuccessful() && response.body() != null) {
                     User updated = response.body();
                     User current = currentUser.getValue();
-                    if (current != null && current.id == updated.id) {
+                    if (current != null && (current.id == updated.id || (current.carnet != null && current.carnet.equalsIgnoreCase(updated.carnet)))) {
                         currentUser.postValue(updated);
                     }
                     // Also update selected user for Detail screens
                     User selected = selectedUser.getValue();
-                    if (selected != null && selected.id == updated.id) {
+                    if (selected != null && (selected.id == updated.id || (selected.carnet != null && selected.carnet.equalsIgnoreCase(updated.carnet)))) {
                         selectedUser.postValue(updated);
                     }
                 }
@@ -639,38 +623,22 @@ public class MainViewModel extends AndroidViewModel {
         });
     }
 
-    public void insertFaculty(Faculty faculty) {
-        repository.insertFaculty(faculty, new Callback<Faculty>() {
-            @Override public void onResponse(@NonNull Call<Faculty> call, @NonNull Response<Faculty> response) { refreshData(); }
-            @Override public void onFailure(@NonNull Call<Faculty> call, @NonNull Throwable t) {}
-        });
-    }
-
-    public void updateFaculty(Faculty faculty) {
-        repository.updateFaculty(faculty, new Callback<Faculty>() {
-            @Override public void onResponse(@NonNull Call<Faculty> call, @NonNull Response<Faculty> response) { refreshData(); }
-            @Override public void onFailure(@NonNull Call<Faculty> call, @NonNull Throwable t) {}
-        });
-    }
-
-    public void deleteFaculty(Faculty faculty) {
-        repository.deleteFaculty(faculty.id, new Callback<Void>() {
-            @Override public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) { refreshData(); }
-            @Override public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {}
-        });
-    }
-
     public void enrollStudent(int studentId, int subjectId, DataCallback<String> errorCallback) {
-        repository.enrollStudent(new Enrollment(studentId, subjectId), new Callback<Enrollment>() {
+        enrollStudentWithCycle(studentId, subjectId, "Ciclo 2025", errorCallback);
+    }
+
+    public void enrollStudentWithCycle(int studentId, int subjectId, String cycle, DataCallback<String> errorCallback) {
+        Enrollment en = new Enrollment(studentId, subjectId, cycle);
+        repository.enrollStudent(en, new Callback<Enrollment>() {
             @Override public void onResponse(@NonNull Call<Enrollment> call, @NonNull Response<Enrollment> response) {
                 if (response.isSuccessful()) {
                     fetchGradesForStudent(studentId);
                 } else {
-                    errorCallback.onResult("El alumno ya está inscrito o hubo un error");
+                    if (errorCallback != null) errorCallback.onResult("El alumno ya está inscrito o hubo un error");
                 }
             }
             @Override public void onFailure(@NonNull Call<Enrollment> call, @NonNull Throwable t) {
-                errorCallback.onResult("Error de conexión");
+                if (errorCallback != null) errorCallback.onResult("Error de conexión");
             }
         });
     }
@@ -741,13 +709,6 @@ public class MainViewModel extends AndroidViewModel {
         });
     }
 
-    public void getFacultyById(int id, DataCallback<Faculty> callback) {
-        repository.getFacultyById(id, new Callback<Faculty>() {
-            @Override public void onResponse(@NonNull Call<Faculty> call, @NonNull Response<Faculty> response) { if (response.isSuccessful()) callback.onResult(response.body()); }
-            @Override public void onFailure(@NonNull Call<Faculty> call, @NonNull Throwable t) {}
-        });
-    }
-
     public void getFacilityById(int id, DataCallback<Facility> callback) {
         repository.getFacilityById(id, new Callback<Facility>() {
             @Override public void onResponse(@NonNull Call<Facility> call, @NonNull Response<Facility> response) {
@@ -757,16 +718,6 @@ public class MainViewModel extends AndroidViewModel {
             @Override public void onFailure(@NonNull Call<Facility> call, @NonNull Throwable t) {
                 callback.onResult(null);
             }
-        });
-    }
-
-    public void fetchFacultyById(int id) {
-        selectedFaculty.setValue(null);
-        repository.getFacultyById(id, new Callback<Faculty>() {
-            @Override public void onResponse(@NonNull Call<Faculty> call, @NonNull Response<Faculty> response) {
-                if (response.isSuccessful() && response.body() != null) selectedFaculty.setValue(response.body());
-            }
-            @Override public void onFailure(@NonNull Call<Faculty> call, @NonNull Throwable t) {}
         });
     }
 

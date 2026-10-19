@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
@@ -9,15 +10,63 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <com.google.android.material.card.MaterialCardView
+        <!-- Top Header with Back Button and Title -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageButton
+                android:id="@+id/btnBackAdvancedSettings"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_back"
+                app:tint="?android:attr/textColorPrimary"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Atrás" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ajustes avanzados"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Subtitle -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Elige dónde trabajar y gestiona las copias de tus datos."
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Categoria 1: Origen de los datos -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Origen de los datos"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="10dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
             app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorPrimary"
-            app:strokeWidth="2dp"
-            app:cardElevation="2dp">
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -25,189 +74,452 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Categoria: Modo de Almacenamiento y Conexión -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Modo de Almacenamiento y Conexión"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:textAllCaps="true"
-                    android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:id="@+id/tvDataModeDescription"
+                <!-- Mode Options Side-by-Side -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Elige si deseas usar los datos almacenados localmente en el dispositivo o mediante la conexión al servidor."
-                    android:textSize="13sp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:layout_marginBottom="12dp"/>
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
 
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/toggleDataMode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:singleSelection="true"
-                    app:selectionRequired="true">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnModeLocal"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                    <!-- Local Box -->
+                    <LinearLayout
+                        android:id="@+id/btnModeLocalBox"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="64dp"
                         android:layout_weight="1"
-                        android:text="📱 Local (Interno)"
-                        android:textSize="13sp"
-                        android:padding="8dp"
-                        android:textAllCaps="false"/>
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_input_field"
+                        android:orientation="vertical"
+                        android:padding="10dp"
+                        android:clickable="true"
+                        android:focusable="true">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnModeServer"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_alignParentStart="true"
+                                android:layout_centerVertical="true">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Local"
+                                    android:textColor="?android:attr/textColorPrimary"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="(Interno)"
+                                    android:textColor="?android:attr/textColorSecondary"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/ivRadioLocal"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_alignParentEnd="true"
+                                android:layout_alignParentTop="true"
+                                android:src="@drawable/ic_radio_checked"
+                                android:contentDescription="Local" />
+                        </RelativeLayout>
+                    </LinearLayout>
+
+                    <!-- Server Box -->
+                    <LinearLayout
+                        android:id="@+id/btnModeServerBox"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="64dp"
                         android:layout_weight="1"
-                        android:text="🌐 Servidor (Online)"
-                        android:textSize="13sp"
-                        android:padding="8dp"
-                        android:textAllCaps="false"/>
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_input_field"
+                        android:orientation="vertical"
+                        android:padding="10dp"
+                        android:clickable="true"
+                        android:focusable="true">
 
-                </com.google.android.material.button.MaterialButtonToggleGroup>
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
 
-                <!-- Botón Descargar Offline en Modo de Almacenamiento -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDownloadOfflineData"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="📥 Descargar Datos del Servidor (Offline)"
-                    android:textAllCaps="false"
-                    app:strokeColor="?attr/colorPrimary"
-                    app:strokeWidth="1.5dp"
-                    android:textColor="?attr/colorPrimary"/>
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_alignParentStart="true"
+                                android:layout_centerVertical="true">
 
-                <!-- Botón Subir Registros Locales al Servidor -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnUploadOfflineData"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="📤 Subir Datos Locales al Servidor (Online)"
-                    android:textAllCaps="false"
-                    app:strokeColor="?attr/colorPrimary"
-                    app:strokeWidth="1.5dp"
-                    android:textColor="?attr/colorPrimary"/>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Servidor"
+                                    android:textColor="?android:attr/textColorPrimary"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
 
-                <!-- Botón Eliminar Datos Descargados Offline -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnClearOfflineData"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="🗑️ Eliminar Datos Descargados del Servidor"
-                    android:textAllCaps="false"
-                    app:strokeColor="@color/bs_danger"
-                    app:strokeWidth="1.5dp"
-                    android:textColor="@color/bs_danger"/>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="(Online)"
+                                    android:textColor="?android:attr/textColorSecondary"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
 
-                <!-- Botón Configurar Servidor solo visible para Administradores -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnConfigureServerUrl"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:text="⚙️ Configurar Servidor (Administradores)"
-                    android:textAllCaps="false"
-                    app:strokeColor="?attr/colorPrimary"
-                    app:strokeWidth="1.5dp"
-                    android:textColor="?attr/colorPrimary"
-                    android:visibility="gone"/>
+                            <ImageView
+                                android:id="@+id/ivRadioServer"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_alignParentEnd="true"
+                                android:layout_alignParentTop="true"
+                                android:src="@drawable/ic_radio_unchecked"
+                                android:contentDescription="Servidor" />
+                        </RelativeLayout>
+                    </LinearLayout>
+                </LinearLayout>
 
-                <!-- Separador -->
+                <!-- Divider -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/bs_border"
-                    android:layout_marginVertical="16dp"/>
+                    android:background="@color/input_border"
+                    android:layout_marginBottom="16dp" />
 
-                <!-- Soporte y Ayuda: Contactar Administrador -->
-                <LinearLayout
-                    android:id="@+id/layoutContactAdminContainer"
+                <!-- Mode Description Box -->
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="16dp"
-                    android:visibility="gone">
+                    android:layout_height="wrap_content">
 
-                    <TextView
+                    <FrameLayout
+                        android:id="@+id/iconStorageBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_database"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Almacenamiento" />
+                    </FrameLayout>
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Soporte y Ayuda"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorPrimary"
-                        android:textAllCaps="true"
-                        android:layout_marginBottom="12dp"/>
+                        android:layout_toEndOf="@id/iconStorageBox"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnContactAdmin"
-                        style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="✉️ Contactar con un Administrador"
-                        android:textAllCaps="false"
-                        app:strokeColor="?attr/colorPrimary"
-                        app:strokeWidth="1.5dp"
-                        android:textColor="?attr/colorPrimary"/>
+                        <TextView
+                            android:id="@+id/tvDataModeTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Estás trabajando en modo local"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
 
-                    <!-- Separador -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/bs_border"
-                        android:layout_marginVertical="16dp"/>
-                </LinearLayout>
-
-                <!-- Categoria: Otros -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Otros"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:textAllCaps="true"
-                    android:layout_marginBottom="12dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchBiometricAutofill"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="🔒 Datos Biométricos (Huella / Rostro)"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="14sp"
-                    android:checked="true"
-                    app:useMaterialThemeColors="true"/>
-
-                <Button
-                    android:id="@+id/btnChangePassword"
-                    style="@style/Widget.Bootstrap.Button.Primary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="🔑 Cambiar Contraseña"
-                    android:textAllCaps="false"/>
+                        <TextView
+                            android:id="@+id/tvDataModeDescription"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Usa los datos de este dispositivo sin depender del servidor."
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </RelativeLayout>
 
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Categoria 2: Transferencia de datos -->
+        <LinearLayout
+            android:id="@+id/layoutTransferCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Transferencia de datos"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Card: Descargar Datos del Servidor -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/btnDownloadOfflineData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:id="@+id/iconDownloadBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_cloud_download"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Descargar" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconDownloadBox"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Descargar Datos del Servidor"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="(Offline)"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Guarda una copia en este dispositivo para usarla sin conexión."
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card: Subir Datos Locales al Servidor -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/btnUploadOfflineData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:id="@+id/iconUploadBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_cloud_upload"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Subir" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconUploadBox"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Subir Datos Locales al Servidor"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="(Online)"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="2dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Envía los datos locales al servidor. Requiere conexión a internet."
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Categoria 3: Datos descargados -->
+        <LinearLayout
+            android:id="@+id/layoutClearCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Datos descargados"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Card: Eliminar Datos Descargados -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/btnClearOfflineData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/bs_danger"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:id="@+id/iconClearBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_delete"
+                            app:tint="@color/bs_danger"
+                            android:contentDescription="Eliminar" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconClearBox"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Eliminar Datos Descargados del Servidor"
+                            android:textColor="@color/bs_danger"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Elimina solo la copia descargada en este dispositivo. Los datos del servidor no se eliminan."
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Hidden Extra Views for Code Compatibility -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConfigureServerUrl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:id="@+id/layoutContactAdminContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <Button
+                    android:id="@+id/btnContactAdmin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchBiometricAutofill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/btnChangePassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

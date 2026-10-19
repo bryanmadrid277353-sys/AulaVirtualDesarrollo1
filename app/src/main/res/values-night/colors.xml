@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Mode Input Colors Override -->
+    <color name="input_bg">#111827</color>
+    <color name="input_border">#1E293B</color>
+    <color name="input_icon_tint">#8A9AAD</color>
+    <color name="input_hint">#526071</color>
+    <color name="bs_dark_bg">#0B1120</color>
+    <color name="bs_dark_surface">#111827</color>
+</resources>

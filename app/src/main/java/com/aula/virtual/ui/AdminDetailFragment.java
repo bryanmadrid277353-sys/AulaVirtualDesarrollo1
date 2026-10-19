@@ -2,8 +2,6 @@ package com.aula.virtual.ui;
 
 import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -20,11 +18,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import com.aula.virtual.R;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentDetailBinding;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AdminDetailFragment extends Fragment {
     private FragmentDetailBinding binding;
@@ -59,8 +54,8 @@ public class AdminDetailFragment extends Fragment {
     }
 
     private void setupUI() {
+        binding.btnBackDetail.setOnClickListener(v -> Navigation.findNavController(v).navigateUp());
         binding.tvDetailTitle.setText("Detalle"); // Will be updated in observeViewModel
-        binding.cardProfileImage.setVisibility(View.VISIBLE);
         
         binding.etField1.setHint("Nombre Completo");
         
@@ -98,11 +93,6 @@ public class AdminDetailFragment extends Fragment {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        // Extended fields for Professors
-        binding.etField4.setHint("Facultad (Click para cambiar)");
-        binding.etField4.setFocusable(false);
-        binding.etField4.setClickable(true);
-        
         binding.btnSave.setOnClickListener(v -> saveChanges());
         binding.btnDelete.setOnClickListener(v -> showDeleteConfirmation());
         binding.btnImpersonateAction.setOnClickListener(v -> showImpersonateConfirmationDialog());
@@ -127,13 +117,44 @@ public class AdminDetailFragment extends Fragment {
 
     private void showImpersonateConfirmationDialog() {
         if (admin == null) return;
-        String roleTitle = "ENCARGADO".equals(admin.role) ? "Encargado del Estudiante" : "Profesor";
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Acceder como " + roleTitle)
-                .setMessage("¿Deseas ingresar a la aplicación utilizando el perfil y menú de " + admin.name + "?")
-                .setPositiveButton("Acceder", (dialog, which) -> impersonateUser())
-                .setNegativeButton("Cancelar", null)
-                .show();
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_impersonate_user, null);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvImpersonateTitle);
+        TextView tvUserInitials = dialogView.findViewById(R.id.tvUserInitials);
+        TextView tvUserName = dialogView.findViewById(R.id.tvUserName);
+        TextView tvUserCarnet = dialogView.findViewById(R.id.tvUserCarnet);
+        TextView tvQuestion = dialogView.findViewById(R.id.tvImpersonateQuestion);
+        TextView tvNotice = dialogView.findViewById(R.id.tvNoticeText);
+        View btnCancel = dialogView.findViewById(R.id.btnCancel);
+        View btnAcceder = dialogView.findViewById(R.id.btnAcceder);
+
+        boolean isProfessor = "PROFESSOR".equals(admin.role);
+        String roleTitle = isProfessor ? "profesor" : "encargado del estudiante";
+        String roleNoticeName = isProfessor ? "profesor" : "encargado";
+
+        tvTitle.setText("Acceder como " + roleTitle);
+        tvUserInitials.setText(getInitials(admin.name));
+        tvUserName.setText(admin.name != null ? admin.name : "-");
+        tvUserCarnet.setText(admin.carnet != null ? admin.carnet : "-");
+        tvQuestion.setText("¿Deseas ingresar a la aplicación utilizando el perfil y menú de " + admin.name + "?");
+        tvNotice.setText("Opción exclusiva del Administrador. No se modificará el registro del " + roleNoticeName + ".");
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnAcceder.setOnClickListener(v -> {
+            dialog.dismiss();
+            impersonateUser();
+        });
+
+        dialog.show();
     }
 
     private void impersonateUser() {
@@ -152,37 +173,43 @@ public class AdminDetailFragment extends Fragment {
             if (user != null) {
                 admin = user;
                 
-                // Dynamic Title based on role
                 String title = "Detalle";
+                String roleHeaderTitle = "Usuario del sistema";
+                String roleName = "encargado";
                 if ("PROFESSOR".equals(admin.role)) {
-                    title = "Detalle Profesor";
+                    title = "Detalle del profesor";
+                    roleHeaderTitle = "Equipo docente";
+                    roleName = "profesor";
                 } else if ("ADMIN".equals(admin.role)) {
-                    title = "Detalle Administrador";
+                    title = "Detalle del administrador";
+                    roleHeaderTitle = "Administrador principal";
+                    roleName = "administrador";
                 } else if ("ENCARGADO".equals(admin.role)) {
-                    title = "Detalle Encargado";
+                    title = "Detalle del encargado";
+                    roleHeaderTitle = "Encargado del estudiante";
+                    roleName = "encargado";
                 } else if ("STUDENT".equals(admin.role)) {
-                    title = "Detalle Estudiante";
+                    title = "Detalle del alumno";
+                    roleHeaderTitle = "Estudiante de primaria";
+                    roleName = "estudiante";
                 }
                 binding.tvDetailTitle.setText(title);
-                if (getActivity() != null) {
-                    TextView tvNavTitle = getActivity().findViewById(R.id.tvNavTitle);
-                    if (tvNavTitle != null) {
-                        tvNavTitle.setText(title);
-                    }
-                }
+                binding.tvDetailRoleHeader.setText(roleHeaderTitle);
+                binding.tvDetailCarnetHeader.setText(admin.carnet != null ? admin.carnet : "-");
+                binding.tvDetailInitials.setText(getInitials(admin.name));
+                binding.tvImpersonateDescription.setText("Ingresa con el perfil y menú del " + roleName + ". Esta acción no edita su registro.");
+                binding.btnImpersonateAction.setText("Acceder como " + roleName);
 
                 binding.etField1.setText(admin.name);
                 binding.etField2.setText(admin.carnet);
                 binding.etField3.setText(admin.password);
                 
-                // Show extended fields for Professors, Admins, and Encargados
                 if ("PROFESSOR".equals(admin.role) || "ADMIN".equals(admin.role) || "ENCARGADO".equals(admin.role)) {
-                    binding.etField4.setVisibility(View.VISIBLE);
                     binding.layoutAddress.setVisibility(View.VISIBLE);
                     binding.layoutPersonalEmail.setVisibility(View.VISIBLE);
                     binding.switchLockPhoto.setVisibility(View.VISIBLE);
+                    binding.cardLockPhotoContainer.setVisibility(View.VISIBLE);
 
-                    // Label setup and Input Restrictions
                     binding.tvRolePrefix.setVisibility(View.VISIBLE);
                     if ("PROFESSOR".equals(admin.role)) {
                         binding.tvRolePrefix.setText("PROF");
@@ -211,75 +238,50 @@ public class AdminDetailFragment extends Fragment {
                     }
                     binding.etField2.setInputType(InputType.TYPE_CLASS_NUMBER);
                     
-                    binding.etField4.setText(admin.faculty != null ? admin.faculty : "");
                     binding.etAddress.setText(admin.address != null ? admin.address : "");
                     binding.etPersonalEmail.setText(admin.personal_email != null ? admin.personal_email : "");
 
-                    // Bloquear la selección de facultad
-                    binding.etField4.setEnabled(false);
-                    binding.etField4.setFocusable(false);
-                    binding.etField4.setClickable(false);
-                    
                     boolean locked = admin.can_change_photo != null && admin.can_change_photo == 0;
                     binding.switchLockPhoto.setChecked(locked);
 
-                    // Show copy/toggle buttons for Admin, Professor, and Encargado management
                     binding.layoutCopyToggles.setVisibility(View.VISIBLE);
                     binding.layoutProfileHeaderContainer.setVisibility(View.VISIBLE);
 
                     if ("PROFESSOR".equals(admin.role) || "ENCARGADO".equals(admin.role)) {
-                        binding.btnImpersonateAction.setVisibility(View.VISIBLE);
-                        binding.btnImpersonate.setVisibility(View.GONE);
-                        binding.btnManageGrades.setVisibility(View.GONE);
+                        binding.cardImpersonateContainer.setVisibility(View.VISIBLE);
                     } else {
-                        binding.btnImpersonateAction.setVisibility(View.GONE);
-                        binding.btnImpersonate.setVisibility(View.GONE);
-                        binding.btnManageGrades.setVisibility(View.GONE);
+                        binding.cardImpersonateContainer.setVisibility(View.GONE);
                     }
-                }    else {
+                } else {
                     binding.tvRolePrefix.setVisibility(View.GONE);
-                    binding.etField4.setVisibility(View.GONE);
                     binding.layoutAddress.setVisibility(View.GONE);
                     binding.layoutPersonalEmail.setVisibility(View.GONE);
                     binding.switchLockPhoto.setVisibility(View.GONE);
-                    binding.btnImpersonateAction.setVisibility(View.GONE);
-                    binding.btnImpersonate.setVisibility(View.GONE);
+                    binding.cardLockPhotoContainer.setVisibility(View.GONE);
+                    binding.cardImpersonateContainer.setVisibility(View.GONE);
                 }
 
-                int paddingPx = (int) (16 * getResources().getDisplayMetrics().density);
-                ImageUtils.setProfileImage(binding.ivProfileImageDetail, admin.profile_image, paddingPx);
+                ImageUtils.setProfileImage(binding.ivProfileImageDetail, admin.profile_image, admin.name);
 
-                // Master Admin Protection
                 if ("ADMIN12345".equals(admin.carnet)) {
                     binding.btnDelete.setVisibility(View.GONE);
-                    binding.etField2.setEnabled(false); // Carnet cannot be changed
+                    binding.etField2.setEnabled(false);
                 }
 
                 DialogUtils.arrangeGridButtons(binding.layoutActionButtons);
                 DialogUtils.hideLoadingOverlay(binding.getRoot());
             }
         });
+    }
 
-        viewModel.getAllFaculties().observe(getViewLifecycleOwner(), faculties -> {
-            if (faculties == null) return;
-            // Filtrar para que la gestión de usuarios general NO liste Docencia ni Administrativa si no pertenecen a ese rol
-            List<String> filteredNames = new ArrayList<>();
-            for (Faculty f : faculties) {
-                if (!f.name.equals("Docencia") && !f.name.equals("Administrativa")) {
-                    filteredNames.add(f.name);
-                }
-            }
-            String[] names = filteredNames.toArray(new String[0]);
-            
-            binding.etField4.setOnClickListener(v -> {
-                if (admin != null && ("PROFESSOR".equals(admin.role) || "ADMIN".equals(admin.role))) return;
-                new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Seleccionar Facultad")
-                    .setItems(names, (dialog, which) -> {
-                        binding.etField4.setText(names[which]);
-                    }).show();
-            });
-        });
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "AV";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
     }
 
     private void saveChanges() {
@@ -304,7 +306,6 @@ public class AdminDetailFragment extends Fragment {
             }
 
             if (isValid) {
-                // Validation of lengths for the numeric section
                 if ("PROFESSOR".equals(admin.role) && carnet.length() != 6) {
                     binding.etField2.setError("Debe ingresar exactamente 6 dígitos");
                     return;
@@ -316,19 +317,19 @@ public class AdminDetailFragment extends Fragment {
 
                 admin.name = name;
                 
-                // Construct full carnet based on prefix
                 if ("PROFESSOR".equals(admin.role)) {
                     admin.carnet = "PROF" + carnet;
                 } else if ("ADMIN".equals(admin.role)) {
                     admin.carnet = "ADMIN" + carnet;
+                } else if ("ENCARGADO".equals(admin.role)) {
+                    admin.carnet = "ENC" + carnet;
                 } else {
                     admin.carnet = carnet;
                 }
                 
                 admin.password = pass;
                 
-                if ("PROFESSOR".equals(admin.role) || "ADMIN".equals(admin.role)) {
-                    admin.faculty = binding.etField4.getText().toString();
+                if ("PROFESSOR".equals(admin.role) || "ADMIN".equals(admin.role) || "ENCARGADO".equals(admin.role)) {
                     admin.address = binding.etAddress.getText().toString();
                     admin.personal_email = binding.etPersonalEmail.getText().toString();
                     

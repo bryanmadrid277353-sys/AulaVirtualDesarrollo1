@@ -80,12 +80,10 @@ public class SubjectDetailFragment extends Fragment {
         binding.etField1.setHint("Nombre de la Materia");
         binding.etField2.setHint("Descripción");
         
-        binding.etField3.setHint("Facultad (Click para cambiar)");
-        binding.etField3.setFocusable(false);
-        binding.etField3.setClickable(true);
-        binding.etField3.setVisibility(View.VISIBLE);
-        binding.etField3.setInputType(InputType.TYPE_CLASS_TEXT);
-        binding.btnTogglePassword.setVisibility(View.GONE);
+        // Field 3 hidden
+        binding.tvLabelField3.setVisibility(View.GONE);
+        binding.etField3.setVisibility(View.GONE);
+        binding.layoutCopyToggles.setVisibility(View.GONE);
 
         binding.etField4.setHint("Sección (Ej: 01, 02)");
         binding.etField4.setVisibility(View.VISIBLE);
@@ -242,7 +240,6 @@ public class SubjectDetailFragment extends Fragment {
                 subject = sub;
                 binding.etField1.setText(subject.name);
                 binding.etField2.setText(subject.description);
-                binding.etField3.setText(subject.faculty);
                 binding.etField4.setText(subject.section != null ? subject.section : "01");
 
                 DialogUtils.hideLoadingOverlay(binding.getRoot());
@@ -294,21 +291,6 @@ public class SubjectDetailFragment extends Fragment {
                     }
                 }
             }
-        });
-
-        viewModel.getAllFaculties().observe(getViewLifecycleOwner(), faculties -> {
-            if (faculties == null) return;
-            String[] names = new String[faculties.size()];
-            for (int i = 0; i < faculties.size(); i++) names[i] = faculties.get(i).name;
-            
-            binding.etField3.setOnClickListener(v -> {
-                if (currentUser != null && !"ADMIN".equals(currentUser.role)) return;
-                new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Seleccionar Facultad")
-                    .setItems(names, (dialog, which) -> {
-                        binding.etField3.setText(names[which]);
-                    }).show();
-            });
         });
     }
 
@@ -375,7 +357,6 @@ public class SubjectDetailFragment extends Fragment {
 
             subject.name = name;
             subject.description = binding.etField2.getText().toString();
-            subject.faculty = binding.etField3.getText().toString();
             subject.section = formattedSection;
             
             viewModel.performOnlineAction(() -> {
@@ -532,15 +513,13 @@ public class SubjectDetailFragment extends Fragment {
                     if (info == null) return false;
                     String name = "";
                     String carnet = "";
-                    String faculty = "";
                     if (info.student != null) {
                         name = info.student.name != null ? info.student.name.toLowerCase() : "";
                         carnet = info.student.carnet != null ? info.student.carnet.toLowerCase() : "";
-                        faculty = info.student.faculty != null ? info.student.faculty.toLowerCase() : "";
                     } else if (info.enrollment != null) {
                         name = "alumno " + info.enrollment.studentId;
                     }
-                    return name.contains(q) || carnet.contains(q) || faculty.contains(q);
+                    return name.contains(q) || carnet.contains(q);
                 }).collect(Collectors.toList());
             }
             notifyDataSetChanged();
@@ -596,13 +575,11 @@ public class SubjectDetailFragment extends Fragment {
 
             String name = "Alumno";
             String carnetStr = "";
-            String facultyStr = "";
             boolean isProf = (info.enrollment == null && info.student != null);
 
             if (info.student != null) {
                 if (info.student.name != null && !info.student.name.isEmpty()) name = info.student.name;
                 if (info.student.carnet != null) carnetStr = info.student.carnet;
-                if (info.student.faculty != null) facultyStr = info.student.faculty;
             } else if (info.enrollment != null) {
                 name = "Alumno ID: " + info.enrollment.studentId;
             }
@@ -610,9 +587,9 @@ public class SubjectDetailFragment extends Fragment {
             holder.tvName.setText(name);
             String subtext;
             if (isProf) {
-                subtext = "Profesor Asignado" + (!facultyStr.isEmpty() ? " • " + facultyStr : "");
+                subtext = "Profesor Asignado";
             } else {
-                subtext = carnetStr + (!carnetStr.isEmpty() && !facultyStr.isEmpty() ? " • " : "") + facultyStr;
+                subtext = carnetStr;
                 if (subtext.isEmpty() && info.enrollment != null) {
                     subtext = "Inscripción #" + info.enrollment.id;
                 }

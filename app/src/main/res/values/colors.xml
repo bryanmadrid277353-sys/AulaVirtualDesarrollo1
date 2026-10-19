@@ -3,18 +3,22 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <!-- App Main Primary Accent: BLUE -->
+    <color name="accent_blue">#2563EB</color>
+    <color name="accent_blue_light">#3B82F6</color>
+    <color name="accent_blue_dark">#1D4ED8</color>
+
     <!-- Bootstrap Palette -->
-    <color name="bs_primary">#0d6efd</color>
-    <color name="bs_secondary">#6c757d</color>
-    <color name="bs_success">#198754</color>
-    <color name="bs_danger">#dc3545</color>
-    <color name="bs_warning">#ffc107</color>
-    <color name="bs_info">#0dcaf0</color>
-    <color name="bs_light">#f8f9fa</color>
-    <color name="bs_dark">#212529</color>
+    <color name="bs_primary">#2563EB</color>
+    <color name="bs_secondary">#64748B</color>
+    <color name="bs_success">#16A34A</color>
+    <color name="bs_danger">#DC2626</color>
+    <color name="bs_warning">#CA8A04</color>
+    <color name="bs_info">#0284C7</color>
+    <color name="bs_light">#F8FAFC</color>
+    <color name="bs_dark">#0F172A</color>
 
     <!-- Accent Colors Normal -->
-    <color name="accent_blue">#0d6efd</color>
     <color name="accent_red">#dc3545</color>
     <color name="accent_green">#198754</color>
     <color name="accent_purple">#6f42c1</color>
@@ -22,7 +26,6 @@
     <color name="accent_yellow">#ffc107</color>
 
     <!-- Accent Colors Light -->
-    <color name="accent_blue_light">#86b7fe</color>
     <color name="accent_red_light">#ea868f</color>
     <color name="accent_green_light">#75b798</color>
     <color name="accent_purple_light">#a370f7</color>
@@ -30,21 +33,26 @@
     <color name="accent_yellow_light">#ffda6a</color>
 
     <!-- Accent Colors Dark -->
-    <color name="accent_blue_dark">#084298</color>
     <color name="accent_red_dark">#842029</color>
     <color name="accent_green_dark">#0f5132</color>
     <color name="accent_purple_dark">#432874</color>
     <color name="accent_cyan_dark">#087990</color>
     <color name="accent_yellow_dark">#997404</color>
 
-    <color name="bs_border">#dee2e6</color>
+    <color name="bs_border">#E2E8F0</color>
 
     <!-- Dark Mode Specifics -->
-    <color name="bs_dark_bg">#121212</color>
-    <color name="bs_dark_surface">#1e1e1e</color>
-    <color name="bs_dark_border">#333333</color>
+    <color name="bs_dark_bg">#0B1120</color>
+    <color name="bs_dark_surface">#111827</color>
+    <color name="bs_dark_border">#1E293B</color>
+
+    <!-- Input Colors (Light Mode default) -->
+    <color name="input_bg">#F1F5F9</color>
+    <color name="input_border">#CBD5E1</color>
+    <color name="input_icon_tint">#64748B</color>
+    <color name="input_hint">#64748B</color>
 
     <!-- Surface Colors -->
     <color name="surface_light">#FFFFFF</color>
-    <color name="surface_dark">#1e1e1e</color>
+    <color name="surface_dark">#111827</color>
 </resources>

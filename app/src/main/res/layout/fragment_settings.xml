@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
@@ -9,228 +10,352 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <com.google.android.material.card.MaterialCardView
+        <!-- Top Header with Back Button and Title -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorPrimary"
-            app:strokeWidth="2dp"
-            app:cardElevation="2dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
 
-            <LinearLayout
+            <ImageButton
+                android:id="@+id/btnBackSettings"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_back"
+                app:tint="?android:attr/textColorPrimary"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Atrás" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ajustes"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Subtitle -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Personaliza tu experiencia en Aula Virtual."
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Categoria 1: Apariencia -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Apariencia"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="10dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border">
+
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Categoria: Apariencia -->
-                <TextView
+                <FrameLayout
+                    android:id="@+id/iconDarkModeBox"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_input_field"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="14dp">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_moon"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Modo Oscuro" />
+                </FrameLayout>
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Apariencia"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:textAllCaps="true"
-                    android:layout_marginBottom="16dp"/>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp">
+                    android:layout_toEndOf="@id/iconDarkModeBox"
+                    android:layout_toStartOf="@id/switchDarkMode"
+                    android:layout_centerVertical="true"
+                    android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Modo Oscuro"
-                        android:textSize="18sp"
+                        android:text="Modo oscuro"
                         android:textColor="?android:attr/textColorPrimary"
-                        android:layout_centerVertical="true"/>
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switchDarkMode"
+                    <TextView
+                        android:id="@+id/tvDarkModeStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"/>
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Paleta de Colores"
-                    android:textSize="18sp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginBottom="12dp"/>
-
-                <!-- Fila 1: Claros -->
-                <LinearLayout
-                    android:id="@+id/rowLight"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginBottom="8dp">
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnBlueLight" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue_light" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnRedLight" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red_light" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnGreenLight" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green_light" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnPurpleLight" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple_light" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnCyanLight" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan_light" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnYellowLight" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow_light" android:layout_marginHorizontal="4dp"/>
+                        android:text="Activado"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp"
+                        tools:text="Activado" />
                 </LinearLayout>
 
-                <!-- Fila 2: Normales -->
-                <LinearLayout
-                    android:id="@+id/rowNormal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginBottom="8dp">
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnBlue" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnRed" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnGreen" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnPurple" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnCyan" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnYellow" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow" android:layout_marginHorizontal="4dp"/>
-                </LinearLayout>
-
-                <!-- Fila 3: Oscuros -->
-                <LinearLayout
-                    android:id="@+id/rowDark"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginBottom="16dp">
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnBlueDark" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_blue_dark" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnRedDark" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_red_dark" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnGreenDark" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_green_dark" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnPurpleDark" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_purple_dark" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnCyanDark" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_cyan_dark" android:layout_marginHorizontal="4dp"/>
-                    <com.google.android.material.button.MaterialButton android:id="@+id/btnYellowDark" style="@style/Widget.Bootstrap.ColorButton" android:backgroundTint="@color/accent_yellow_dark" android:layout_marginHorizontal="4dp"/>
-                </LinearLayout>
-
-                <!-- Ubicación de la Barra de Navegación -->
-                <TextView
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchDarkMode"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ubicación de la Barra de Navegación"
-                    android:textSize="18sp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp"/>
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    app:useMaterialThemeColors="true" />
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
 
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/toggleNavbarPosition"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:singleSelection="true"
-                    app:selectionRequired="true">
+        <!-- Categoria 2: Preferencias -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Preferencias"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="10dp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNavPositionTop"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Arriba (Superior)"
-                        android:textAllCaps="false"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNavPositionBottom"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Abajo (Inferior)"
-                        android:textAllCaps="false"/>
-
-                </com.google.android.material.button.MaterialButtonToggleGroup>
-
-                <!-- Separador -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/bs_border"
-                    android:layout_marginVertical="16dp"/>
-
-                <!-- Categoria: Opciones Avanzadas -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Configuración Avanzada"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:textAllCaps="true"
-                    android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Modo de almacenamiento, conexión al servidor, soporte y seguridad de la cuenta."
-                    android:textSize="13sp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:layout_marginBottom="16dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnGoToAdvancedSettings"
-                    style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="⚙️ Ir a Ajustes Avanzados"
-                    android:textAllCaps="false"
-                    app:strokeColor="?attr/colorPrimary"
-                    app:strokeWidth="1.5dp"
-                    android:textColor="?attr/colorPrimary"/>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
             app:cardCornerRadius="16dp"
-            app:strokeColor="?attr/colorPrimary"
-            app:strokeWidth="1.5dp"
-            app:cardElevation="2dp">
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp"
-                android:gravity="center">
+                android:orientation="vertical">
 
-                <ImageView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:src="@drawable/ic_app_logo"
-                    android:contentDescription="Logo de la App"
-                    android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Row 1: Ajustes de Notificaciones -->
+                <RelativeLayout
+                    android:id="@+id/btnNotificationSettings"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Aula Virtual"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginBottom="2dp"/>
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                    <FrameLayout
+                        android:id="@+id/iconNotifSettingsBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_settings"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Ajustes de Notificaciones" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconNotifSettingsBox"
+                        android:layout_toStartOf="@id/arrowNotifSettings"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ajustes de Notificaciones"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Canales, sonido, horarios y silencio"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowNotifSettings"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_back"
+                        android:rotation="180"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:contentDescription="Ir" />
+                </RelativeLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/input_border" />
+
+                <!-- Row 2: Ajustes avanzados -->
+                <RelativeLayout
+                    android:id="@+id/btnGoToAdvancedSettings"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Versión 0.6"
-                    android:textSize="14sp"
-                    android:textColor="?android:attr/textColorSecondary"/>
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <FrameLayout
+                        android:id="@+id/iconAdvancedBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_sliders"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Ajustes avanzados" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconAdvancedBox"
+                        android:layout_toStartOf="@id/arrowAdvanced"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ajustes avanzados"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Almacenamiento y conexión"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowAdvanced"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_back"
+                        android:rotation="180"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:contentDescription="Ir" />
+                </RelativeLayout>
 
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Categoria 3: Acerca de Aula Virtual -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Acerca de Aula Virtual"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="10dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_login_logo"
+                    android:layout_marginEnd="16dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_open_book"
+                        android:contentDescription="Logo" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Aula Virtual"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Versión 0.6"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="13sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 </ScrollView>

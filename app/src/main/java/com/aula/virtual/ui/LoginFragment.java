@@ -1,10 +1,12 @@
 package com.aula.virtual.ui;
 
+import android.text.method.PasswordTransformationMethod;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,9 +46,21 @@ public class LoginFragment extends Fragment {
         boolean autofillEnabled = ThemeHelper.isBiometricAutofillEnabled(requireContext());
         binding.btnSavedAccounts.setVisibility(autofillEnabled ? View.VISIBLE : View.GONE);
         binding.cbRemember.setVisibility(autofillEnabled ? View.VISIBLE : View.GONE);
+        binding.layoutBiometricHint.setVisibility(autofillEnabled ? View.VISIBLE : View.GONE);
         if (!autofillEnabled) {
             binding.cbRemember.setChecked(false);
         }
+
+        binding.btnTogglePassword.setOnClickListener(v -> {
+            if (binding.etPassword.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                binding.etPassword.setTransformationMethod(null);
+                binding.btnTogglePassword.setImageResource(R.drawable.ic_visibility);
+            } else {
+                binding.etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                binding.btnTogglePassword.setImageResource(R.drawable.ic_visibility_off);
+            }
+            binding.etPassword.setSelection(binding.etPassword.getText().length());
+        });
 
         binding.btnLogin.setOnClickListener(v -> {
             String carnet = binding.etCarnet.getText().toString();
@@ -111,14 +125,21 @@ public class LoginFragment extends Fragment {
             return;
         }
 
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
-        builder.setTitle("Seleccionar cuenta");
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_saved_accounts, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
-        ListView listView = new ListView(requireContext());
-        listView.setDivider(null);
-        listView.setPadding(0, 8, 0, 8);
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        final androidx.appcompat.app.AlertDialog[] dialogRef = new androidx.appcompat.app.AlertDialog[1];
+        ListView listView = dialogView.findViewById(R.id.listSavedAccounts);
+        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnAuthAndFill = dialogView.findViewById(R.id.btnAuthenticateAndFill);
+
+        final String[] selectedCarnetRef = new String[]{accounts.get(0)};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), R.layout.item_saved_account, accounts) {
             @NonNull
@@ -132,6 +153,7 @@ public class LoginFragment extends Fragment {
                 String carnet = getItem(position);
                 TextView tvName = view.findViewById(R.id.tvAccountName);
                 TextView tvCarnet = view.findViewById(R.id.tvAccountCarnet);
+                ImageView ivIndicator = view.findViewById(R.id.ivSelectionIndicator);
                 View btnDelete = view.findViewById(R.id.btnDeleteAccount);
 
                 String name = credentialsManager.getUserName(carnet);
@@ -144,13 +166,16 @@ public class LoginFragment extends Fragment {
                     tvCarnet.setVisibility(View.GONE);
                 }
 
+                boolean isSelected = carnet.equals(selectedCarnetRef[0]);
+                if (isSelected) {
+                    ivIndicator.setImageResource(R.drawable.ic_radio_checked);
+                } else {
+                    ivIndicator.setImageResource(R.drawable.ic_radio_unchecked);
+                }
+
                 view.setOnClickListener(v -> {
-                    if (dialogRef[0] != null) dialogRef[0].dismiss();
-
-                    binding.etCarnet.setText(carnet);
-                    binding.etPassword.setText("");
-
-                    authenticateBiometrically(carnet);
+                    selectedCarnetRef[0] = carnet;
+                    notifyDataSetChanged();
                 });
 
                 btnDelete.setFocusable(false);
@@ -161,8 +186,10 @@ public class LoginFragment extends Fragment {
                         remove(carnet);
                         notifyDataSetChanged();
                         if (isEmpty()) {
-                            if (dialogRef[0] != null) dialogRef[0].dismiss();
+                            dialog.dismiss();
                             Toast.makeText(getContext(), "No quedan cuentas guardadas", Toast.LENGTH_SHORT).show();
+                        } else if (!accounts.contains(selectedCarnetRef[0])) {
+                            selectedCarnetRef[0] = accounts.get(0);
                         }
                     });
                 });
@@ -172,16 +199,16 @@ public class LoginFragment extends Fragment {
         };
 
         listView.setAdapter(adapter);
-        builder.setView(listView);
-        builder.setNegativeButton("Cerrar", null);
 
-        androidx.appcompat.app.AlertDialog dialog = builder.create();
-        dialogRef[0] = dialog;
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedCarnet = adapter.getItem(position);
+        btnAuthAndFill.setOnClickListener(v -> {
             dialog.dismiss();
-            authenticateBiometrically(selectedCarnet);
+            String carnet = selectedCarnetRef[0];
+            binding.etCarnet.setText(carnet);
+            binding.etPassword.setText("");
+            authenticateBiometrically(carnet);
         });
 
         dialog.show();

@@ -11,7 +11,6 @@ public class User {
     public String name;
     public String password;
     public String role;
-    public String faculty;
     public String address;
     public String personal_email;
     public String profile_image;
@@ -19,11 +18,10 @@ public class User {
 
     public User() {}
 
-    public User(String carnet, String name, String password, String role, String faculty) {
+    public User(String carnet, String name, String password, String role) {
         this.carnet = carnet;
         this.name = name;
         this.password = password;
         this.role = role;
-        this.faculty = faculty;
     }
 }

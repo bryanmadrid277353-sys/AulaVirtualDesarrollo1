@@ -38,7 +38,7 @@ public class ProfessorStudentListFragment extends Fragment {
                 getActivity().runOnUiThread(() -> {
                     if (binding != null && sub != null) {
                         binding.tvTitle.setText(sub.name);
-                        binding.tvSubtitle.setText(sub.faculty + " - " + sub.description);
+                        binding.tvSubtitle.setText(sub.description);
                         binding.tvSubtitle.setVisibility(View.VISIBLE);
                     }
                 });

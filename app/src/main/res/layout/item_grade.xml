@@ -1,31 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardGradeItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:layout_marginBottom="10dp"
-    android:layout_marginHorizontal="2dp"
-    android:background="@drawable/bg_list_item">
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/input_bg"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/input_border"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
-    <!-- Nombre de la Materia / Alumno a ancho completo -->
-    <TextView
-        android:id="@+id/tvSubjectName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="2dp"/>
-
-    <!-- Instalación asignada y Sección -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="2dp">
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Top Row: Subject Name, Section Pill & Chevron -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@id/btnChevronRight">
+
+                <TextView
+                    android:id="@+id/tvSubjectName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="Matemáticas 1" />
+
+                <TextView
+                    android:id="@+id/tvSection"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Sección: 01"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    tools:text="Sección: 01" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnChevronRight"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?android:attr/textColorSecondary"
+                android:contentDescription="Abrir notas" />
+        </RelativeLayout>
+
+        <!-- Subtitle: Professor name -->
+        <TextView
+            android:id="@+id/tvProfessor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Profesor no asignado"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            android:layout_marginBottom="12dp"
+            tools:text="Prof. Ricardo Valenzuela" />
 
         <TextView
             android:id="@+id/tvFacility"
@@ -34,192 +84,80 @@
             android:textColor="?attr/colorPrimary"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:visibility="gone"/>
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/tvSection"
-            android:layout_width="wrap_content"
+        <!-- Periods Container (Dynamic Horizontal Scroll / Row of Squircle Period Boxes) -->
+        <HorizontalScrollView
+            android:id="@+id/horizontalScrollView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:paddingHorizontal="6dp"
-            android:paddingVertical="1dp"
-            android:background="@drawable/bg_badge_primary"
-            android:textColor="@color/white"
-            android:visibility="gone"/>
-    </LinearLayout>
+            android:scrollbars="none"
+            android:overScrollMode="never"
+            android:layout_marginBottom="12dp">
 
-    <TextView
-        android:id="@+id/tvProfessor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="?android:attr/textColorSecondary"
-        android:textSize="12sp"
-        android:textStyle="italic"
-        android:layout_marginBottom="12dp"
-        android:visibility="gone"/>
+            <LinearLayout
+                android:id="@+id/layoutPeriodsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical" />
+        </HorizontalScrollView>
 
-    <!-- Calificaciones por Período y Promedio -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="12dp">
+        <!-- Bottom Row: Status Tag & Action Links (Asistencia | Modificar Notas) -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P1" android:textSize="10sp" android:textColor="?android:attr/textColorSecondary"/>
-            <TextView android:id="@+id/tvP1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
-        </LinearLayout>
+            <TextView
+                android:id="@+id/tvStatusTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="🟢 Aprobado • Ciclo 2025"
+                android:textColor="#10B981"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="🟢 Aprobado • Ciclo 2025" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P2" android:textSize="10sp" android:textColor="?android:attr/textColorSecondary"/>
-            <TextView android:id="@+id/tvP2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P3" android:textSize="10sp" android:textColor="?android:attr/textColorSecondary"/>
-            <TextView android:id="@+id/tvP3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/btnAttendance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Asistencia"
+                    android:textColor="#10B981"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="4dp"
+                    android:layout_marginEnd="10dp" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P4" android:textSize="10sp" android:textColor="?android:attr/textColorSecondary"/>
-            <TextView android:id="@+id/tvP4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/btnAddPeriod"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Modificar Notas"
+                    android:textColor="#38BDF8"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="4dp" />
+            </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="P5" android:textSize="10sp" android:textColor="?android:attr/textColorSecondary"/>
-            <TextView android:id="@+id/tvP5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AVG" android:textSize="10sp" android:textStyle="bold" android:textColor="?attr/colorPrimary"/>
-            <TextView android:id="@+id/tvAverage" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="N/A" android:textSize="16sp" android:textStyle="bold" android:textColor="?attr/colorPrimary"/>
-        </LinearLayout>
+        </RelativeLayout>
 
     </LinearLayout>
-
-    <!-- Botones de Acción Ubicados por Debajo de las Notas -->
-    <LinearLayout
-        android:id="@+id/layoutButtons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnProfile"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:paddingHorizontal="12dp"
-            android:text="Perfil"
-            android:textSize="11sp"
-            android:textAllCaps="false"
-            app:cornerRadius="18dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            app:backgroundTint="?attr/colorPrimary"
-            android:textColor="@color/white"
-            android:layout_marginEnd="4dp"
-            android:visibility="gone"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnEditGrades"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:padding="0dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            app:cornerRadius="22dp"
-            app:icon="@drawable/ic_grade"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="22dp"
-            app:iconTint="@color/white"
-            app:backgroundTint="@color/bs_success"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:visibility="gone"
-            android:contentDescription="Notas"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnGoToBlog"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:padding="0dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            app:cornerRadius="22dp"
-            app:icon="@drawable/ic_manage"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="22dp"
-            app:iconTint="@color/white"
-            app:backgroundTint="?attr/colorPrimary"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:contentDescription="Gestionar"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDeleteEnrollment"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:padding="0dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            app:cornerRadius="22dp"
-            app:icon="@drawable/ic_delete"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="22dp"
-            app:iconTint="@color/white"
-            app:backgroundTint="@color/bs_danger"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:contentDescription="Desinscribir"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-
-</LinearLayout>
+</androidx.cardview.widget.CardView>

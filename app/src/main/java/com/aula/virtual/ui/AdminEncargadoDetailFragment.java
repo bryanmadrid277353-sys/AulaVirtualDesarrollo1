@@ -17,32 +17,32 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import com.aula.virtual.MainActivity;
 import com.aula.virtual.R;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.User;
-import com.aula.virtual.databinding.FragmentAdminDashboardBinding;
+import com.aula.virtual.databinding.FragmentAdminEncargadoDetailBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class AdminEncargadoDetailFragment extends Fragment {
-    private FragmentAdminDashboardBinding binding;
+    private FragmentAdminEncargadoDetailBinding binding;
     private MainViewModel viewModel;
     private User encargado;
     private StudentRecordAdapter adapter;
     private List<Student> encargadoStudents = new ArrayList<>();
-    private List<Faculty> availableFaculties = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentAdminDashboardBinding.inflate(inflater, container, false);
+        binding = FragmentAdminEncargadoDetailBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -51,31 +51,32 @@ public class AdminEncargadoDetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
+        binding.btnBackEncargadoDetail.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToHome();
+            } else {
+                Navigation.findNavController(v).navigateUp();
+            }
+        });
+
         int encargadoId = getArguments() != null ? getArguments().getInt("encargadoId", -1) : -1;
 
-        binding.tvTitle.setText("Alumnos encargados");
         adapter = new StudentRecordAdapter();
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);
 
         setupSearch();
 
-        viewModel.getAllFaculties().observe(getViewLifecycleOwner(), faculties -> {
-            if (faculties != null) availableFaculties = faculties;
-        });
-
         if (encargadoId != -1) {
             viewModel.fetchUserById(encargadoId);
             viewModel.getSelectedUser().observe(getViewLifecycleOwner(), user -> {
                 if (user != null) {
                     encargado = user;
-                    binding.tvTitle.setText("Alumnos encargados");
-                    binding.tvSubtitle.setText("Encargado: " + user.name);
-                    binding.tvSubtitle.setVisibility(View.VISIBLE);
+                    binding.tvEncargadoName.setText(user.name);
+                    binding.tvEncargadoCarnet.setText(user.carnet != null ? user.carnet : "-");
+                    binding.tvEncargadoInitials.setText(getInitials(user.name));
                     loadEncargadoStudents(user.id);
 
-                    binding.btnHeaderDetail.setVisibility(View.VISIBLE);
-                    binding.btnHeaderDetail.setIconResource(R.drawable.ic_carnet);
                     binding.btnHeaderDetail.setOnClickListener(v -> {
                         Bundle args = new Bundle();
                         args.putInt("adminId", user.id);
@@ -85,7 +86,7 @@ public class AdminEncargadoDetailFragment extends Fragment {
             });
         }
 
-        binding.btnAdd.setOnClickListener(v -> {
+        binding.btnAddStudentToEncargado.setOnClickListener(v -> {
             if (encargado != null) {
                 showAddStudentDialog(encargado);
             }
@@ -94,12 +95,22 @@ public class AdminEncargadoDetailFragment extends Fragment {
         adapter.setOnItemClickListener(student -> {
             Bundle args = new Bundle();
             args.putInt("studentId", student.id);
-            Navigation.findNavController(requireView()).navigate(R.id.action_adminEncargadoDetailFragment_to_adminEnrollmentListFragment, args);
+            Navigation.findNavController(view).navigate(R.id.action_adminEncargadoDetailFragment_to_adminEnrollmentListFragment, args);
         });
     }
 
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "AV";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
+    }
+
     private void setupSearch() {
-        String[] options = {"Todo", "Carnet", "Nombre", "Facultad"};
+        String[] options = {"Todo", "Carnet", "Nombre"};
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, options);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.spinnerFilter.setAdapter(spinnerAdapter);
@@ -131,6 +142,7 @@ public class AdminEncargadoDetailFragment extends Fragment {
         if (query.isEmpty()) {
             adapter.setStudents(encargadoStudents);
             binding.tvRecordCount.setText(encargadoStudents.size() + (encargadoStudents.size() == 1 ? " alumno" : " alumnos"));
+            binding.tvNoStudentsMessage.setVisibility(encargadoStudents.isEmpty() ? View.VISIBLE : View.GONE);
             return;
         }
 
@@ -138,38 +150,42 @@ public class AdminEncargadoDetailFragment extends Fragment {
             if (s == null) return false;
             String name = s.name != null ? s.name.toLowerCase() : "";
             String carnet = s.carnet != null ? s.carnet.toLowerCase() : "";
-            String faculty = s.faculty != null ? s.faculty.toLowerCase() : "";
 
             if (filterType.equals("Todo")) {
-                return name.contains(query) || carnet.contains(query) || faculty.contains(query);
+                return name.contains(query) || carnet.contains(query);
             } else if (filterType.equals("Carnet")) {
                 return carnet.contains(query);
             } else if (filterType.equals("Nombre")) {
                 return name.contains(query);
-            } else if (filterType.equals("Facultad")) {
-                return faculty.contains(query);
             }
             return false;
         }).collect(Collectors.toList());
 
         adapter.setStudents(filtered);
         binding.tvRecordCount.setText(filtered.size() + (filtered.size() == 1 ? " alumno" : " alumnos"));
+        binding.tvNoStudentsMessage.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     private void showAddStudentDialog(User targetEncargado) {
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), "Añadir Alumno a Cargo");
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_student_to_encargado, null);
 
-        final TextView tvEncargadoFixed = DialogUtils.createDialogOptionButton(requireContext(), "Encargado Obligatorio: " + targetEncargado.name, false);
-        tvEncargadoFixed.setEnabled(false);
-        layout.addView(tvEncargadoFixed);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
-        final EditText etName = DialogUtils.createStyledEditText(requireContext(), "Nombre Completo del Alumno", 0);
-        layout.addView(etName);
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        final EditText etCarnet = DialogUtils.createStyledEditText(requireContext(), "Carnet del Alumno (7 dígitos)", InputType.TYPE_CLASS_NUMBER);
-        etCarnet.setFilters(new InputFilter[]{new InputFilter.LengthFilter(7)});
-        layout.addView(etCarnet);
+        TextView tvEncargadoName = dialogView.findViewById(R.id.tvEncargadoName);
+        EditText etStudentName = dialogView.findViewById(R.id.etStudentName);
+        EditText etStudentCarnet = dialogView.findViewById(R.id.etStudentCarnet);
+        View btnSelectGrade = dialogView.findViewById(R.id.btnSelectGrade);
+        TextView tvSelectedGrade = dialogView.findViewById(R.id.tvSelectedGrade);
+        View btnCancel = dialogView.findViewById(R.id.btnCancel);
+        View btnAddStudent = dialogView.findViewById(R.id.btnAddStudent);
+
+        tvEncargadoName.setText(targetEncargado.name != null ? targetEncargado.name : "-");
 
         final String[] gradeOptions = {
             "1º Primaria", "2º Primaria", "3º Primaria", "4º Primaria",
@@ -177,96 +193,61 @@ public class AdminEncargadoDetailFragment extends Fragment {
             "1º Bachillerato", "2º Bachillerato", "3º Bachillerato"
         };
         final String[] selectedGrade = {null};
-        final TextView tvGrade = DialogUtils.createDialogOptionButton(requireContext(), "Seleccionar Grado y Nivel (Primaria 1-9 / Bachiller 1-3)...", true);
-        tvGrade.setOnClickListener(v -> {
+
+        btnSelectGrade.setOnClickListener(v -> {
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Seleccionar Grado y Nivel")
-                    .setItems(gradeOptions, (dialog, which) -> {
+                    .setItems(gradeOptions, (d, which) -> {
                         selectedGrade[0] = gradeOptions[which];
-                        tvGrade.setError(null);
-                        DialogUtils.setOptionState(tvGrade, "Grado: " + selectedGrade[0], false, requireContext());
+                        tvSelectedGrade.setText(selectedGrade[0]);
+                        tvSelectedGrade.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
                     }).show();
         });
-        layout.addView(tvGrade);
 
-        final TextView tvFaculty = DialogUtils.createDialogOptionButton(requireContext(), "Seleccionar Escuela/Facultad...", true);
-        layout.addView(tvFaculty);
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        final String[] facultyNames;
-        List<String> filteredNames = new ArrayList<>();
-        for (Faculty f : availableFaculties) {
-            if (!f.name.equals("Docencia") && !f.name.equals("Administrativa") && !f.name.equals("Encargados de Estudiantes")) {
-                filteredNames.add(f.name);
-            }
-        }
-        facultyNames = filteredNames.toArray(new String[0]);
-        final String[] selectedFaculty = {null};
-
-        tvFaculty.setOnClickListener(v -> {
-            if (facultyNames.length == 0) {
-                Toast.makeText(getContext(), "No hay facultades académicas disponibles", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Facultades/Escuelas")
-                .setItems(facultyNames, (dialog, which) -> {
-                    selectedFaculty[0] = facultyNames[which];
-                    tvFaculty.setError(null);
-                    DialogUtils.setOptionState(tvFaculty, "Escuela: " + selectedFaculty[0], false, requireContext());
-                }).show();
-        });
-
-        builder.setView(layout);
-        builder.setPositiveButton("Añadir", null);
-        builder.setNegativeButton("Cancelar", null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v1 -> {
-            String name = etName.getText().toString().trim();
-            String carnet = etCarnet.getText().toString().trim();
+        btnAddStudent.setOnClickListener(v1 -> {
+            String name = etStudentName.getText().toString().trim();
+            String carnet = etStudentCarnet.getText().toString().trim();
 
             boolean isValid = true;
 
             if (name.isEmpty()) {
-                etName.setError("El nombre es obligatorio");
+                etStudentName.setError("El nombre es obligatorio");
                 isValid = false;
             }
             if (!carnet.matches("\\d{7}")) {
-                etCarnet.setError("Carnet inválido (7 dígitos numéricos)");
+                etStudentCarnet.setError("Carnet inválido (7 dígitos numéricos)");
                 isValid = false;
             }
             if (selectedGrade[0] == null) {
-                tvGrade.setError("Seleccione un grado y nivel");
-                isValid = false;
-            }
-            if (selectedFaculty[0] == null) {
-                tvFaculty.setError("Seleccione una facultad o escuela");
+                Toast.makeText(requireContext(), "Seleccione un grado y nivel", Toast.LENGTH_SHORT).show();
                 isValid = false;
             }
 
             if (isValid) {
                 String fullCarnet = "EST" + carnet;
                 String grade = selectedGrade[0];
-                Student newStudent = new Student(fullCarnet, name, grade, selectedFaculty[0], targetEncargado.id);
+                Student newStudent = new Student(fullCarnet, name, grade, targetEncargado.id);
                 viewModel.performOnlineAction(() -> {
                     viewModel.insertStudent(newStudent, new retrofit2.Callback<Student>() {
                         @Override
-                        public void onResponse(retrofit2.Call<Student> call, retrofit2.Response<Student> response) {
+                        public void onResponse(@NonNull retrofit2.Call<Student> call, @NonNull retrofit2.Response<Student> response) {
                             Toast.makeText(getContext(), "Estudiante registrado exitosamente", Toast.LENGTH_SHORT).show();
                             loadEncargadoStudents(targetEncargado.id);
                             dialog.dismiss();
                         }
 
                         @Override
-                        public void onFailure(retrofit2.Call<Student> call, Throwable t) {
+                        public void onFailure(@NonNull retrofit2.Call<Student> call, @NonNull Throwable t) {
                             Toast.makeText(getContext(), "Error al guardar estudiante", Toast.LENGTH_SHORT).show();
                         }
                     });
                 });
             }
         });
+
+        dialog.show();
     }
 
     @Override

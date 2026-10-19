@@ -3,7 +3,6 @@ package com.aula.virtual.ui;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -45,9 +44,14 @@ public class FacilityAdapter extends RecyclerView.Adapter<FacilityAdapter.ViewHo
         holder.tvType.setText(facility.type);
         holder.tvDesc.setText(facility.description);
         
-        holder.btnManage.setOnClickListener(v -> {
+        holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(facility);
         });
+        if (holder.btnManage != null) {
+            holder.btnManage.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(facility);
+            });
+        }
     }
 
     @Override
@@ -57,7 +61,7 @@ public class FacilityAdapter extends RecyclerView.Adapter<FacilityAdapter.ViewHo
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvType, tvDesc;
-        Button btnManage;
+        View btnManage;
 
         ViewHolder(View itemView) {
             super(itemView);

@@ -27,8 +27,11 @@ public interface UserDao {
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
     User getUserById(int id);
 
-    @Query("SELECT * FROM users WHERE carnet = :carnet AND password = :password LIMIT 1")
+    @Query("SELECT * FROM users WHERE (LOWER(TRIM(carnet)) = LOWER(TRIM(:carnet)) OR LOWER(TRIM(name)) = LOWER(TRIM(:carnet))) AND (password = :password OR TRIM(password) = TRIM(:password)) LIMIT 1")
     User login(String carnet, String password);
+
+    @Query("SELECT * FROM users WHERE LOWER(TRIM(carnet)) = LOWER(TRIM(:identifier)) OR LOWER(TRIM(name)) = LOWER(TRIM(:identifier)) LIMIT 1")
+    User getUserByCarnetOrName(String identifier);
 
     @Query("SELECT * FROM users")
     List<User> getAllUsers();

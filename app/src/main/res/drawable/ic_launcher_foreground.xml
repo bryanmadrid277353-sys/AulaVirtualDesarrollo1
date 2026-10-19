@@ -3,8 +3,18 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- School Graduation Cap Icon Centered, pure white for system launcher compatibility -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,32L24,44L54,56L79,44V59H84V44L54,32ZM34,51.33V58.33C34,64.22 42.95,69 54,69C65.05,69 74,64.22 74,58.33V51.33L54,60.33L34,51.33Z" />
+    <!-- Libro abierto centrado: el original (24x24) se escala x2.5 y se centra en 108x108 -->
+    <group
+        android:translateX="24"
+        android:translateY="24"
+        android:scaleX="2.5"
+        android:scaleY="2.5">
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M12,6.25V19.25M12,6.25C10.83,5.48 9.25,5 7.5,5C5.75,5 4.17,5.48 3,6.25V19.25C4.17,18.48 5.75,18 7.5,18C9.25,18 10.83,18.48 12,19.25M12,6.25C13.17,5.48 14.75,5 16.5,5C18.25,5 19.83,5.48 21,6.25V19.25C19.83,18.48 18.25,18 16.5,18C14.75,18 13.17,18.48 12,19.25" />
+    </group>
 </vector>

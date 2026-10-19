@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import com.aula.virtual.R;
 import com.aula.virtual.data.RetrofitClient;
 import com.aula.virtual.data.VirtualAulaRepository;
@@ -44,6 +46,9 @@ public class SettingsAdvancedFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
+        binding.btnBackAdvancedSettings.setOnClickListener(v -> 
+            Navigation.findNavController(v).navigateUp());
+
         setupDataModeSelector();
         setupBiometricAutofillSwitch();
         binding.btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
@@ -52,10 +57,12 @@ public class SettingsAdvancedFragment extends Fragment {
         binding.btnClearOfflineData.setOnClickListener(v -> confirmClearOfflineData());
         binding.btnConfigureServerUrl.setOnClickListener(v -> showServerUrlDialog());
 
-        User currentUser = viewModel.getCurrentUser().getValue();
-        if (currentUser != null && !"ADMIN".equals(currentUser.role)) {
-            RetrofitClient.setCustomUrl(requireContext(), RetrofitClient.BASE_URL);
-        }
+        viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
+            updateVisibilityForMode(user);
+            if (user != null && !"ADMIN".equals(user.role)) {
+                RetrofitClient.setCustomUrl(requireContext(), RetrofitClient.BASE_URL);
+            }
+        });
 
         viewModel.getModificationError().observe(getViewLifecycleOwner(), error -> {
             if (error != null) {
@@ -65,66 +72,51 @@ public class SettingsAdvancedFragment extends Fragment {
         });
     }
 
-    private void updateVisibilityForMode(String currentMode) {
-        User currentUser = viewModel.getCurrentUser().getValue();
+    private void updateVisibilityForMode(User currentUser) {
         boolean isAdmin = currentUser != null && "ADMIN".equals(currentUser.role);
 
-        if (ThemeHelper.MODE_LOCAL.equals(currentMode)) {
-            if (isAdmin) {
-                binding.btnDownloadOfflineData.setVisibility(View.VISIBLE);
-                binding.btnUploadOfflineData.setVisibility(View.VISIBLE);
-                binding.btnClearOfflineData.setVisibility(View.VISIBLE);
-            } else {
-                binding.btnDownloadOfflineData.setVisibility(View.GONE);
-                binding.btnUploadOfflineData.setVisibility(View.GONE);
-                binding.btnClearOfflineData.setVisibility(View.GONE);
-            }
-            binding.btnConfigureServerUrl.setVisibility(View.GONE);
+        if (isAdmin) {
+            // Admins see all options regardless of local or server mode
+            binding.layoutTransferCategory.setVisibility(View.VISIBLE);
+            binding.layoutClearCategory.setVisibility(View.VISIBLE);
         } else {
-            binding.btnDownloadOfflineData.setVisibility(View.GONE);
-            binding.btnUploadOfflineData.setVisibility(View.GONE);
-            binding.btnClearOfflineData.setVisibility(View.GONE);
-            if (isAdmin) {
-                binding.btnConfigureServerUrl.setVisibility(View.VISIBLE);
-            } else {
-                binding.btnConfigureServerUrl.setVisibility(View.GONE);
-            }
-        }
-
-        if (currentUser != null && !"ADMIN".equals(currentUser.role)) {
-            binding.layoutContactAdminContainer.setVisibility(View.VISIBLE);
-            binding.btnContactAdmin.setOnClickListener(v -> showContactAdminDialog(currentUser));
-        } else {
-            binding.layoutContactAdminContainer.setVisibility(View.GONE);
+            // Professors, Encargados, and Students see ONLY the local/server data mode selection option
+            binding.layoutTransferCategory.setVisibility(View.GONE);
+            binding.layoutClearCategory.setVisibility(View.GONE);
         }
     }
 
     private void setupDataModeSelector() {
         String currentMode = ThemeHelper.getDataMode(requireContext());
-        updateVisibilityForMode(currentMode);
+        updateVisibilityForMode(viewModel.getCurrentUser().getValue());
 
-        if (ThemeHelper.MODE_LOCAL.equals(currentMode)) {
-            binding.toggleDataMode.check(R.id.btnModeLocal);
-            binding.tvDataModeDescription.setText("Modo Local Activo: Operando con los datos almacenados dentro del dispositivo móvil sin depender del servidor.");
+        boolean isLocal = ThemeHelper.MODE_LOCAL.equals(currentMode);
+        binding.ivRadioLocal.setImageResource(isLocal ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
+        binding.ivRadioServer.setImageResource(isLocal ? R.drawable.ic_radio_unchecked : R.drawable.ic_radio_checked);
+
+        if (isLocal) {
+            binding.tvDataModeTitle.setText("Estás trabajando en modo local");
+            binding.tvDataModeDescription.setText("Usa los datos de este dispositivo sin depender del servidor.");
         } else {
-            binding.toggleDataMode.check(R.id.btnModeServer);
-            binding.tvDataModeDescription.setText("Modo Servidor Activo: Conexión obligatoria con el servidor para la consulta y el registro de datos.");
+            binding.tvDataModeTitle.setText("Estás trabajando en modo servidor");
+            binding.tvDataModeDescription.setText("Conexión obligatoria con el servidor para la consulta y registro de datos.");
         }
 
-        binding.toggleDataMode.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (isChecked) {
-                String newMode = (checkedId == R.id.btnModeLocal) ? ThemeHelper.MODE_LOCAL : ThemeHelper.MODE_SERVER;
-                if (!newMode.equals(ThemeHelper.getDataMode(requireContext()))) {
-                    ThemeHelper.setDataMode(requireContext(), newMode);
-                    if (ThemeHelper.MODE_LOCAL.equals(newMode)) {
-                        Toast.makeText(getContext(), "Cambiado a Modo Local (Sin servidor)", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Cambiado a Modo Servidor. Verificando conexión...", Toast.LENGTH_SHORT).show();
-                        RetrofitClient.resetClient();
-                        viewModel.refreshData();
-                    }
-                    requireActivity().recreate();
-                }
+        binding.btnModeLocalBox.setOnClickListener(v -> {
+            if (!ThemeHelper.MODE_LOCAL.equals(ThemeHelper.getDataMode(requireContext()))) {
+                ThemeHelper.setDataMode(requireContext(), ThemeHelper.MODE_LOCAL);
+                Toast.makeText(getContext(), "Cambiado a Modo Local (Sin servidor)", Toast.LENGTH_SHORT).show();
+                requireActivity().recreate();
+            }
+        });
+
+        binding.btnModeServerBox.setOnClickListener(v -> {
+            if (!ThemeHelper.MODE_SERVER.equals(ThemeHelper.getDataMode(requireContext()))) {
+                ThemeHelper.setDataMode(requireContext(), ThemeHelper.MODE_SERVER);
+                Toast.makeText(getContext(), "Cambiado a Modo Servidor. Verificando conexión...", Toast.LENGTH_SHORT).show();
+                RetrofitClient.resetClient();
+                viewModel.refreshData();
+                requireActivity().recreate();
             }
         });
     }
@@ -242,19 +234,60 @@ public class SettingsAdvancedFragment extends Fragment {
         User currentUser = viewModel.getCurrentUser().getValue();
         if (currentUser == null) return;
 
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), "Cambiar Contraseña");
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_change_password, null);
 
-        final EditText etCurrentPass = DialogUtils.createStyledEditText(requireContext(), "Contraseña Actual", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(etCurrentPass);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
-        final EditText etNewPass = DialogUtils.createStyledEditText(requireContext(), "Nueva Contraseña", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(etNewPass);
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        final TextView tvStrength = new TextView(getContext());
-        tvStrength.setTextSize(12f);
-        tvStrength.setVisibility(View.GONE);
-        layout.addView(tvStrength);
+        EditText etCurrentPass = dialogView.findViewById(R.id.etCurrentPass);
+        EditText etNewPass = dialogView.findViewById(R.id.etNewPass);
+        EditText etConfirmPass = dialogView.findViewById(R.id.etConfirmPass);
+
+        TextView tvStrength = dialogView.findViewById(R.id.tvPasswordStrength);
+        ImageView btnToggleCurrent = dialogView.findViewById(R.id.btnToggleCurrentPass);
+        ImageView btnToggleNew = dialogView.findViewById(R.id.btnToggleNewPass);
+        ImageView btnToggleConfirm = dialogView.findViewById(R.id.btnToggleConfirmPass);
+
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnUpdate = dialogView.findViewById(R.id.btnUpdateDialog);
+
+        btnToggleCurrent.setOnClickListener(v -> {
+            if (etCurrentPass.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                etCurrentPass.setTransformationMethod(null);
+                btnToggleCurrent.setImageResource(R.drawable.ic_visibility);
+            } else {
+                etCurrentPass.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                btnToggleCurrent.setImageResource(R.drawable.ic_visibility_off);
+            }
+            etCurrentPass.setSelection(etCurrentPass.getText().length());
+        });
+
+        btnToggleNew.setOnClickListener(v -> {
+            if (etNewPass.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                etNewPass.setTransformationMethod(null);
+                btnToggleNew.setImageResource(R.drawable.ic_visibility);
+            } else {
+                etNewPass.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                btnToggleNew.setImageResource(R.drawable.ic_visibility_off);
+            }
+            etNewPass.setSelection(etNewPass.getText().length());
+        });
+
+        btnToggleConfirm.setOnClickListener(v -> {
+            if (etConfirmPass.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                etConfirmPass.setTransformationMethod(null);
+                btnToggleConfirm.setImageResource(R.drawable.ic_visibility);
+            } else {
+                etConfirmPass.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                btnToggleConfirm.setImageResource(R.drawable.ic_visibility_off);
+            }
+            etConfirmPass.setSelection(etConfirmPass.getText().length());
+        });
 
         etNewPass.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -271,17 +304,9 @@ public class SettingsAdvancedFragment extends Fragment {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        final EditText etConfirmPass = DialogUtils.createStyledEditText(requireContext(), "Confirmar Nueva Contraseña", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(etConfirmPass);
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        builder.setView(layout);
-        builder.setPositiveButton("Actualizar", null);
-        builder.setNegativeButton("Cancelar", null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+        btnUpdate.setOnClickListener(v -> {
             String currentPass = etCurrentPass.getText().toString();
             String newPass = etNewPass.getText().toString();
             String confirmPass = etConfirmPass.getText().toString();
@@ -297,7 +322,7 @@ public class SettingsAdvancedFragment extends Fragment {
                 etNewPass.setError("Ingrese la nueva contraseña");
                 isValid = false;
             } else if (ValidationUtils.getPasswordStrength(newPass) == ValidationUtils.PasswordStrength.WEAK) {
-                etNewPass.setError("Contraseña demasiado débil");
+                etNewPass.setError("Contraseña demasiado débil (mínimo 4 caracteres)");
                 isValid = false;
             }
 
@@ -310,11 +335,17 @@ public class SettingsAdvancedFragment extends Fragment {
                 viewModel.performOnlineAction(() -> {
                     currentUser.password = newPass;
                     viewModel.updateUser(currentUser);
+                    if (getContext() != null) {
+                        CredentialsManager credentialsManager = new CredentialsManager(requireContext());
+                        credentialsManager.saveCredentials(currentUser.carnet, currentUser.password, currentUser.name);
+                    }
                     Toast.makeText(getContext(), "Contraseña actualizada exitosamente", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 });
             }
         });
+
+        dialog.show();
     }
 
     private void downloadOfflineData() {
@@ -479,6 +510,7 @@ public class SettingsAdvancedFragment extends Fragment {
 
                 viewModel.performOnlineAction(() -> {
                     viewModel.insertNotification(notif, () -> {
+                        Toast.makeText(getContext(), "¡Reporte enviado exitosamente a los Administradores!", Toast.LENGTH_SHORT).show();
                         Toast.makeText(getContext(), "¡Reporte enviado exitosamente a los Administradores!", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                     });

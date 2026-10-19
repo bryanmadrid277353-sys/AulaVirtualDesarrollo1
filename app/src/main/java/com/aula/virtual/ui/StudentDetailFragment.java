@@ -14,12 +14,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import com.aula.virtual.R;
-import com.aula.virtual.data.entity.Faculty;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.databinding.FragmentDetailBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import java.util.ArrayList;
-import java.util.List;
 
 public class StudentDetailFragment extends Fragment {
     private FragmentDetailBinding binding;
@@ -38,7 +35,7 @@ public class StudentDetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
-        int studentId = getArguments().getInt("studentId");
+        int studentId = getArguments() != null ? getArguments().getInt("studentId", -1) : -1;
 
         setupUI();
         observeViewModel();
@@ -51,39 +48,43 @@ public class StudentDetailFragment extends Fragment {
         });
 
         DialogUtils.showLoadingOverlay(binding.getRoot(), requireContext());
-        viewModel.fetchStudentById(studentId);
+        if (studentId != -1) {
+            viewModel.fetchStudentById(studentId);
+        } else {
+            DialogUtils.hideLoadingOverlay(binding.getRoot());
+        }
     }
 
     private void setupUI() {
-        binding.tvDetailTitle.setText("Detalle Alumno");
+        binding.btnBackDetail.setOnClickListener(v -> Navigation.findNavController(v).navigateUp());
+        binding.tvDetailTitle.setText("Detalle del estudiante");
         binding.cardProfileImage.setVisibility(View.GONE);
 
+        binding.tvLabelField1.setText("Nombre completo");
         binding.etField1.setHint("Nombre Completo del Alumno");
 
+        binding.tvLabelField2.setText("Carnet");
         binding.etField2.setHint("Carnet (7 dígitos)");
         binding.etField2.setInputType(InputType.TYPE_CLASS_NUMBER);
         binding.etField2.setFilters(new InputFilter[]{new InputFilter.LengthFilter(7)});
 
         // Hide unused fields for minor students
+        binding.tvLabelField3.setVisibility(View.GONE);
         binding.etField3.setVisibility(View.GONE);
-        if (binding.etField3.getParent() instanceof View) {
-            ((View) binding.etField3.getParent()).setVisibility(View.GONE);
-        }
         binding.tvPasswordStrength.setVisibility(View.GONE);
         binding.btnTogglePassword.setVisibility(View.GONE);
         binding.layoutCopyToggles.setVisibility(View.GONE);
         binding.switchLockPhoto.setVisibility(View.GONE);
+        binding.cardLockPhotoContainer.setVisibility(View.GONE);
         binding.btnImpersonateAction.setVisibility(View.GONE);
         binding.btnImpersonate.setVisibility(View.GONE);
 
-        // Field 4 for Faculty/School
-        binding.etField4.setHint("Escuela / Facultad (Click para cambiar)");
-        binding.etField4.setFocusable(false);
-        binding.etField4.setClickable(true);
-        binding.etField4.setVisibility(View.VISIBLE);
+        // Field 4 hidden
+        binding.etField4.setVisibility(View.GONE);
 
         // Address layout repurposed for Grade / Level
         binding.layoutAddress.setVisibility(View.VISIBLE);
+        binding.tvLabelAddress.setText("Grado y nivel");
         binding.etAddress.setHint("Grado y Nivel (Click para cambiar)");
         binding.etAddress.setFocusable(false);
         binding.etAddress.setClickable(true);
@@ -103,6 +104,7 @@ public class StudentDetailFragment extends Fragment {
 
         // Personal email layout repurposed for Encargado info
         binding.layoutPersonalEmail.setVisibility(View.VISIBLE);
+        binding.tvLabelPersonalEmail.setText("Encargado a cargo");
         binding.etPersonalEmail.setHint("Encargado a Cargo");
         binding.etPersonalEmail.setEnabled(false);
         binding.etPersonalEmail.setFocusable(false);
@@ -129,10 +131,27 @@ public class StudentDetailFragment extends Fragment {
         binding.btnCopyAddress.setOnClickListener(v -> ClipboardUtils.copyToClipboard(getContext(), "Grado", binding.etAddress.getText().toString()));
     }
 
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "AV";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
+    }
+
     private void observeViewModel() {
         viewModel.getSelectedStudentRecord().observe(getViewLifecycleOwner(), student -> {
             if (student != null && binding != null) {
                 studentRecord = student;
+
+                binding.tvDetailTitle.setText("Detalle del estudiante");
+                binding.tvDetailRoleHeader.setText(student.name != null ? student.name : "Estudiante");
+                binding.tvDetailCarnetHeader.setText(student.carnet != null ? student.carnet : "-");
+                binding.tvDetailInitials.setText(getInitials(student.name));
+                binding.layoutProfileHeaderContainer.setVisibility(View.VISIBLE);
+
                 binding.etField1.setText(student.name != null ? student.name : "");
 
                 if (student.carnet != null && student.carnet.startsWith("EST")) {
@@ -141,7 +160,6 @@ public class StudentDetailFragment extends Fragment {
                     binding.etField2.setText(student.carnet != null ? student.carnet : "");
                 }
 
-                binding.etField4.setText(student.faculty != null ? student.faculty : "");
                 binding.etAddress.setText(student.grade != null ? student.grade : "");
 
                 if (student.encargadoId != null) {
@@ -164,36 +182,12 @@ public class StudentDetailFragment extends Fragment {
                 DialogUtils.hideLoadingOverlay(binding.getRoot());
             }
         });
-
-        viewModel.getAllFaculties().observe(getViewLifecycleOwner(), faculties -> {
-            if (faculties == null) return;
-            List<String> filteredNames = new ArrayList<>();
-            for (Faculty f : faculties) {
-                if (!f.name.equals("Docencia") && !f.name.equals("Administrativa") && !f.name.equals("Encargados de Estudiantes")) {
-                    filteredNames.add(f.name);
-                }
-            }
-            String[] names = filteredNames.toArray(new String[0]);
-
-            binding.etField4.setOnClickListener(v -> {
-                if (names.length == 0) {
-                    Toast.makeText(getContext(), "No hay facultades disponibles", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                new MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Seleccionar Escuela / Facultad")
-                        .setItems(names, (dialog, which) -> {
-                            binding.etField4.setText(names[which]);
-                        }).show();
-            });
-        });
     }
 
     private void saveChanges() {
         if (studentRecord != null) {
             String name = binding.etField1.getText().toString().trim();
             String carnet = binding.etField2.getText().toString().trim();
-            String faculty = binding.etField4.getText().toString().trim();
             String grade = binding.etAddress.getText().toString().trim();
 
             boolean isValid = true;
@@ -205,10 +199,6 @@ public class StudentDetailFragment extends Fragment {
                 binding.etField2.setError("Carnet inválido (7 dígitos numéricos)");
                 isValid = false;
             }
-            if (faculty.isEmpty()) {
-                binding.etField4.setError("La facultad es obligatoria");
-                isValid = false;
-            }
             if (grade.isEmpty()) {
                 binding.etAddress.setError("El grado es obligatorio");
                 isValid = false;
@@ -217,7 +207,6 @@ public class StudentDetailFragment extends Fragment {
             if (isValid) {
                 studentRecord.name = name;
                 studentRecord.carnet = "EST" + carnet;
-                studentRecord.faculty = faculty;
                 studentRecord.grade = grade;
 
                 viewModel.performOnlineAction(() -> {

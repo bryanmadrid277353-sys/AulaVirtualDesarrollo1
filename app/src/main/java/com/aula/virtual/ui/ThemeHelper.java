@@ -69,45 +69,16 @@ public class ThemeHelper {
     }
 
     public static int getAccentTheme(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String accent = prefs.getString(KEY_ACCENT_COLOR, "BLUE");
-        switch (accent) {
-            case "BLUE_LIGHT": return R.style.Theme_MyApplication_Blue_Light;
-            case "BLUE": return R.style.Theme_MyApplication_Blue;
-            case "BLUE_DARK": return R.style.Theme_MyApplication_Blue_Dark;
-            
-            case "RED_LIGHT": return R.style.Theme_MyApplication_Red_Light;
-            case "RED": return R.style.Theme_MyApplication_Red;
-            case "RED_DARK": return R.style.Theme_MyApplication_Red_Dark;
-            
-            case "GREEN_LIGHT": return R.style.Theme_MyApplication_Green_Light;
-            case "GREEN": return R.style.Theme_MyApplication_Green;
-            case "GREEN_DARK": return R.style.Theme_MyApplication_Green_Dark;
-            
-            case "PURPLE_LIGHT": return R.style.Theme_MyApplication_Purple_Light;
-            case "PURPLE": return R.style.Theme_MyApplication_Purple;
-            case "PURPLE_DARK": return R.style.Theme_MyApplication_Purple_Dark;
-            
-            case "CYAN_LIGHT": return R.style.Theme_MyApplication_Cyan_Light;
-            case "CYAN": return R.style.Theme_MyApplication_Cyan;
-            case "CYAN_DARK": return R.style.Theme_MyApplication_Cyan_Dark;
-            
-            case "YELLOW_LIGHT": return R.style.Theme_MyApplication_Yellow_Light;
-            case "YELLOW": return R.style.Theme_MyApplication_Yellow;
-            case "YELLOW_DARK": return R.style.Theme_MyApplication_Yellow_Dark;
-            
-            default: return R.style.Theme_MyApplication_Blue;
-        }
+        return R.style.Theme_MyApplication_Blue;
     }
 
     public static void setAccentColor(Context context, String color) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putString(KEY_ACCENT_COLOR, color).apply();
+        prefs.edit().putString(KEY_ACCENT_COLOR, "BLUE").apply();
     }
 
     public static String getAccentColorName(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getString(KEY_ACCENT_COLOR, "BLUE");
+        return "BLUE";
     }
 
     public static void setDarkMode(Context context, boolean isDark) {

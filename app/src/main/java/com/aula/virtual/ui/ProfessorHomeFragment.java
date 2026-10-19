@@ -1,6 +1,5 @@
 package com.aula.virtual.ui;
 
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -57,14 +56,9 @@ public class ProfessorHomeFragment extends Fragment {
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 binding.tvProfessorName.setText("Bienvenido Prof. " + user.name);
-                updateProfileImage(user.profile_image, binding.ivProfileImageProf);
+                ImageUtils.setProfileImage(binding.ivProfileImageProf, user.profile_image, user.name);
             }
         });
-    }
-
-    private void updateProfileImage(String profileImage, ImageView iv) {
-        int paddingPx = (int) (8 * getResources().getDisplayMetrics().density);
-        ImageUtils.setProfileImage(iv, profileImage, paddingPx);
     }
 
     @Override

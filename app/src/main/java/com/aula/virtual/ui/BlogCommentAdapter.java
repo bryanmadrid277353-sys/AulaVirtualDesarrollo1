@@ -115,8 +115,7 @@ public class BlogCommentAdapter extends RecyclerView.Adapter<BlogCommentAdapter.
             holder.tvRole.setText(roleLabel);
             setRoleBadgeStyle(holder.tvRole, info.userRole);
 
-            int paddingPx = (int) (6 * holder.itemView.getResources().getDisplayMetrics().density);
-            ImageUtils.setProfileImage(holder.ivPhoto, info.userPhoto, paddingPx);
+            ImageUtils.setProfileImage(holder.ivPhoto, info.userPhoto, info.userName);
         }
     }
 

@@ -4,7 +4,10 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -80,7 +83,7 @@ public class ImageUtils {
     }
 
     public static Bitmap base64ToBitmap(String base64Str) {
-        if (base64Str == null || base64Str.isEmpty()) return null;
+        if (base64Str == null || base64Str.trim().isEmpty()) return null;
         try {
             byte[] decodedBytes = Base64.decode(base64Str, Base64.DEFAULT);
             return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
@@ -89,16 +92,61 @@ public class ImageUtils {
         }
     }
 
+    public static String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "AV";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
+    }
+
+    public static Bitmap createInitialsBitmap(Context context, String name, int sizePx) {
+        if (sizePx <= 0) sizePx = 200;
+        Bitmap bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        int accentColor = ThemeHelper.getSubjectColor(context, ThemeHelper.getAccentColorName(context));
+
+        Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bgPaint.setColor(accentColor);
+        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, bgPaint);
+
+        String initials = getInitials(name);
+
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(sizePx * 0.42f);
+
+        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+        float baseline = (sizePx / 2f) - ((fontMetrics.descent + fontMetrics.ascent) / 2f);
+        canvas.drawText(initials, sizePx / 2f, baseline, textPaint);
+
+        return bitmap;
+    }
+
+    public static void setProfileImage(ImageView iv, String profileImage, String userName) {
+        setProfileImage(iv, profileImage, userName, 0);
+    }
+
     public static void setProfileImage(ImageView iv, String profileImage, int defaultPaddingPx) {
+        setProfileImage(iv, profileImage, null, defaultPaddingPx);
+    }
+
+    public static void setProfileImage(ImageView iv, String profileImage, String userName, int defaultPaddingPx) {
         if (iv == null) return;
         Context context = iv.getContext();
         
         iv.setImageTintList(null);
+        iv.clearColorFilter();
+        iv.setPadding(0, 0, 0, 0);
 
-        if (profileImage != null && !profileImage.isEmpty()) {
+        if (profileImage != null && !profileImage.trim().isEmpty()) {
             Bitmap bitmap = base64ToBitmap(profileImage);
             if (bitmap != null) {
-                iv.setPadding(0, 0, 0, 0);
                 iv.setImageBitmap(bitmap);
                 if (iv.getParent() instanceof CardView) {
                     CardView card = (CardView) iv.getParent();
@@ -109,13 +157,12 @@ public class ImageUtils {
             }
         }
 
-        int accentColor = ThemeHelper.getSubjectColor(context, ThemeHelper.getAccentColorName(context));
-        iv.setPadding(0, 0, 0, 0);
-        iv.setImageResource(R.drawable.ic_image_missing);
+        Bitmap initialsBitmap = createInitialsBitmap(context, userName, 200);
+        iv.setImageBitmap(initialsBitmap);
         if (iv.getParent() instanceof CardView) {
             CardView card = (CardView) iv.getParent();
-            card.setCardBackgroundColor(accentColor);
-            card.setCardElevation(dpToPx(context, 2));
+            card.setCardBackgroundColor(Color.TRANSPARENT);
+            card.setCardElevation(0);
         }
     }
 

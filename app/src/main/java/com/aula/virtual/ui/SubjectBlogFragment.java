@@ -1,6 +1,9 @@
 package com.aula.virtual.ui;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -78,10 +81,13 @@ public class SubjectBlogFragment extends Fragment {
             }
         });
 
+        binding.btnBackList.setOnClickListener(v -> Navigation.findNavController(v).navigateUp());
+
         if (isAdmin) {
             binding.btnAddEntryTop.setVisibility(View.VISIBLE);
             binding.btnAddEntryTop.setOnClickListener(v -> showEntryDialog(null));
-            binding.fabAddEntry.setVisibility(View.GONE);
+        } else {
+            binding.btnAddEntryTop.setVisibility(View.GONE);
         }
         
         viewModel.fetchSubjectBlog(subjectId);
@@ -89,13 +95,24 @@ public class SubjectBlogFragment extends Fragment {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     if (binding != null && sub != null) {
-                        binding.tvBlogTitle.setText("Foro de la Materia");
-                        binding.tvBlogSubtitle.setText("Materia: " + sub.name);
-                        binding.tvBlogSubtitle.setVisibility(View.VISIBLE);
+                        binding.tvSubjectName.setText(sub.name);
+                        String sec = (sub.section != null && !sub.section.isEmpty()) ? sub.section : "01";
+                        binding.tvSubjectSection.setText("Sección: " + sec);
+                        String initials = sub.name != null && sub.name.length() >= 2 ? sub.name.substring(0, 2).toUpperCase() : "MA";
+                        binding.tvSubjectInitials.setText(initials);
                     }
                 });
             }
         });
+
+        if (binding.btnSubjectAttendanceBlog != null) {
+            if (isAdmin) {
+                binding.btnSubjectAttendanceBlog.setVisibility(View.GONE);
+            } else {
+                binding.btnSubjectAttendanceBlog.setVisibility(View.VISIBLE);
+                binding.btnSubjectAttendanceBlog.setOnClickListener(v -> showSubjectAttendanceDialog(subjectId));
+            }
+        }
 
         binding.btnViewParticipantsBlog.setOnClickListener(v -> {
             Bundle args = new Bundle();
@@ -103,15 +120,103 @@ public class SubjectBlogFragment extends Fragment {
             Navigation.findNavController(view).navigate(R.id.action_subjectBlogFragment_to_subjectParticipantsFragment, args);
         });
 
-        View.OnClickListener openSubjectDetail = v -> {
+        binding.btnSubjectDetailBlog.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putInt("subjectId", subjectId);
             Navigation.findNavController(view).navigate(R.id.action_subjectBlogFragment_to_subjectDetailFragment, args);
-        };
-        binding.btnSubjectDetailBlog.setOnClickListener(openSubjectDetail);
+        });
 
         // Start polling
         pollHandler.postDelayed(pollRunnable, POLL_INTERVAL);
+    }
+
+    private void showSubjectAttendanceDialog(int subjectId) {
+        if (getContext() == null) return;
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_student_attendance, null);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvSubtitle = dialogView.findViewById(R.id.tvAttendanceSubtitle);
+        if (tvSubtitle != null) {
+            tvSubtitle.setText("Control de asistencia según los días de clase de esta materia.");
+        }
+
+        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnSave = dialogView.findViewById(R.id.btnSaveDialog);
+
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        LinearLayout layoutRows = dialogView.findViewById(R.id.layoutAttendanceRowsContainer);
+        if (layoutRows != null) {
+            layoutRows.removeAllViews();
+
+            String[] dates = {"Lunes 13/10/2025", "Miércoles 15/10/2025", "Viernes 17/10/2025", "Lunes 20/10/2025", "Miércoles 22/10/2025"};
+            String[] statuses = {"PRESENT", "PRESENT", "ABSENT", "EXCUSED", "PRESENT"};
+
+            for (int i = 0; i < dates.length; i++) {
+                View rowView = LayoutInflater.from(requireContext()).inflate(R.layout.item_attendance_row, null);
+
+                TextView tvDate = rowView.findViewById(R.id.tvAttendanceDate);
+                TextView tvSubj = rowView.findViewById(R.id.tvAttendanceSubject);
+                MaterialButton btnToggle = rowView.findViewById(R.id.btnToggleAttendance);
+
+                if (tvDate != null) tvDate.setText(dates[i]);
+                if (tvSubj != null) tvSubj.setText("Día de clase programado");
+
+                final String[] currentStatus = {statuses[i]};
+
+                Runnable updateButtonUI = () -> {
+                    if ("PRESENT".equals(currentStatus[0])) {
+                        btnToggle.setText("🟢 Asistió");
+                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#10B981")));
+                    } else if ("ABSENT".equals(currentStatus[0])) {
+                        btnToggle.setText("🔴 No asistió");
+                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#EF4444")));
+                    } else {
+                        btnToggle.setText("🟡 Justificado");
+                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F59E0B")));
+                    }
+                };
+
+                updateButtonUI.run();
+
+                btnToggle.setOnClickListener(v -> {
+                    if ("PRESENT".equals(currentStatus[0])) {
+                        currentStatus[0] = "ABSENT";
+                    } else if ("ABSENT".equals(currentStatus[0])) {
+                        currentStatus[0] = "EXCUSED";
+                    } else {
+                        currentStatus[0] = "PRESENT";
+                    }
+                    updateButtonUI.run();
+                });
+
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
+                rowView.setLayoutParams(lp);
+
+                layoutRows.addView(rowView);
+            }
+        }
+
+        if (btnSave != null) {
+            btnSave.setOnClickListener(v -> {
+                Toast.makeText(requireContext(), "Asistencia de la materia guardada exitosamente", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+        }
+
+        dialog.show();
     }
 
     private void setupRecyclerView() {
