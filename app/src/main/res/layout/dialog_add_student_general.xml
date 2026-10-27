@@ -41,14 +41,31 @@
                 android:layout_marginBottom="24dp" />
 
             <!-- Field 1: Nombre completo del alumno -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Nombre completo del alumno"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre completo del alumno"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvNameError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -73,14 +90,31 @@
             </LinearLayout>
 
             <!-- Field 2: Carnet del alumno (7 dígitos) with EST prefix -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Carnet del alumno (7 dígitos)"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Carnet del alumno (7 dígitos)"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvCarnetError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -115,14 +149,31 @@
             </LinearLayout>
 
             <!-- Field 3: Grado y nivel -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Grado y nivel"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Grado y nivel"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvGradeError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/btnSelectGrade"
@@ -157,14 +208,31 @@
             </RelativeLayout>
 
             <!-- Field 4: Encargado a cargo -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Encargado a cargo"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Encargado a cargo"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvEncargadoError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/btnSelectEncargado"
@@ -219,7 +287,7 @@
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/input_border"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="#1D2738" />
+                    android:backgroundTint="@color/input_bg" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddDialog"

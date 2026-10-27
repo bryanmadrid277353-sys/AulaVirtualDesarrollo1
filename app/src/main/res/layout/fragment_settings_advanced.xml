@@ -244,7 +244,99 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Categoria 2: Transferencia de datos -->
+        <!-- Categoria 2: Servidor y Conexión -->
+        <LinearLayout
+            android:id="@+id/layoutServerConfigCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Servidor y conexión"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"
+                android:layout_marginBottom="10dp" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/btnConfigureServerUrl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:id="@+id/iconServerConfigBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_settings"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Servidor" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconServerConfigBox"
+                        android:layout_toStartOf="@id/arrowServerConfig"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Conexión y Dirección del Servidor"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Seleccionar entre Nube, Emulador o Red Local Wi-Fi."
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/arrowServerConfig"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_back"
+                        android:rotation="180"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:contentDescription="Ir" />
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Categoria 3: Transferencia de datos -->
         <LinearLayout
             android:id="@+id/layoutTransferCategory"
             android:layout_width="match_parent"
@@ -494,11 +586,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:visibility="gone">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnConfigureServerUrl"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
 
             <LinearLayout
                 android:id="@+id/layoutContactAdminContainer"

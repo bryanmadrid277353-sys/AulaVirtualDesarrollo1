@@ -17,6 +17,8 @@ import com.aula.virtual.data.entity.BlogEntry;
 import com.aula.virtual.data.entity.Enrollment;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
+import com.aula.virtual.data.ChatRoomInfo;
+import com.aula.virtual.data.entity.DirectMessage;
 import com.aula.virtual.data.entity.Notification;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
@@ -26,13 +28,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainViewModel extends AndroidViewModel {
     private final VirtualAulaRepository repository;
+    private final MutableLiveData<List<ChatRoomInfo>> userChatRooms = new MutableLiveData<>();
+    private final MutableLiveData<List<DirectMessage>> chatHistory = new MutableLiveData<>();
     private final MutableLiveData<List<User>> allStudents = new MutableLiveData<>();
     private final MutableLiveData<List<Student>> allStudentRecords = new MutableLiveData<>();
     private final MutableLiveData<Student> selectedStudentRecord = new MutableLiveData<>();
@@ -95,6 +98,9 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void refreshData() {
+        if (repository != null) {
+            repository.resetConnectionFailures();
+        }
         fetchStudents();
         fetchStudentRecords();
         fetchEncargados();
@@ -118,6 +124,9 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<List<Subject>> getAllSubjects() { return allSubjects; }
     public LiveData<User> getCurrentUser() { return currentUser; }
     public void setCurrentUser(User user) { 
+        if (user != null && !"ADMIN".equalsIgnoreCase(user.role)) {
+            ThemeHelper.setDataMode(getApplication(), ThemeHelper.MODE_SERVER);
+        }
         currentUser.setValue(user); 
         if (user != null) {
             fetchStudentsForEncargado(user.id);
@@ -234,6 +243,65 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<List<CommentInfo>> getBlogComments() { return blogComments; }
     public LiveData<Boolean> isServerConnected() { return isServerConnected; }
     public LiveData<String> getModificationError() { return modificationError; }
+
+    public LiveData<List<ChatRoomInfo>> getUserChatRooms() { return userChatRooms; }
+    public LiveData<List<DirectMessage>> getChatHistory() { return chatHistory; }
+
+    public void fetchUserChatRooms(int userId) {
+        repository.getUserChatRooms(userId, new Callback<List<ChatRoomInfo>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<ChatRoomInfo>> call, @NonNull Response<List<ChatRoomInfo>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    userChatRooms.postValue(response.body());
+                }
+            }
+            @Override public void onFailure(@NonNull Call<List<ChatRoomInfo>> call, @NonNull Throwable t) {}
+        });
+    }
+
+    public void fetchDirectMessagesHistory(int userId, int contactId) {
+        repository.getDirectMessagesHistory(userId, contactId, new Callback<List<DirectMessage>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<DirectMessage>> call, @NonNull Response<List<DirectMessage>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    chatHistory.postValue(response.body());
+                }
+            }
+            @Override public void onFailure(@NonNull Call<List<DirectMessage>> call, @NonNull Throwable t) {}
+        });
+    }
+
+    public void sendDirectMessage(DirectMessage message) {
+        repository.sendDirectMessage(message, new Callback<DirectMessage>() {
+            @Override
+            public void onResponse(@NonNull Call<DirectMessage> call, @NonNull Response<DirectMessage> response) {
+                if (response.isSuccessful()) {
+                    fetchDirectMessagesHistory(message.senderId, message.receiverId);
+                } else if (response.code() == 403) {
+                    modificationError.setValue("Solo un Administrador puede iniciar la conversación directa.");
+                }
+            }
+            @Override public void onFailure(@NonNull Call<DirectMessage> call, @NonNull Throwable t) {
+                modificationError.setValue("Error al enviar mensaje: " + t.getMessage());
+            }
+        });
+    }
+
+    public void deleteChatRoom(String chatRoomId, int currentUserId) {
+        repository.deleteChatRoom(chatRoomId, new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    fetchUserChatRooms(currentUserId);
+                }
+            }
+            @Override public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {}
+        });
+    }
+
+    public void getAllEligibleChatContacts(Callback<List<User>> callback) {
+        repository.getAllEligibleChatContacts(callback);
+    }
 
     public void clearModificationError() { modificationError.setValue(null); }
 
@@ -551,8 +619,12 @@ public class MainViewModel extends AndroidViewModel {
         repository.login(carnet, password, new Callback<User>() {
             @Override public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    currentUser.setValue(response.body());
-                    callback.onSuccess(response.body());
+                    User user = response.body();
+                    if (!"ADMIN".equalsIgnoreCase(user.role)) {
+                        ThemeHelper.setDataMode(getApplication(), ThemeHelper.MODE_SERVER);
+                    }
+                    currentUser.setValue(user);
+                    callback.onSuccess(user);
                 } else {
                     if (response.code() >= 500) {
                         callback.onError("Error del servidor: Los servicios de datos no responden");
@@ -569,8 +641,29 @@ public class MainViewModel extends AndroidViewModel {
 
     public void insertUser(User user) {
         repository.insertUser(user, new Callback<User>() {
-            @Override public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) { refreshData(); }
-            @Override public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {}
+            @Override
+            public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
+                if (response.isSuccessful()) {
+                    refreshData();
+                } else {
+                    String err = "Error al registrar usuario";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorJson = response.errorBody().string();
+                            if (errorJson.contains("detail")) {
+                                org.json.JSONObject obj = new org.json.JSONObject(errorJson);
+                                err = obj.optString("detail", err);
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                    modificationError.postValue(err);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
+                modificationError.postValue("Error de conexión al servidor");
+            }
         });
     }
 
@@ -759,7 +852,30 @@ public class MainViewModel extends AndroidViewModel {
             if (callback != null) callback.onError("Acción no permitida: Los Profesores y Estudiantes no pueden eliminar datos de la aplicación en Modo Local.");
             return;
         }
-        repository.clearAllOfflineData(callback);
+        repository.clearAllOfflineData(new VirtualAulaRepository.SyncCallback() {
+            @Override
+            public void onSuccess(String message) {
+                allStudents.postValue(new ArrayList<>());
+                allStudentRecords.postValue(new ArrayList<>());
+                allEncargados.postValue(new ArrayList<>());
+                allProfessors.postValue(new ArrayList<>());
+                allSubjects.postValue(new ArrayList<>());
+                allFacilities.postValue(new ArrayList<>());
+                myStudents.postValue(new ArrayList<>());
+
+                User masterAdmin = new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN");
+                List<User> adminList = new ArrayList<>();
+                adminList.add(masterAdmin);
+                allAdmins.postValue(adminList);
+
+                if (callback != null) callback.onSuccess(message);
+            }
+
+            @Override
+            public void onError(String error) {
+                if (callback != null) callback.onError(error);
+            }
+        });
     }
 
     public void fetchSubjectFacilityMap(DataCallback<Map<Integer, String>> callback) {

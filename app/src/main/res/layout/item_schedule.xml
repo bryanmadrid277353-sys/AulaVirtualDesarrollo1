@@ -1,124 +1,183 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardScheduleItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="12dp"
-    android:layout_marginBottom="10dp"
-    android:layout_marginHorizontal="2dp"
-    android:background="@drawable/bg_list_item">
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/input_bg"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/input_border">
 
     <LinearLayout
-        android:id="@+id/layoutScheduleText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@id/layoutScheduleActions"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvScheduleSubject"
-            android:layout_width="wrap_content"
+        <!-- Top Title Row: Subject Name + Section Pill -->
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Materia"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="2dp" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="2dp">
+            android:layout_marginBottom="4dp">
 
             <TextView
-                android:id="@+id/tvScheduleProfessor"
+                android:id="@+id/tvScheduleSubject"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Profesor"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="14sp" />
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@id/tvScheduleSection"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="8dp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="Matemáticas 5º Grado" />
 
             <TextView
                 android:id="@+id/tvScheduleSection"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
                 android:text="Sección 01"
-                android:textSize="11sp"
+                android:textColor="#38BDF8"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="1dp"
-                android:background="@drawable/bg_badge_primary"
-                android:textColor="@color/white"
-                android:visibility="visible" />
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="3dp"
+                android:background="@drawable/bg_badge_semester"
+                tools:text="Sección 01" />
+        </RelativeLayout>
+
+        <!-- Professor Name Line -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_person"
+                app:tint="?android:attr/textColorSecondary"
+                android:layout_marginEnd="6dp"
+                android:contentDescription="Profesor" />
+
+            <TextView
+                android:id="@+id/tvScheduleProfessor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                tools:text="Prof. Ricardo Valenzuela" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvScheduleTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Días y Horario"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp"
-            android:layout_marginTop="4dp" />
+        <!-- Bottom Schedule Row: Clock Icon Box + Days/Time + Action Buttons -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@id/layoutScheduleActions"
+                android:layout_centerVertical="true">
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_badge_semester"
+                    android:backgroundTint="#172554"
+                    android:layout_marginEnd="10dp">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_timetable"
+                        app:tint="#38BDF8"
+                        android:contentDescription="Reloj" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvScheduleTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="Lun, Mié • 07:30 - 09:00 AM" />
+            </LinearLayout>
+
+            <!-- Right Action Buttons (Edit & Delete) -->
+            <LinearLayout
+                android:id="@+id/layoutScheduleActions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEditSchedule"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_edit"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="18dp"
+                    app:iconTint="#10B981"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#064E3B"
+                    android:backgroundTint="#064E3B"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Editar horario" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDeleteSchedule"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetLeft="0dp"
+                    android:insetRight="0dp"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_delete"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="18dp"
+                    app:iconTint="#FF5252"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#7F1D1D"
+                    android:backgroundTint="#2E1218"
+                    android:contentDescription="Eliminar horario" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/layoutScheduleActions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnEditSchedule"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:padding="0dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            app:cornerRadius="22dp"
-            app:icon="@drawable/ic_edit"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="22dp"
-            app:iconTint="@color/white"
-            app:backgroundTint="@color/bs_success"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:contentDescription="Editar horario"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDeleteSchedule"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:padding="0dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:insetLeft="0dp"
-            android:insetRight="0dp"
-            app:cornerRadius="22dp"
-            app:icon="@drawable/ic_delete"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconSize="22dp"
-            app:iconTint="@color/white"
-            app:backgroundTint="@color/bs_danger"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:contentDescription="Eliminar horario"/>
-    </LinearLayout>
-
-</RelativeLayout>
+</androidx.cardview.widget.CardView>

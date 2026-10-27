@@ -17,6 +17,7 @@ public class Enrollment {
     public Double grade6;
     public Double grade7;
     public Double grade8;
+    public Double average;
     public String color = "BLUE";
     public String cycle = "Ciclo 2025";
     public int periodsCount = 5;

@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
+    <!-- Fixed Header Container (Title, Card, Actions, Search) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingLeft="20dp"
+        android:paddingTop="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="4dp">
 
         <!-- Top Header with Back Button and Title -->
         <LinearLayout
@@ -19,7 +23,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="12dp">
 
             <ImageButton
                 android:id="@+id/btnBackList"
@@ -37,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:text="Gestión de la materia"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textSize="24sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -45,7 +49,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="12dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="@color/input_bg"
@@ -56,18 +60,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="14dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="12dp">
 
                     <FrameLayout
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:background="@drawable/bg_circle_primary"
                         android:layout_marginEnd="12dp">
 
@@ -78,7 +82,7 @@
                             android:layout_gravity="center"
                             tools:text="MA"
                             android:textColor="@color/white"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
                     </FrameLayout>
 
@@ -93,7 +97,7 @@
                             android:layout_height="wrap_content"
                             android:text="Materia"
                             android:textColor="?attr/colorPrimary"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -104,7 +108,7 @@
                             android:textColor="?android:attr/textColorPrimary"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="1dp"
                             tools:text="Matemáticas" />
 
                         <TextView
@@ -113,46 +117,25 @@
                             android:layout_height="wrap_content"
                             android:text="Sección: 01"
                             android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="13sp"
-                            android:layout_marginTop="2dp"
+                            android:textSize="12sp"
+                            android:layout_marginTop="1dp"
                             tools:text="Sección: 01" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Action Buttons inside card: Asistencia, Integrantes & Detalle -->
+                <!-- Action Buttons inside card: Integrantes, Notas & Detalle -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnSubjectAttendanceBlog"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="4dp"
-                        android:text="Asistencia"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textAllCaps="false"
-                        app:icon="@drawable/ic_check"
-                        app:iconGravity="textStart"
-                        app:iconSize="16dp"
-                        app:iconTint="?attr/colorPrimary"
-                        app:cornerRadius="10dp"
-                        app:strokeColor="@color/input_border"
-                        app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
-
-                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnViewParticipantsBlog"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="40dp"
-                        android:layout_marginHorizontal="2dp"
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="3dp"
                         android:text="Integrantes"
                         android:textColor="?android:attr/textColorPrimary"
                         android:textSize="12sp"
@@ -160,7 +143,28 @@
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_person_badge"
                         app:iconGravity="textStart"
-                        app:iconSize="16dp"
+                        app:iconSize="15dp"
+                        app:iconTint="?attr/colorPrimary"
+                        app:cornerRadius="10dp"
+                        app:strokeColor="@color/input_border"
+                        app:strokeWidth="1dp"
+                        android:backgroundTint="@color/input_bg" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSubjectAttendanceBlog"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="38dp"
+                        android:layout_marginHorizontal="2dp"
+                        android:text="Notas"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textAllCaps="false"
+                        app:icon="@drawable/ic_sliders"
+                        app:iconGravity="textStart"
+                        app:iconSize="15dp"
                         app:iconTint="?attr/colorPrimary"
                         app:cornerRadius="10dp"
                         app:strokeColor="@color/input_border"
@@ -172,8 +176,8 @@
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="40dp"
-                        android:layout_marginStart="4dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="3dp"
                         android:text="Detalle"
                         android:textColor="?android:attr/textColorPrimary"
                         android:textSize="12sp"
@@ -181,7 +185,7 @@
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_open_book"
                         app:iconGravity="textStart"
-                        app:iconSize="16dp"
+                        app:iconSize="15dp"
                         app:iconTint="?attr/colorPrimary"
                         app:cornerRadius="10dp"
                         app:strokeColor="@color/input_border"
@@ -192,54 +196,59 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Section Header -->
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Publicaciones y Foro"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tvSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Consulta y gestiona las publicaciones de la materia."
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Primary Action Button: Añadir entrada (for Admin/Professor) -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAddEntryTop"
-            style="@style/Widget.Bootstrap.Button.Primary"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="+ Añadir entrada"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:cornerRadius="12dp"
-            app:backgroundTint="?attr/colorPrimary"
-            app:elevation="0dp"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone" />
-
-        <!-- Search and Filter Bar -->
+        <!-- Top Action Row: Add Button + Search Toggle Button on Right -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="44dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <!-- Primary Action Button: Añadir entrada (for Admin/Professor) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddEntryTop"
+                style="@style/Widget.Bootstrap.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"
+                android:text="+ Añadir entrada"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:elevation="0dp"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <!-- Search Toggle ImageButton -->
+            <ImageButton
+                android:id="@+id/btnToggleSearch"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_search"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="Alternar búsqueda" />
+        </LinearLayout>
+
+        <!-- Search and Filter Bar (Collapsible / Toggleable) -->
+        <LinearLayout
+            android:id="@+id/layoutSearchContainer"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_input_field"
             android:paddingHorizontal="14dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:src="@drawable/ic_search"
                 app:tint="?android:attr/textColorSecondary"
                 android:contentDescription="Buscar"
@@ -252,7 +261,7 @@
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
                 android:hint="Buscar publicaciones..."
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textColorHint="?android:attr/textColorSecondary"
                 android:singleLine="true" />
@@ -264,6 +273,18 @@
                 android:backgroundTint="?attr/colorPrimary" />
         </LinearLayout>
 
+        <!-- Hidden Compatibility views -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
         <!-- Record Count Counter -->
         <TextView
             android:id="@+id/tvBlogEntryCount"
@@ -271,26 +292,29 @@
             android:layout_height="wrap_content"
             android:text="0 publicaciones"
             android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp"
-            android:layout_marginBottom="12dp" />
-
-        <!-- RecyclerView for Blog Entries -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvBlog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false" />
-
-        <TextView
-            android:id="@+id/tvNoEntriesMessage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Esta materia aún no tiene publicaciones."
-            android:textAlignment="center"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
-            android:padding="24dp"
-            android:visibility="gone"/>
-
+            android:textSize="12sp" />
     </LinearLayout>
-</ScrollView>
+
+    <!-- Scrollable Publications List Only -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvBlog"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false" />
+
+    <TextView
+        android:id="@+id/tvNoEntriesMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Esta materia aún no tiene publicaciones."
+        android:textAlignment="center"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="14sp"
+        android:padding="24dp"
+        android:visibility="gone"/>
+
+</LinearLayout>

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/input_bg"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/input_border">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Top Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@id/btnCloseExcelDialog">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_marginEnd="12dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_sliders"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Gestión Excel" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gestión de Notas por Excel"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSubjectExcelCode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Materia (ASIGN0000)"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/btnCloseExcelDialog"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/bg_input_field"
+                    android:src="@drawable/ic_close"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Cerrar" />
+            </RelativeLayout>
+
+            <!-- Action 1: Generar Plantilla Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGenerateExcelTemplate"
+                style="@style/Widget.Bootstrap.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Generar plantilla .xlsx"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_download"
+                app:iconGravity="textStart"
+                app:iconPadding="10dp"
+                app:iconSize="20dp"
+                app:iconTint="?attr/colorOnPrimary"
+                app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:elevation="0dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Action 2: Vincular Archivo Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLinkExcelFile"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Vincular archivo Excel (.xlsx)"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                app:icon="@drawable/ic_link"
+                app:iconGravity="textStart"
+                app:iconPadding="10dp"
+                app:iconSize="20dp"
+                app:iconTint="?android:attr/textColorPrimary"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/input_border"
+                app:strokeWidth="1dp"
+                android:backgroundTint="@color/input_bg"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Linked File Status Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input_field"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ARCHIVO VINCULADO"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_file_document"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Archivo" />
+
+                    <TextView
+                        android:id="@+id/tvLinkedFileName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ningún archivo vinculado actualmente."
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Sync Status Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input_field"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ÚLTIMA SINCRONIZACIÓN"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:id="@+id/tvLastSyncTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sin registros de sincronización."
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="10dp">
+
+                    <TextView
+                        android:id="@+id/tvRowsOk"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Correctos: 0"
+                        android:textColor="#10B981"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvRowsError"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Errores: 0"
+                        android:textColor="#EF4444"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Error Detail Log View -->
+            <LinearLayout
+                android:id="@+id/layoutErrorDetailBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input_field"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DETALLE DE ERRORES REGISTRADOS"
+                    android:textColor="#EF4444"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:id="@+id/tvErrorDetailText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    android:maxLines="6"
+                    android:scrollbars="vertical" />
+            </LinearLayout>
+
+            <!-- Sync Now Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSyncNow"
+                style="@style/Widget.Bootstrap.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Sincronizar ahora"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_bolt"
+                app:iconGravity="textStart"
+                app:iconPadding="10dp"
+                app:iconSize="20dp"
+                app:iconTint="?attr/colorOnPrimary"
+                app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:elevation="0dp" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</ScrollView>

@@ -1,6 +1,5 @@
 package com.aula.virtual.ui;
 
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -111,11 +110,35 @@ public class BlogCommentAdapter extends RecyclerView.Adapter<BlogCommentAdapter.
 
         if (getItemViewType(position) == TYPE_OTHERS) {
             String roleLabel = getRoleLabel(info.userRole);
-            holder.tvName.setText(info.userName);
+            holder.tvName.setText(info.userName != null ? info.userName : "Usuario");
             holder.tvRole.setText(roleLabel);
             setRoleBadgeStyle(holder.tvRole, info.userRole);
 
-            ImageUtils.setProfileImage(holder.ivPhoto, info.userPhoto, info.userName);
+            if (holder.tvInitials != null) {
+                holder.tvInitials.setText(getInitials(info.userName));
+            }
+
+            if (info.userPhoto != null && !info.userPhoto.isEmpty()) {
+                Bitmap b = ImageUtils.base64ToBitmap(info.userPhoto);
+                if (b != null) {
+                    holder.ivPhoto.setImageBitmap(b);
+                    if (holder.cardPhoto != null) holder.cardPhoto.setVisibility(View.VISIBLE);
+                } else {
+                    if (holder.cardPhoto != null) holder.cardPhoto.setVisibility(View.GONE);
+                }
+            } else {
+                if (holder.cardPhoto != null) holder.cardPhoto.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "U";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
         }
     }
 
@@ -141,8 +164,9 @@ public class BlogCommentAdapter extends RecyclerView.Adapter<BlogCommentAdapter.
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvContent, tvRole, tvTimestamp;
+        TextView tvName, tvContent, tvRole, tvTimestamp, tvInitials;
         ImageView ivPhoto;
+        View cardPhoto;
 
         ViewHolder(View itemView, int viewType) {
             super(itemView);
@@ -151,7 +175,9 @@ public class BlogCommentAdapter extends RecyclerView.Adapter<BlogCommentAdapter.
             if (viewType == TYPE_OTHERS) {
                 tvName = itemView.findViewById(R.id.tvUserName);
                 tvRole = itemView.findViewById(R.id.tvUserRole);
+                tvInitials = itemView.findViewById(R.id.tvCommentInitials);
                 ivPhoto = itemView.findViewById(R.id.ivUserPhoto);
+                cardPhoto = itemView.findViewById(R.id.cardCommentPhoto);
             }
         }
     }

@@ -50,12 +50,6 @@ public class NotificationSettingsFragment extends Fragment {
         binding.switchSound.setChecked(NotificationPrefs.isSoundEnabled(requireContext()));
         binding.switchVibration.setChecked(NotificationPrefs.isVibrationEnabled(requireContext()));
 
-        // 2. Channels
-        binding.switchChannelGeneral.setChecked(NotificationPrefs.isChannelGeneralEnabled(requireContext()));
-        binding.switchChannelSubjects.setChecked(NotificationPrefs.isChannelSubjectsEnabled(requireContext()));
-        binding.switchChannelFacilities.setChecked(NotificationPrefs.isChannelFacilitiesEnabled(requireContext()));
-        binding.switchChannelInstitutional.setChecked(NotificationPrefs.isChannelInstitutionalEnabled(requireContext()));
-
         // 3. Priority & Quiet Hours
         binding.switchPriorityAlerts.setChecked(NotificationPrefs.isPriorityAlertsEnabled(requireContext()));
 
@@ -95,23 +89,6 @@ public class NotificationSettingsFragment extends Fragment {
 
         binding.switchVibration.setOnCheckedChangeListener((btn, isChecked) -> {
             NotificationPrefs.setVibrationEnabled(requireContext(), isChecked);
-        });
-
-        // Channels Switches
-        binding.switchChannelGeneral.setOnCheckedChangeListener((btn, isChecked) -> {
-            NotificationPrefs.setChannelGeneralEnabled(requireContext(), isChecked);
-        });
-
-        binding.switchChannelSubjects.setOnCheckedChangeListener((btn, isChecked) -> {
-            NotificationPrefs.setChannelSubjectsEnabled(requireContext(), isChecked);
-        });
-
-        binding.switchChannelFacilities.setOnCheckedChangeListener((btn, isChecked) -> {
-            NotificationPrefs.setChannelFacilitiesEnabled(requireContext(), isChecked);
-        });
-
-        binding.switchChannelInstitutional.setOnCheckedChangeListener((btn, isChecked) -> {
-            NotificationPrefs.setChannelInstitutionalEnabled(requireContext(), isChecked);
         });
 
         // Priority & Quiet Hours

@@ -286,19 +286,44 @@ public class AdminDetailFragment extends Fragment {
 
     private void saveChanges() {
         if (admin != null) {
-            String name = binding.etField1.getText().toString();
-            String carnet = binding.etField2.getText().toString();
+            String name = binding.etField1.getText().toString().trim();
+            String rawCarnetInput = binding.etField2.getText().toString().trim();
             String pass = binding.etField3.getText().toString();
+
+            String carnetDigits = rawCarnetInput;
+            if (carnetDigits.startsWith("ADMIN")) carnetDigits = carnetDigits.substring(5);
+            else if (carnetDigits.startsWith("PROF")) carnetDigits = carnetDigits.substring(4);
+            else if (carnetDigits.startsWith("ENC")) carnetDigits = carnetDigits.substring(3);
+            else if (carnetDigits.startsWith("EST")) carnetDigits = carnetDigits.substring(3);
 
             boolean isValid = true;
             if (name.isEmpty()) {
                 binding.etField1.setError("El nombre es obligatorio");
                 isValid = false;
             }
-            if (carnet.isEmpty()) {
-                binding.etField2.setError("El carnet es obligatorio");
-                isValid = false;
+
+            if ("ADMIN".equals(admin.role)) {
+                if (!carnetDigits.matches("\\d{5}")) {
+                    binding.etField2.setError("Debe ingresar exactamente 5 dígitos numéricos");
+                    isValid = false;
+                }
+            } else if ("PROFESSOR".equals(admin.role)) {
+                if (!carnetDigits.matches("\\d{6}")) {
+                    binding.etField2.setError("Debe ingresar exactamente 6 dígitos numéricos");
+                    isValid = false;
+                }
+            } else if ("ENCARGADO".equals(admin.role)) {
+                if (!carnetDigits.matches("\\d{7}")) {
+                    binding.etField2.setError("Debe ingresar exactamente 7 dígitos numéricos");
+                    isValid = false;
+                }
+            } else {
+                if (carnetDigits.isEmpty()) {
+                    binding.etField2.setError("El carnet es obligatorio");
+                    isValid = false;
+                }
             }
+
             if (ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK) {
                 binding.tvPasswordStrength.setText("Contraseña muy débil");
                 binding.tvPasswordStrength.setTextColor(0xFFFF4444);
@@ -306,25 +331,16 @@ public class AdminDetailFragment extends Fragment {
             }
 
             if (isValid) {
-                if ("PROFESSOR".equals(admin.role) && carnet.length() != 6) {
-                    binding.etField2.setError("Debe ingresar exactamente 6 dígitos");
-                    return;
-                }
-                if ("ADMIN".equals(admin.role) && carnet.length() != 5) {
-                    binding.etField2.setError("Debe ingresar exactamente 5 dígitos");
-                    return;
-                }
-
                 admin.name = name;
                 
                 if ("PROFESSOR".equals(admin.role)) {
-                    admin.carnet = "PROF" + carnet;
+                    admin.carnet = "PROF" + carnetDigits;
                 } else if ("ADMIN".equals(admin.role)) {
-                    admin.carnet = "ADMIN" + carnet;
+                    admin.carnet = "ADMIN" + carnetDigits;
                 } else if ("ENCARGADO".equals(admin.role)) {
-                    admin.carnet = "ENC" + carnet;
+                    admin.carnet = "ENC" + carnetDigits;
                 } else {
-                    admin.carnet = carnet;
+                    admin.carnet = carnetDigits;
                 }
                 
                 admin.password = pass;
@@ -348,22 +364,28 @@ public class AdminDetailFragment extends Fragment {
     }
 
     private void showDeleteConfirmation() {
-        new MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Confirmar Eliminación")
-            .setMessage("¿Estás seguro de que deseas eliminar este perfil?")
-            .setPositiveButton("Eliminar", (dialog, which) -> {
-                if (admin != null) {
-                    viewModel.performOnlineAction(() -> {
-                        viewModel.deleteUser(admin);
-                        Toast.makeText(getContext(), "Perfil eliminado", Toast.LENGTH_SHORT).show();
-                        if (!Navigation.findNavController(requireView()).popBackStack(R.id.adminProfessorListFragment, false)) {
-                            Navigation.findNavController(requireView()).popBackStack();
-                        }
-                    });
-                }
-            })
-            .setNegativeButton("Cancelar", null)
-            .show();
+        if (admin == null) return;
+        String roleTitle = "PROFESSOR".equals(admin.role) ? "Profesor" : ("ENCARGADO".equals(admin.role) ? "Encargado" : "Administrador");
+        String badge = admin.carnet != null ? admin.carnet : "";
+        DialogUtils.showConfirmDeleteDialog(
+            requireContext(),
+            "Confirmar Eliminación",
+            "¿Estás seguro de que deseas eliminar este perfil? Se perderán las credenciales de acceso institucional y los datos asociados de forma permanente.",
+            admin.name,
+            roleTitle + " • AulaV",
+            badge,
+            null,
+            0,
+            () -> {
+                viewModel.performOnlineAction(() -> {
+                    viewModel.deleteUser(admin);
+                    Toast.makeText(getContext(), "Perfil eliminado", Toast.LENGTH_SHORT).show();
+                    if (!Navigation.findNavController(requireView()).popBackStack(R.id.adminProfessorListFragment, false)) {
+                        Navigation.findNavController(requireView()).popBackStack();
+                    }
+                });
+            }
+        );
     }
 
     @Override

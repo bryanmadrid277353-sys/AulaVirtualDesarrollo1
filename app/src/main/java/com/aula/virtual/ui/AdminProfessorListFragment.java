@@ -56,6 +56,16 @@ public class AdminProfessorListFragment extends Fragment {
 
         setupSearch();
 
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearch.requestFocus();
+                }
+            });
+        }
+
         viewModel.getAllProfessors().observe(getViewLifecycleOwner(), professors -> {
             allProfessors = professors;
             applyFilter();
@@ -98,6 +108,7 @@ public class AdminProfessorListFragment extends Fragment {
     }
 
     private void applyFilter() {
+        if (binding == null || !isAdded()) return;
         String query = binding.etSearch.getText().toString().toLowerCase().trim();
         String filterType = binding.spinnerFilter.getSelectedItem() != null ? binding.spinnerFilter.getSelectedItem().toString() : "Todo";
 
@@ -172,6 +183,10 @@ public class AdminProfessorListFragment extends Fragment {
             @Override public void afterTextChanged(Editable s) {}
         });
 
+        TextView tvNameError = dialogView.findViewById(R.id.tvNameError);
+        TextView tvCarnetError = dialogView.findViewById(R.id.tvCarnetError);
+        TextView tvPassError = dialogView.findViewById(R.id.tvPassError);
+
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnAdd.setOnClickListener(v1 -> {
@@ -181,16 +196,24 @@ public class AdminProfessorListFragment extends Fragment {
 
             boolean isValid = true;
             if (name.isEmpty()) {
-                etName.setError("El nombre es obligatorio");
+                if (tvNameError != null) { tvNameError.setText("Obligatorio"); tvNameError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvNameError != null) tvNameError.setVisibility(View.GONE);
             }
+
             if (carnet.length() != 6) {
-                etCarnet.setError("Debe ingresar exactamente 6 dígitos");
+                if (tvCarnetError != null) { tvCarnetError.setText("Obligatorio"); tvCarnetError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvCarnetError != null) tvCarnetError.setVisibility(View.GONE);
             }
-            if (ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK) {
-                etPass.setError("Contraseña muy débil");
+
+            if (pass.isEmpty() || ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK) {
+                if (tvPassError != null) { tvPassError.setText("Obligatorio"); tvPassError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvPassError != null) tvPassError.setVisibility(View.GONE);
             }
 
             if (isValid) {

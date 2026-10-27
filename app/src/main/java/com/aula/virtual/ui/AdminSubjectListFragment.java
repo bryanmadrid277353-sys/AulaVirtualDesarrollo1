@@ -56,6 +56,16 @@ public class AdminSubjectListFragment extends Fragment {
 
         setupSearch();
 
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearch.requestFocus();
+                }
+            });
+        }
+
         viewModel.getAllSubjects().observe(getViewLifecycleOwner(), subjects -> {
             allSubjects = subjects;
             applyFilter();
@@ -102,6 +112,7 @@ public class AdminSubjectListFragment extends Fragment {
     }
 
     private void applyFilter() {
+        if (binding == null || !isAdded()) return;
         String query = binding.etSearch.getText().toString().toLowerCase().trim();
         String filterType = binding.spinnerFilter.getSelectedItem() != null ? binding.spinnerFilter.getSelectedItem().toString() : "Todo";
 
@@ -137,47 +148,64 @@ public class AdminSubjectListFragment extends Fragment {
         }
 
         EditText etName = dialogView.findViewById(R.id.etName);
+        EditText etCodeDigits = dialogView.findViewById(R.id.etCodeDigits);
         EditText etDesc = dialogView.findViewById(R.id.etDesc);
         EditText etSection = dialogView.findViewById(R.id.etSection);
         View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
         View btnAdd = dialogView.findViewById(R.id.btnAddDialog);
 
+        TextView tvNameError = dialogView.findViewById(R.id.tvNameError);
+        TextView tvCodeError = dialogView.findViewById(R.id.tvCodeError);
+        TextView tvSectionError = dialogView.findViewById(R.id.tvSectionError);
+
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnAdd.setOnClickListener(v1 -> {
             String name = etName.getText().toString().trim();
+            String codeDigits = etCodeDigits.getText().toString().trim();
             String desc = etDesc.getText().toString().trim();
             String sectionStr = etSection.getText().toString().trim();
 
             boolean isValid = true;
             if (name.isEmpty()) {
-                etName.setError("El nombre es obligatorio");
+                if (tvNameError != null) { tvNameError.setText("Obligatorio"); tvNameError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvNameError != null) tvNameError.setVisibility(View.GONE);
+            }
+
+            if (!codeDigits.matches("\\d{5}")) {
+                if (tvCodeError != null) { tvCodeError.setText("Obligatorio"); tvCodeError.setVisibility(View.VISIBLE); }
+                isValid = false;
+            } else {
+                if (tvCodeError != null) tvCodeError.setVisibility(View.GONE);
             }
 
             String finalSection = "01";
             if (sectionStr.isEmpty()) {
-                etSection.setError("La sección es obligatoria");
+                if (tvSectionError != null) { tvSectionError.setText("Obligatorio"); tvSectionError.setVisibility(View.VISIBLE); }
                 isValid = false;
             } else {
                 try {
                     int val = Integer.parseInt(sectionStr);
                     if (val < 1 || val > 9) {
-                        etSection.setError("Debe ser un número entero entre 1 y 9");
+                        if (tvSectionError != null) { tvSectionError.setText("Obligatorio"); tvSectionError.setVisibility(View.VISIBLE); }
                         isValid = false;
                     } else {
                         finalSection = "0" + val;
+                        if (tvSectionError != null) tvSectionError.setVisibility(View.GONE);
                     }
                 } catch (NumberFormatException e) {
-                    etSection.setError("Debe ser un número válido");
+                    if (tvSectionError != null) { tvSectionError.setText("Obligatorio"); tvSectionError.setVisibility(View.VISIBLE); }
                     isValid = false;
                 }
             }
 
             if (isValid) {
+                String fullCode = "ASIGN" + codeDigits;
                 String sectionParam = finalSection;
                 viewModel.performOnlineAction(() -> {
-                    Subject newSub = new Subject(name, desc, null);
+                    Subject newSub = new Subject(fullCode, name, desc, null);
                     newSub.section = sectionParam;
                     viewModel.insertSubject(newSub);
                     dialog.dismiss();

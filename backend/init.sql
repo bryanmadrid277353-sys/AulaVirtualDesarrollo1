@@ -19,13 +19,6 @@ INSERT IGNORE INTO allowed_colors (color_name) VALUES
 ('CYAN_LIGHT'), ('CYAN'), ('CYAN_DARK'),
 ('YELLOW_LIGHT'), ('YELLOW'), ('YELLOW_DARK');
 
--- Tabla de Facultades: Entidades académicas principales (Ej: Facultad de Ingeniería)
-CREATE TABLE IF NOT EXISTS faculties (
-    id INT AUTO_INCREMENT PRIMARY KEY, -- Identificador único interno
-    name VARCHAR(255) NOT NULL,        -- Nombre completo de la facultad (Ej: Ciencias Sociales)
-    description TEXT                   -- Breve reseña o propósito de la facultad
-);
-
 -- Tabla de Usuarios (Cuentas con Acceso: Administradores, Profesores, Encargados del Estudiante)
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno
@@ -33,7 +26,6 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,                 -- Nombre completo del Encargado / Usuario
     password VARCHAR(255) NOT NULL,             -- Contraseña de acceso
     role VARCHAR(50) NOT NULL,                  -- Rol del usuario: 'ADMIN', 'ENCARGADO' o 'PROFESSOR'
-    faculty VARCHAR(255),                       -- Nombre de la facultad
     address TEXT,                               -- Dirección domiciliar del Encargado
     personal_email VARCHAR(255),                -- Correo electrónico del Encargado
     profile_image LONGTEXT,                     -- Foto de perfil en Base64
@@ -47,7 +39,6 @@ CREATE TABLE IF NOT EXISTS students (
     carnet VARCHAR(20) NOT NULL UNIQUE,         -- Carnet/Código del estudiante
     name VARCHAR(255) NOT NULL,                 -- Nombre completo del estudiante menor de edad
     grade VARCHAR(100),                         -- Grado o sección del alumno
-    faculty VARCHAR(255),                       -- Facultad/Escuela
     profile_image LONGTEXT,                     -- Foto del estudiante
     FOREIGN KEY (encargadoId) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -55,9 +46,9 @@ CREATE TABLE IF NOT EXISTS students (
 -- Tabla de Materias: Cursos académicos ofrecidos
 CREATE TABLE IF NOT EXISTS subjects (
     id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno
+    code VARCHAR(50) UNIQUE,                    -- Código/Carnet institucional de la materia (Ej: ASIGN12345)
     name VARCHAR(255) NOT NULL,                 -- Nombre de la materia (Ej: Matemática II)
     description TEXT,                           -- Contenido o resumen de la materia
-    faculty VARCHAR(255),                       -- Facultad que imparte la materia
     professorId INT,                            -- ID del usuario con rol 'PROFESSOR' asignado
     section VARCHAR(10) DEFAULT '01',           -- Sección de la materia (Ej: 01, 02)
     color VARCHAR(50) DEFAULT 'BLUE',           -- Color representativo para la interfaz (Ej: 'RED', 'GREEN', 'PURPLE')
@@ -67,18 +58,134 @@ CREATE TABLE IF NOT EXISTS subjects (
 -- Tabla de Inscripciones y Notas: Relaciona alumnos con materias y sus calificaciones
 CREATE TABLE IF NOT EXISTS enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno
-    studentId INT NOT NULL,                     -- ID del usuario con rol 'STUDENT'
+    studentId INT NOT NULL,                     -- ID del estudiante menor de edad (FK a students.id)
     subjectId INT NOT NULL,                     -- ID de la materia inscrita
     grade1 DOUBLE,                              -- Nota del primer periodo (Escala 0.0 - 10.0)
     grade2 DOUBLE,                              -- Nota del segundo periodo (Escala 0.0 - 10.0)
     grade3 DOUBLE,                              -- Nota del tercer periodo (Escala 0.0 - 10.0)
     grade4 DOUBLE,                              -- Nota del cuarto periodo (Escala 0.0 - 10.0)
     grade5 DOUBLE,                              -- Nota del quinto periodo (Escala 0.0 - 10.0)
-    color VARCHAR(50) DEFAULT 'BLUE',           -- Color preferido por el alumno para esta materia en su vista
-    FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE,
+    average DOUBLE GENERATED ALWAYS AS (
+        CASE
+            WHEN (IF(grade1 IS NULL,0,1) + IF(grade2 IS NULL,0,1) + IF(grade3 IS NULL,0,1) + IF(grade4 IS NULL,0,1) + IF(grade5 IS NULL,0,1)) = 0 THEN NULL
+            ELSE (COALESCE(grade1,0) + COALESCE(grade2,0) + COALESCE(grade3,0) + COALESCE(grade4,0) + COALESCE(grade5,0)) /
+                 (IF(grade1 IS NULL,0,1) + IF(grade2 IS NULL,0,1) + IF(grade3 IS NULL,0,1) + IF(grade4 IS NULL,0,1) + IF(grade5 IS NULL,0,1))
+        END
+    ) STORED,                                   -- Promedio calculated automáticamente ignorando notas NULL
+    color VARCHAR(50) DEFAULT 'BLUE',           -- Color preferido para la vista
+    FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE,
     UNIQUE (studentId, subjectId)               -- Evita inscripciones duplicadas del mismo alumno en la misma materia
 );
+
+-- Tabla de Historial/Bitácora de Importación de Notas y Conducta desde Excel (.xlsx)
+CREATE TABLE IF NOT EXISTS grade_import_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único de la importación
+    subjectId INT NOT NULL,                     -- ID de la materia sincronizada
+    sheetName VARCHAR(50) DEFAULT 'Notas',      -- Nombre de la hoja procesada ('Notas' o 'Conducta')
+    fileName VARCHAR(255) NOT NULL,             -- Nombre del archivo Excel procesado
+    fileHash VARCHAR(64) NOT NULL,              -- Hash SHA-256 del contenido para detección de cambios
+    importedAt VARCHAR(100) NOT NULL,           -- Timestamp de la importación
+    rowsOk INT DEFAULT 0,                       -- Registros de estudiantes actualizados exitosamente
+    rowsError INT DEFAULT 0,                    -- Registros con errores
+    errorDetail TEXT,                           -- Detalle técnico de errores por fila
+    FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE
+);
+
+-- Tabla de Niveles de Conducta (Catálogo 1-5)
+CREATE TABLE IF NOT EXISTS conduct_levels (
+    value TINYINT PRIMARY KEY CHECK (value BETWEEN 1 AND 5), -- Valor numérico (1: Malo ... 5: Excelente)
+    label VARCHAR(50) NOT NULL UNIQUE                        -- Texto legible
+);
+
+INSERT IGNORE INTO conduct_levels (value, label) VALUES
+(1, 'Malo'), (2, 'Regular'), (3, 'Bueno'), (4, 'Muy bueno'), (5, 'Excelente');
+
+-- Tabla de Registros de Conducta por Estudiante, Materia y Período
+CREATE TABLE IF NOT EXISTS conduct_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    studentId INT NOT NULL,                     -- ID del estudiante (FK a students.id)
+    subjectId INT NOT NULL,                     -- ID de la materia (FK a subjects.id)
+    period TINYINT NOT NULL CHECK (period BETWEEN 1 AND 5), -- Período evaluado (1-5)
+    attention_participation TINYINT NULL CHECK (attention_participation IS NULL OR attention_participation BETWEEN 1 AND 5),
+    rules_routines TINYINT NULL CHECK (rules_routines IS NULL OR rules_routines BETWEEN 1 AND 5),
+    self_regulation_effort TINYINT NULL CHECK (self_regulation_effort IS NULL OR self_regulation_effort BETWEEN 1 AND 5),
+    respect_collaboration TINYINT NULL CHECK (respect_collaboration IS NULL OR respect_collaboration BETWEEN 1 AND 5),
+    responsibility TINYINT NULL CHECK (responsibility IS NULL OR responsibility BETWEEN 1 AND 5),
+    observations TEXT NULL,                     -- Observaciones opcionales del docente
+    updatedAt VARCHAR(100) NULL,                -- Timestamp de última actualización
+    average DOUBLE GENERATED ALWAYS AS (
+        CASE
+            WHEN (IF(attention_participation IS NULL,0,1) + IF(rules_routines IS NULL,0,1) + IF(self_regulation_effort IS NULL,0,1) + IF(respect_collaboration IS NULL,0,1) + IF(responsibility IS NULL,0,1)) = 0 THEN NULL
+            ELSE (COALESCE(attention_participation,0) + COALESCE(rules_routines,0) + COALESCE(self_regulation_effort,0) + COALESCE(respect_collaboration,0) + COALESCE(responsibility,0)) /
+                 (IF(attention_participation IS NULL,0,1) + IF(rules_routines IS NULL,0,1) + IF(self_regulation_effort IS NULL,0,1) + IF(respect_collaboration IS NULL,0,1) + IF(responsibility IS NULL,0,1))
+        END
+    ) STORED,                                   -- Promedio calculado automáticamente ignorando NULL
+    FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE,
+    UNIQUE (studentId, subjectId, period)
+);
+
+-- Tabla de Períodos Académicos (Períodos 1 a 5)
+CREATE TABLE IF NOT EXISTS academic_periods (
+    period TINYINT PRIMARY KEY CHECK (period BETWEEN 1 AND 5),
+    startDate DATE NOT NULL,
+    endDate DATE NOT NULL,
+    CONSTRAINT check_period_dates CHECK (startDate <= endDate)
+);
+
+-- Tabla de Días No Lectivos / Asuetos / Feriados
+CREATE TABLE IF NOT EXISTS non_school_days (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    day DATE NOT NULL UNIQUE,
+    reason VARCHAR(255) NOT NULL
+);
+
+-- Tabla de Catálogo de Estados de Asistencia (0 a 3)
+CREATE TABLE IF NOT EXISTS attendance_states (
+    value TINYINT PRIMARY KEY CHECK (value BETWEEN 0 AND 3),
+    label VARCHAR(50) NOT NULL UNIQUE
+);
+
+INSERT IGNORE INTO attendance_states (value, label) VALUES
+(0, 'Sin evaluar'),
+(1, 'Asistió'),
+(2, 'No asistió'),
+(3, 'Justificado');
+
+-- Tabla de Registros de Asistencia por Estudiante, Materia y Fecha de Clase
+CREATE TABLE IF NOT EXISTS attendance_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    studentId INT NOT NULL,
+    subjectId INT NOT NULL,
+    classDate DATE NOT NULL,
+    status TINYINT NOT NULL DEFAULT 0 CHECK (status BETWEEN 0 AND 3),
+    justification TEXT NULL,
+    updatedAt VARCHAR(100) NULL,
+    FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE,
+    UNIQUE (studentId, subjectId, classDate)
+);
+
+CREATE INDEX idx_attendance_subject_date ON attendance_records(subjectId, classDate);
+
+-- Vista Calculada de Resumen de Asistencia
+CREATE OR REPLACE VIEW attendance_summary AS
+SELECT
+    studentId,
+    subjectId,
+    SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS attended_count,
+    SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS absent_count,
+    SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) AS excused_count,
+    SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS unevaluated_count,
+    COUNT(*) AS total_classes,
+    CASE
+        WHEN (SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) + SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) + SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END)) = 0 THEN NULL
+        ELSE (SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) + SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END)) /
+             (SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) + SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) + SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END)) * 100.0
+    END AS attendance_percentage
+FROM attendance_records
+GROUP BY studentId, subjectId;
 
 -- Tabla de Colores Personalizados: Preferencias estéticas de horario por usuario
 CREATE TABLE IF NOT EXISTS user_subject_colors (
@@ -116,8 +223,9 @@ CREATE TABLE IF NOT EXISTS blog_comments (
 -- Tabla de Instalaciones: Lugares físicos dentro de la institución
 CREATE TABLE IF NOT EXISTS facilities (
     id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno
+    code VARCHAR(50) UNIQUE,                    -- Código/Carnet institucional de la instalación (Ej: INSTA10001)
     name VARCHAR(255) NOT NULL,                 -- Nombre o código del aula/lugar (Ej: Aula BJ 205)
-    type VARCHAR(100),                          -- Clasificación: 'Aula', 'Laboratorio', 'Auditorio', 'Edificio'
+    type VARCHAR(100),                          -- Clasificación: 'Aulas', 'Laboratorio', 'Deportes', 'Biblioteca'
     description TEXT                            -- Detalles adicionales como ubicación o capacidad
 );
 
@@ -141,10 +249,24 @@ CREATE TABLE IF NOT EXISTS notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno
     title VARCHAR(255) NOT NULL,                -- Título del aviso
     message TEXT NOT NULL,                      -- Cuerpo del mensaje
-    targetType VARCHAR(50) NOT NULL,            -- Destinatario: 'ALL', 'ROLE_STUDENTS', 'ROLE_PROFESSORS', 'ROLE_ADMINS', 'FACULTY', 'SUBJECT', 'FACILITY'
-    targetValue VARCHAR(255) NULL,              -- Valor específico (Nombre de facultad, materia o instalación)
+    targetType VARCHAR(50) NOT NULL,            -- Destinatario: 'ALL', 'ROLE_STUDENTS', 'ROLE_PROFESSORS', 'ROLE_ADMINS', 'SUBJECT', 'FACILITY'
+    targetValue VARCHAR(255) NULL,              -- Valor específico (Nombre de materia o instalación)
     senderName VARCHAR(255) NOT NULL,           -- Nombre del usuario emisor
     timestamp VARCHAR(100) NOT NULL             -- Fecha y hora de envío
+);
+
+-- Tabla de Mensajes Directos: Conversaciones privadas 1 a 1 entre dos usuarios
+CREATE TABLE IF NOT EXISTS direct_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno del mensaje
+    chatRoomId VARCHAR(100) NOT NULL,           -- Identificador único del chat privado (Ej: 'chat_1_5')
+    senderId INT NOT NULL,                      -- ID del usuario que envía el mensaje
+    receiverId INT NOT NULL,                    -- ID del usuario destinatario
+    message TEXT NOT NULL,                      -- Contenido del mensaje privado
+    timestamp VARCHAR(100) NOT NULL,            -- Fecha y hora del mensaje (Ej: '10:42 AM')
+    isRead INT DEFAULT 0,                       -- Estado de lectura: 0=No leído, 1=Leído
+    initiatorId INT NOT NULL,                   -- ID del usuario que inició la conversación en este chat
+    FOREIGN KEY (senderId) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (receiverId) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Triggers de Validación de Límites y Traslape de Horarios para evitar colisiones
@@ -163,7 +285,7 @@ BEGIN
     -- Validar que la hora de inicio sea anterior a la de finalización
     IF @new_start >= @new_end THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error: La hora de inicio debe ser estrictamente menor a la hora de finalización.';
+        SET MESSAGE_TEXT = 'Error: La hora de inicio debe ser strictly menor a la hora de finalización.';
     END IF;
 
     -- 1. Validar traslape en la misma Aula/Instalación para los mismos días
@@ -213,7 +335,7 @@ BEGIN
 
     IF @new_start >= @new_end THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error: La hora de inicio debe ser estrictamente menor a la hora de finalización.';
+        SET MESSAGE_TEXT = 'Error: La hora de inicio debe ser strictly menor a la hora de finalización.';
     END IF;
 
     -- 1. Validar traslape en la misma Aula (Excluyendo el propio registro que se actualiza)
@@ -253,45 +375,12 @@ BEGIN
     END IF;
 END//
 
--- Trigger para forzar e inyectar facultades automáticas e inmutables segun el rol asignado
-CREATE TRIGGER before_insert_user_force_faculty
-BEFORE INSERT ON users
-FOR EACH ROW
-BEGIN
-    IF NEW.role = 'PROFESSOR' THEN
-        SET NEW.faculty = 'Docencia';
-    ELSEIF NEW.role = 'ADMIN' THEN
-        SET NEW.faculty = 'Administrativa';
-    ELSEIF NEW.role = 'ENCARGADO' THEN
-        SET NEW.faculty = 'Encargados de Estudiantes';
-    END IF;
-END//
-
-CREATE TRIGGER before_update_user_force_faculty
-BEFORE UPDATE ON users
-FOR EACH ROW
-BEGIN
-    IF NEW.role = 'PROFESSOR' THEN
-        SET NEW.faculty = 'Docencia';
-    ELSEIF NEW.role = 'ADMIN' THEN
-        SET NEW.faculty = 'Administrativa';
-    ELSEIF NEW.role = 'ENCARGADO' THEN
-        SET NEW.faculty = 'Encargados de Estudiantes';
-    END IF;
-END//
-
 DELIMITER ;
-
--- Inserción de las Facultades obligatorias del sistema
-INSERT IGNORE INTO faculties (id, name, description) VALUES
-(997, 'Encargados de Estudiantes', 'Facultad obligatoria asignada automáticamente a todos los Encargados de Estudiantes.'),
-(998, 'Docencia', 'Facultad obligatoria asignada automáticamente a todos los Profesores.'),
-(999, 'Administrativa', 'Facultad obligatoria asignada automáticamente a todos los Administradores.');
 
 -- Inserción del Admin Maestro inicial
 -- Datos de prueba base:
 -- Carnet (User login): ADMIN12345
 -- Password: ASD###
 -- Rol: Administrador del sistema
-INSERT IGNORE INTO users (carnet, name, password, role, faculty)
-VALUES ('ADMIN12345', 'Admin Maestro', 'ASD###', 'ADMIN', 'Administrativa');
+INSERT IGNORE INTO users (carnet, name, password, role)
+VALUES ('ADMIN12345', 'Admin Maestro', 'ASD###', 'ADMIN');

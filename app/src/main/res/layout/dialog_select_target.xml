@@ -518,7 +518,7 @@
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/input_border"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="#1D2738" />
+                    android:backgroundTint="@color/input_bg" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnConfirmDialog"

@@ -14,6 +14,17 @@ public class ThemeHelper {
     private static final String KEY_NAVBAR_POSITION = "navbar_position";
     private static final String KEY_DATA_MODE = "data_mode";
     private static final String KEY_BIOMETRIC_AUTOFILL = "biometric_autofill";
+    private static final String KEY_HAPTIC_FEEDBACK = "haptic_feedback";
+
+    public static boolean isHapticFeedbackEnabled(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(KEY_HAPTIC_FEEDBACK, true);
+    }
+
+    public static void setHapticFeedbackEnabled(Context context, boolean enabled) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(KEY_HAPTIC_FEEDBACK, enabled).apply();
+    }
 
     public static boolean isBiometricAutofillEnabled(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);

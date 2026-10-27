@@ -1,82 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="12dp"
-    android:layout_marginBottom="10dp"
-    android:layout_marginHorizontal="2dp"
-    android:background="@drawable/bg_list_item">
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardParticipantPhoto"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="?attr/colorPrimaryContainer"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true">
-        <ImageView
-            android:id="@+id/ivParticipantPhoto"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/ic_person"
-            android:scaleType="centerCrop"
-            app:tint="?attr/colorOnPrimaryContainer"
-            android:padding="8dp"/>
-    </androidx.cardview.widget.CardView>
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/input_bg"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/input_border"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/cardParticipantPhoto"
-        android:layout_toStartOf="@id/btnViewProfile"
-        android:layout_marginStart="12dp"
-        android:layout_centerVertical="true"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvParticipantName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nombre"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+        <!-- Left Circle Avatar / Initials -->
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_circle_primary"
+            android:layout_marginEnd="14dp">
 
-        <TextView
-            android:id="@+id/tvParticipantRole"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/tvParticipantInitials"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="PR" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardParticipantPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@android:color/transparent">
+
+                <ImageView
+                    android:id="@+id/ivParticipantPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Foto de perfil" />
+            </com.google.android.material.card.MaterialCardView>
+        </FrameLayout>
+
+        <!-- Middle Info Column (Name, Role) -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Estudiante"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="12sp" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="8dp">
+
+            <TextView
+                android:id="@+id/tvParticipantName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="Prof. Ricardo Valenzuela" />
+
+            <TextView
+                android:id="@+id/tvParticipantRole"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:layout_marginTop="2dp"
+                tools:text="Profesor" />
+        </LinearLayout>
+
+        <!-- Right Side: Chevron Icon -->
+        <ImageView
+            android:id="@+id/btnViewProfile"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="?android:attr/textColorSecondary"
+            android:contentDescription="Ver perfil" />
+
     </LinearLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnViewProfile"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:padding="0dp"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:insetLeft="0dp"
-        android:insetRight="0dp"
-        app:cornerRadius="22dp"
-        app:icon="@drawable/ic_person"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:iconSize="22dp"
-        app:iconTint="@color/white"
-        app:backgroundTint="?attr/colorPrimary"
-        android:layout_marginStart="4dp"
-        android:layout_marginEnd="4dp"
-        android:contentDescription="Ver perfil"/>
-
-</RelativeLayout>
+</androidx.cardview.widget.CardView>

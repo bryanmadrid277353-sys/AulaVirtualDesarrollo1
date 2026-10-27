@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Onda exterior -->
+    <path
+        android:strokeColor="#FF5252"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="butt"
+        android:pathData="M1.68,9.18A14.6,14.6 0 0 1 22.32,9.18"/>
+
+    <!-- Onda media -->
+    <path
+        android:strokeColor="#FF5252"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="butt"
+        android:pathData="M5.28,12.78A9.5,9.5 0 0 1 18.72,12.78"/>
+
+    <!-- Onda interior (recortada por la insignia) -->
+    <path
+        android:strokeColor="#FF5252"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="butt"
+        android:pathData="M8.54,16.04A4.9,4.9 0 0 1 12.85,14.67"/>
+
+    <!-- Punto del wifi -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M12,19.5m-1.3,0a1.3,1.3 0,1 0,2.6 0a1.3,1.3 0,1 0,-2.6 0z"/>
+
+    <!-- Insignia de alerta con signo de exclamación vaciado -->
+    <path
+        android:fillColor="#FF5252"
+        android:fillType="evenOdd"
+        android:pathData="M13.7,17.4a2.7,2.7 0,1 0,5.4 0a2.7,2.7 0,1 0,-5.4 0z
+                          M16.05,15.7h0.7l-0.1,2.5h-0.5z
+                          M16,19a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0z"/>
+</vector>

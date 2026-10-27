@@ -1,7 +1,5 @@
 package com.aula.virtual.ui;
 
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -53,6 +51,7 @@ public class StudentHomeFragment extends Fragment {
         }
 
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
+            if (binding == null || !isAdded()) return;
             if (user != null) {
                 binding.tvWelcomeName.setText(user.name != null ? user.name : "Usuario");
                 binding.tvRoleTag.setText("• Encargado de Familia");
@@ -67,19 +66,21 @@ public class StudentHomeFragment extends Fragment {
         });
 
         viewModel.getMyStudents().observe(getViewLifecycleOwner(), students -> {
+            if (binding == null || !isAdded()) return;
             renderStudentCards(viewModel, students);
         });
     }
 
     private void renderStudentCards(MainViewModel viewModel, List<Student> students) {
-        if (binding == null) return;
+        if (binding == null || getContext() == null || !isAdded()) return;
         binding.layoutStudentCardsContainer.removeAllViews();
 
         int count = students != null ? students.size() : 0;
         binding.tvStudentsCountHeader.setText("MIS ESTUDIANTES (" + count + (count == 1 ? " REGISTRO)" : " REGISTROS)"));
 
         if (students == null || students.isEmpty()) {
-            TextView tvEmpty = new TextView(requireContext());
+            if (getContext() == null) return;
+            TextView tvEmpty = new TextView(getContext());
             tvEmpty.setText("No tienes estudiantes asignados a tu cargo.");
             tvEmpty.setTextColor(0xFF8E9BB0);
             tvEmpty.setPadding(0, 16, 0, 16);
@@ -97,7 +98,6 @@ public class StudentHomeFragment extends Fragment {
             TextView tvAveragePill = cardView.findViewById(R.id.tvStudentAveragePill);
             View btnChevronRight = cardView.findViewById(R.id.btnChevronRight);
 
-            MaterialButton btnAttendance = cardView.findViewById(R.id.btnStudentAttendance);
             MaterialButton btnSchedule = cardView.findViewById(R.id.btnStudentSchedule);
 
             tvInitials.setText(getInitials(s.name));
@@ -141,9 +141,6 @@ public class StudentHomeFragment extends Fragment {
             cardView.setOnClickListener(openManagement);
             if (btnChevronRight != null) btnChevronRight.setOnClickListener(openManagement);
 
-            // Left Button: Asistencia
-            btnAttendance.setOnClickListener(v -> showStudentAttendanceDialog(s));
-
             // Right Button: Horario
             btnSchedule.setOnClickListener(v -> {
                 Bundle args = new Bundle();
@@ -160,94 +157,7 @@ public class StudentHomeFragment extends Fragment {
         }
     }
 
-    private void showStudentAttendanceDialog(Student s) {
-        if (s == null || getContext() == null) return;
 
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_student_attendance, null);
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
-        builder.setView(dialogView);
-
-        AlertDialog dialog = builder.create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-
-        TextView tvSubtitle = dialogView.findViewById(R.id.tvAttendanceSubtitle);
-        if (tvSubtitle != null) {
-            tvSubtitle.setText("Asistencias de " + s.name + " según los días del horario de clases.");
-        }
-
-        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
-        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
-        View btnSave = dialogView.findViewById(R.id.btnSaveDialog);
-
-        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
-        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
-
-        LinearLayout layoutRows = dialogView.findViewById(R.id.layoutAttendanceRowsContainer);
-        if (layoutRows != null) {
-            layoutRows.removeAllViews();
-
-            String[] dates = {"Lunes 13/10/2025", "Martes 14/10/2025", "Miércoles 15/10/2025", "Jueves 16/10/2025", "Viernes 17/10/2025"};
-            String[] statuses = {"PRESENT", "PRESENT", "ABSENT", "EXCUSED", "PRESENT"};
-
-            for (int i = 0; i < dates.length; i++) {
-                View rowView = LayoutInflater.from(requireContext()).inflate(R.layout.item_attendance_row, null);
-
-                TextView tvDate = rowView.findViewById(R.id.tvAttendanceDate);
-                TextView tvSubj = rowView.findViewById(R.id.tvAttendanceSubject);
-                MaterialButton btnToggle = rowView.findViewById(R.id.btnToggleAttendance);
-
-                if (tvDate != null) tvDate.setText(dates[i]);
-                if (tvSubj != null) tvSubj.setText("Clase programada • Horario de clases");
-
-                final String[] currentStatus = {statuses[i]};
-
-                Runnable updateButtonUI = () -> {
-                    if ("PRESENT".equals(currentStatus[0])) {
-                        btnToggle.setText("🟢 Asistió");
-                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#10B981")));
-                    } else if ("ABSENT".equals(currentStatus[0])) {
-                        btnToggle.setText("🔴 No asistió");
-                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#EF4444")));
-                    } else {
-                        btnToggle.setText("🟡 Justificado");
-                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F59E0B")));
-                    }
-                };
-
-                updateButtonUI.run();
-
-                btnToggle.setOnClickListener(v -> {
-                    if ("PRESENT".equals(currentStatus[0])) {
-                        currentStatus[0] = "ABSENT";
-                    } else if ("ABSENT".equals(currentStatus[0])) {
-                        currentStatus[0] = "EXCUSED";
-                    } else {
-                        currentStatus[0] = "PRESENT";
-                    }
-                    updateButtonUI.run();
-                });
-
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
-                rowView.setLayoutParams(lp);
-
-                layoutRows.addView(rowView);
-            }
-        }
-
-        if (btnSave != null) {
-            btnSave.setOnClickListener(v -> {
-                Toast.makeText(requireContext(), "Control de asistencia guardado exitosamente", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
-            });
-        }
-
-        dialog.show();
-    }
 
     private String getInitials(String name) {
         if (name == null || name.trim().isEmpty()) return "AV";

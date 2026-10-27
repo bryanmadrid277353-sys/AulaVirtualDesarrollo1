@@ -16,4 +16,10 @@ public interface UserSubjectColorDao {
 
     @Query("DELETE FROM user_subject_colors")
     void deleteAll();
+
+    @Query("DELETE FROM user_subject_colors WHERE subjectId = :subjectId")
+    void deleteBySubjectId(int subjectId);
+
+    @Query("DELETE FROM user_subject_colors WHERE userId = :userId")
+    void deleteByUserId(int userId);
 }

@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,6 +51,16 @@ public class AdminFacilityListFragment extends Fragment {
 
         setupSearch();
 
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearch.requestFocus();
+                }
+            });
+        }
+
         viewModel.getAllFacilities().observe(getViewLifecycleOwner(), facilities -> {
             allFacilities = facilities;
             applyFilter();
@@ -85,6 +96,7 @@ public class AdminFacilityListFragment extends Fragment {
     }
 
     private void applyFilter() {
+        if (binding == null || !isAdded()) return;
         String query = binding.etSearch.getText().toString().toLowerCase().trim();
         String filterType = binding.spinnerFilter.getSelectedItem() != null ? binding.spinnerFilter.getSelectedItem().toString() : "Todo";
 
@@ -119,9 +131,15 @@ public class AdminFacilityListFragment extends Fragment {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
+        TextView tvNameError = dialogView.findViewById(R.id.tvNameError);
+        TextView tvCodeError = dialogView.findViewById(R.id.tvCodeError);
+        TextView tvTypeError = dialogView.findViewById(R.id.tvTypeError);
+
         EditText etName = dialogView.findViewById(R.id.etName);
+        EditText etCodeDigits = dialogView.findViewById(R.id.etCodeDigits);
         EditText etType = dialogView.findViewById(R.id.etType);
         EditText etDesc = dialogView.findViewById(R.id.etDesc);
+
         View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
         View btnAdd = dialogView.findViewById(R.id.btnAddDialog);
 
@@ -129,16 +147,37 @@ public class AdminFacilityListFragment extends Fragment {
 
         btnAdd.setOnClickListener(v1 -> {
             String name = etName.getText().toString().trim();
+            String codeDigits = etCodeDigits.getText().toString().trim();
             String type = etType.getText().toString().trim();
             String desc = etDesc.getText().toString().trim();
 
+            boolean isValid = true;
             if (name.isEmpty()) {
-                etName.setError("El nombre es obligatorio");
-                return;
+                if (tvNameError != null) { tvNameError.setText("Obligatorio"); tvNameError.setVisibility(View.VISIBLE); }
+                isValid = false;
+            } else {
+                if (tvNameError != null) tvNameError.setVisibility(View.GONE);
             }
 
+            if (!codeDigits.matches("\\d{5}")) {
+                if (tvCodeError != null) { tvCodeError.setText("Obligatorio"); tvCodeError.setVisibility(View.VISIBLE); }
+                isValid = false;
+            } else {
+                if (tvCodeError != null) tvCodeError.setVisibility(View.GONE);
+            }
+
+            if (type.isEmpty()) {
+                if (tvTypeError != null) { tvTypeError.setText("Obligatorio"); tvTypeError.setVisibility(View.VISIBLE); }
+                isValid = false;
+            } else {
+                if (tvTypeError != null) tvTypeError.setVisibility(View.GONE);
+            }
+
+            if (!isValid) return;
+
+            String fullCode = "INSTA" + codeDigits;
             viewModel.performOnlineAction(() -> {
-                viewModel.insertFacility(new Facility(name, type, desc));
+                viewModel.insertFacility(new Facility(fullCode, name, type, desc));
                 dialog.dismiss();
             });
         });

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+
+    <!-- Fixed Top Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingTop="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="8dp">
+
+        <!-- Top Header with Back Button and Title -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageButton
+                android:id="@+id/btnBackDirectMessages"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_back"
+                app:tint="?android:attr/textColorPrimary"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="Atrás" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mensajes"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Action Row: Subtitle + New Chat Button -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/btnNewChat"
+                android:layout_marginEnd="8dp"
+                android:text="Comunícate de forma privada e individual con docentes y familias."
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="14sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNewChat"
+                style="@style/Widget.Bootstrap.Button.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="+ Nuevo"
+                android:textAllCaps="false"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:elevation="0dp" />
+        </RelativeLayout>
+
+        <!-- Search Bar (Permanently Visible) -->
+        <LinearLayout
+            android:id="@+id/layoutSearchContainer"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_input_field"
+            android:paddingHorizontal="14dp"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_search"
+                app:tint="?android:attr/textColorSecondary"
+                android:contentDescription="Buscar"
+                android:layout_marginEnd="8dp"/>
+
+            <EditText
+                android:id="@+id/etSearchChatRooms"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Buscar conversación o contacto..."
+                android:textSize="13sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textColorHint="?android:attr/textColorSecondary"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <!-- Filter Chips Row -->
+        <HorizontalScrollView
+            android:id="@+id/chipsScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:overScrollMode="never"
+            android:layout_marginBottom="4dp">
+
+            <LinearLayout
+                android:id="@+id/chipsLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp" />
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Scrollable Chat Rooms List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChatRooms"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false" />
+
+    <TextView
+        android:id="@+id/tvEmptyChats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No tienes conversaciones privadas activas.\nPresiona '+ Nuevo' para iniciar un chat."
+        android:textAlignment="center"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="14sp"
+        android:padding="32dp"
+        android:visibility="gone" />
+
+</LinearLayout>

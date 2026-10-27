@@ -5,15 +5,18 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Typeface;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
@@ -262,5 +265,82 @@ public class DialogUtils {
         if (ThemeHelper.isDarkMode(context)) return true;
         int nightModeFlags = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
         return nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    public interface OnDeleteConfirmedListener {
+        void onDeleteConfirmed();
+    }
+
+    public static void showConfirmDeleteDialog(
+            Context context,
+            String title,
+            String message,
+            String recordName,
+            String recordSubtitle,
+            String recordBadge,
+            String initials,
+            int iconResId,
+            OnDeleteConfirmedListener listener) {
+
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_confirm_delete, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context, R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvDeleteTitle);
+        TextView tvMessage = dialogView.findViewById(R.id.tvDeleteMessage);
+        TextView tvRecordName = dialogView.findViewById(R.id.tvRecordName);
+        TextView tvRecordSubtitle = dialogView.findViewById(R.id.tvRecordSubtitle);
+        TextView tvRecordBadge = dialogView.findViewById(R.id.tvRecordBadge);
+        TextView tvInitials = dialogView.findViewById(R.id.tvRecordInitials);
+        ImageView ivIcon = dialogView.findViewById(R.id.ivRecordIcon);
+
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDelete);
+        View btnConfirm = dialogView.findViewById(R.id.btnConfirmDelete);
+
+        if (title != null && !title.isEmpty()) tvTitle.setText(title);
+        if (message != null && !message.isEmpty()) tvMessage.setText(message);
+
+        if (recordName != null) tvRecordName.setText(recordName);
+        if (recordSubtitle != null) tvRecordSubtitle.setText(recordSubtitle);
+
+        if (recordBadge != null && !recordBadge.isEmpty()) {
+            tvRecordBadge.setText(recordBadge);
+            tvRecordBadge.setVisibility(View.VISIBLE);
+        } else {
+            tvRecordBadge.setVisibility(View.GONE);
+        }
+
+        if (iconResId != 0) {
+            ivIcon.setImageResource(iconResId);
+            ivIcon.setVisibility(View.VISIBLE);
+            tvInitials.setVisibility(View.GONE);
+        } else {
+            ivIcon.setVisibility(View.GONE);
+            tvInitials.setVisibility(View.VISIBLE);
+            tvInitials.setText(initials != null ? initials : getInitials(recordName));
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnConfirm.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (listener != null) listener.onDeleteConfirmed();
+        });
+
+        dialog.show();
+    }
+
+    private static String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "U";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
     }
 }

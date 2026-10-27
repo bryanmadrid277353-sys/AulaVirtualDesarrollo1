@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground"
+    android:padding="20dp">
+
+    <!-- Top Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/btnBackCalendar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_input_field"
+            android:src="@drawable/ic_back"
+            app:tint="?android:attr/textColorPrimary"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="Regresar" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Calendario Académico"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fechas del ciclo escolar y asuetos"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Card 1: Períodos Lectivos (1 a 5) -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeColor="@color/input_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PERÍODOS ACADÉMICOS (1 A 5)"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Period 1 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Período 1"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+                        <EditText
+                            android:id="@+id/etP1Start"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Inicio (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="6dp" />
+                        <EditText
+                            android:id="@+id/etP1End"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Fin (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Period 2 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Período 2"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+                        <EditText
+                            android:id="@+id/etP2Start"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Inicio (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="6dp" />
+                        <EditText
+                            android:id="@+id/etP2End"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Fin (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Period 3 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Período 3"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+                        <EditText
+                            android:id="@+id/etP3Start"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Inicio (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="6dp" />
+                        <EditText
+                            android:id="@+id/etP3End"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Fin (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Period 4 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Período 4"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+                        <EditText
+                            android:id="@+id/etP4Start"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Inicio (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="6dp" />
+                        <EditText
+                            android:id="@+id/etP4End"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Fin (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Period 5 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Período 5"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+                        <EditText
+                            android:id="@+id/etP5Start"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Inicio (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="6dp" />
+                        <EditText
+                            android:id="@+id/etP5End"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Fin (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSavePeriods"
+                        style="@style/Widget.Bootstrap.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="Guardar Períodos Académicos"
+                        android:textAllCaps="false"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="10dp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 2: Días No Lectivos / Feriados -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeColor="@color/input_border"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DÍAS NO LECTIVOS (ASUETOS / FERIADOS)"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <EditText
+                            android:id="@+id/etNonSchoolDate"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:hint="Fecha (YYYY-MM-DD)"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="6dp" />
+
+                        <EditText
+                            android:id="@+id/etNonSchoolReason"
+                            android:layout_width="0dp"
+                            android:layout_weight="1.5"
+                            android:layout_height="44dp"
+                            android:hint="Motivo (ej. Día Trabajo)"
+                            android:background="@drawable/bg_input_field"
+                            android:paddingHorizontal="10dp"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddNonSchoolDay"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:text="Agregar Día Sin Clases"
+                        android:textAllCaps="false"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="10dp"
+                        app:strokeColor="?attr/colorPrimary"
+                        app:strokeWidth="1dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutNonSchoolDaysList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

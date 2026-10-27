@@ -2,10 +2,12 @@ package com.aula.virtual.data;
 
 import com.aula.virtual.data.entity.BlogComment;
 import com.aula.virtual.data.entity.BlogEntry;
+import com.aula.virtual.data.entity.DirectMessage;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
 import com.aula.virtual.data.entity.Enrollment;
 import com.aula.virtual.data.entity.Notification;
+import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.entity.User;
 
@@ -25,7 +27,7 @@ public interface ApiService {
     @GET("/")
     Call<Map<String, Object>> healthCheck();
 
-    // --- Users ---
+    // --- Users & Students ---
     @GET("users/students")
     Call<List<User>> getStudents();
 
@@ -34,6 +36,27 @@ public interface ApiService {
 
     @GET("users/professors")
     Call<List<User>> getProfessors();
+
+    @GET("users/encargados")
+    Call<List<User>> getEncargados();
+
+    @GET("students")
+    Call<List<Student>> getAllStudentRecords();
+
+    @GET("students/encargado/{encargado_id}")
+    Call<List<Student>> getStudentsByEncargado(@Path("encargado_id") int encargadoId);
+
+    @POST("students")
+    Call<Student> createStudent(@Body Student student);
+
+    @GET("students/{id}")
+    Call<Student> getStudentById(@Path("id") int id);
+
+    @PUT("students/{id}")
+    Call<Student> updateStudent(@Path("id") int id, @Body Student student);
+
+    @DELETE("students/{id}")
+    Call<Void> deleteStudent(@Path("id") int id);
 
     @GET("users/student/{id}/schedules")
     Call<List<ScheduleInfo>> getStudentSchedules(@Path("id") int studentId);
@@ -173,4 +196,17 @@ public interface ApiService {
 
     @DELETE("notifications/{id}")
     Call<Void> deleteNotification(@Path("id") int id);
+
+    // --- Direct Messages & Private Chats ---
+    @GET("direct-messages/rooms/{user_id}")
+    Call<List<ChatRoomInfo>> getUserChatRooms(@Path("user_id") int userId);
+
+    @GET("direct-messages/history/{user_id}/{contact_id}")
+    Call<List<DirectMessage>> getDirectMessagesHistory(@Path("user_id") int userId, @Path("contact_id") int contactId);
+
+    @POST("direct-messages")
+    Call<DirectMessage> sendDirectMessage(@Body DirectMessage message);
+
+    @DELETE("direct-messages/rooms/{chat_room_id}")
+    Call<Void> deleteChatRoom(@Path("chat_room_id") String chatRoomId);
 }

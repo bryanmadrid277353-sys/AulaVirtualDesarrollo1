@@ -88,6 +88,16 @@ public class AdminStudentListFragment extends Fragment {
 
         setupSearch();
 
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearch.requestFocus();
+                }
+            });
+        }
+
         viewModel.getAllEncargados().observe(getViewLifecycleOwner(), users -> {
             allEncargados = users != null ? users : new ArrayList<>();
             if (isEncargadoMode) applyFilter();
@@ -153,6 +163,7 @@ public class AdminStudentListFragment extends Fragment {
     }
 
     private void applyFilter() {
+        if (binding == null || !isAdded()) return;
         String query = binding.etSearch.getText().toString().toLowerCase().trim();
         String filterType = binding.spinnerFilter.getSelectedItem() != null ? binding.spinnerFilter.getSelectedItem().toString() : "Todo";
 
@@ -230,6 +241,10 @@ public class AdminStudentListFragment extends Fragment {
         View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
         View btnAdd = dialogView.findViewById(R.id.btnAddDialog);
 
+        TextView tvNameError = dialogView.findViewById(R.id.tvNameError);
+        TextView tvCarnetError = dialogView.findViewById(R.id.tvCarnetError);
+        TextView tvPassError = dialogView.findViewById(R.id.tvPassError);
+
         tvTitle.setText(dialogTitle);
 
         btnTogglePass.setOnClickListener(v -> {
@@ -268,16 +283,24 @@ public class AdminStudentListFragment extends Fragment {
             boolean isValid = true;
 
             if (name.isEmpty()) {
-                etName.setError("El nombre es obligatorio");
+                if (tvNameError != null) { tvNameError.setText("Obligatorio"); tvNameError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvNameError != null) tvNameError.setVisibility(View.GONE);
             }
+
             if (!carnet.matches("\\d{7}")) {
-                etCarnet.setError("Carnet inválido (7 dígitos numéricos)");
+                if (tvCarnetError != null) { tvCarnetError.setText("Obligatorio"); tvCarnetError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvCarnetError != null) tvCarnetError.setVisibility(View.GONE);
             }
-            if (isEncargado && ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK) {
-                etPass.setError("Contraseña muy débil");
+
+            if (isEncargado && (pass.isEmpty() || ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK)) {
+                if (tvPassError != null) { tvPassError.setText("Obligatorio"); tvPassError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvPassError != null) tvPassError.setVisibility(View.GONE);
             }
 
             if (isValid) {
@@ -329,12 +352,16 @@ public class AdminStudentListFragment extends Fragment {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
+        TextView tvNameError = dialogView.findViewById(R.id.tvNameError);
+        TextView tvCarnetError = dialogView.findViewById(R.id.tvCarnetError);
         EditText etStudentName = dialogView.findViewById(R.id.etStudentName);
         EditText etStudentCarnet = dialogView.findViewById(R.id.etStudentCarnet);
         View btnSelectGrade = dialogView.findViewById(R.id.btnSelectGrade);
         TextView tvSelectedGrade = dialogView.findViewById(R.id.tvSelectedGrade);
+        TextView tvGradeError = dialogView.findViewById(R.id.tvGradeError);
         View btnSelectEncargado = dialogView.findViewById(R.id.btnSelectEncargado);
         TextView tvSelectedEncargado = dialogView.findViewById(R.id.tvSelectedEncargado);
+        TextView tvEncargadoError = dialogView.findViewById(R.id.tvEncargadoError);
         View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
         View btnAdd = dialogView.findViewById(R.id.btnAddDialog);
 
@@ -352,6 +379,7 @@ public class AdminStudentListFragment extends Fragment {
                         selectedGrade[0] = gradeOptions[which];
                         tvSelectedGrade.setText(selectedGrade[0]);
                         tvSelectedGrade.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
+                        if (tvGradeError != null) tvGradeError.setVisibility(View.GONE);
                     }).show();
         });
 
@@ -375,6 +403,7 @@ public class AdminStudentListFragment extends Fragment {
                         selectedEncargadoId[0] = chosen.id;
                         tvSelectedEncargado.setText(chosen.name);
                         tvSelectedEncargado.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
+                        if (tvEncargadoError != null) tvEncargadoError.setVisibility(View.GONE);
                     }).show();
         });
 
@@ -387,40 +416,62 @@ public class AdminStudentListFragment extends Fragment {
             boolean isValid = true;
 
             if (name.isEmpty()) {
-                etStudentName.setError("El nombre es obligatorio");
+                if (tvNameError != null) { tvNameError.setText("Obligatorio"); tvNameError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvNameError != null) tvNameError.setVisibility(View.GONE);
             }
+
             if (!carnet.matches("\\d{7}")) {
-                etStudentCarnet.setError("Carnet inválido (7 dígitos numéricos)");
+                if (tvCarnetError != null) { tvCarnetError.setText("Obligatorio"); tvCarnetError.setVisibility(View.VISIBLE); }
                 isValid = false;
+            } else {
+                if (tvCarnetError != null) tvCarnetError.setVisibility(View.GONE);
             }
             if (selectedGrade[0] == null) {
-                Toast.makeText(requireContext(), "Seleccione un grado y nivel", Toast.LENGTH_SHORT).show();
+                if (tvGradeError != null) {
+                    tvGradeError.setText("Obligatorio");
+                    tvGradeError.setVisibility(View.VISIBLE);
+                }
                 isValid = false;
+            } else {
+                if (tvGradeError != null) tvGradeError.setVisibility(View.GONE);
             }
 
-            int encId = (selectedEncargadoId[0] != null) ? selectedEncargadoId[0] : (allEncargados != null && !allEncargados.isEmpty() ? allEncargados.get(0).id : 1);
+            if (selectedEncargadoId[0] == null) {
+                if (tvEncargadoError != null) {
+                    tvEncargadoError.setText("Obligatorio");
+                    tvEncargadoError.setVisibility(View.VISIBLE);
+                }
+                isValid = false;
+            } else {
+                if (tvEncargadoError != null) tvEncargadoError.setVisibility(View.GONE);
+            }
 
-            if (isValid) {
-                String fullCarnet = "EST" + carnet;
-                String grade = selectedGrade[0];
-                Student newStudent = new Student(fullCarnet, name, grade, encId);
-                viewModel.performOnlineAction(() -> {
-                    viewModel.insertStudent(newStudent, new retrofit2.Callback<Student>() {
-                        @Override
-                        public void onResponse(@NonNull retrofit2.Call<Student> call, @NonNull retrofit2.Response<Student> response) {
-                            Toast.makeText(getContext(), "Alumno registrado exitosamente", Toast.LENGTH_SHORT).show();
-                            viewModel.refreshData();
-                            dialog.dismiss();
-                        }
+            if (!isValid) {
+                return;
+            }
 
-                        @Override
-                        public void onFailure(@NonNull retrofit2.Call<Student> call, @NonNull Throwable t) {
-                            Toast.makeText(getContext(), "Error al guardar alumno", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            int encId = selectedEncargadoId[0];
+
+            String fullCarnet = "EST" + carnet;
+            String grade = selectedGrade[0];
+            Student newStudent = new Student(fullCarnet, name, grade, encId);
+            viewModel.performOnlineAction(() -> {
+                viewModel.insertStudent(newStudent, new retrofit2.Callback<Student>() {
+                    @Override
+                    public void onResponse(@NonNull retrofit2.Call<Student> call, @NonNull retrofit2.Response<Student> response) {
+                        Toast.makeText(getContext(), "Alumno registrado exitosamente", Toast.LENGTH_SHORT).show();
+                        viewModel.refreshData();
+                        dialog.dismiss();
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull retrofit2.Call<Student> call, @NonNull Throwable t) {
+                        Toast.makeText(getContext(), "Error al guardar alumno", Toast.LENGTH_SHORT).show();
+                    }
                 });
-            }
+            });
         });
 
         dialog.show();

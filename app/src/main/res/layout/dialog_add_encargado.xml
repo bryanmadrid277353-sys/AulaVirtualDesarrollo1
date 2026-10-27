@@ -40,14 +40,31 @@
                 android:layout_marginBottom="24dp" />
 
             <!-- Field 1: Nombre completo -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Nombre completo"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre completo"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvNameError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -72,14 +89,31 @@
             </LinearLayout>
 
             <!-- Field 2: Carnet (7 dígitos) with ENC prefix -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Carnet (7 dígitos)"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Carnet (7 dígitos)"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvCarnetError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -114,14 +148,31 @@
             </LinearLayout>
 
             <!-- Field 3: Contraseña -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Contraseña"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Contraseña"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvPassError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -252,7 +303,7 @@
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/input_border"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="#1D2738" />
+                    android:backgroundTint="@color/input_bg" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddDialog"

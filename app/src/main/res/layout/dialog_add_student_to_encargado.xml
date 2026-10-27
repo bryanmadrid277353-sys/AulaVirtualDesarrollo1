@@ -91,14 +91,31 @@
         </androidx.cardview.widget.CardView>
 
         <!-- Input 1: Nombre completo del alumno -->
-        <TextView
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Nombre completo del alumno"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre completo del alumno"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_alignParentStart="true" />
+
+            <TextView
+                android:id="@+id/tvNameError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Obligatorio"
+                android:textColor="#FF6B6B"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_alignParentEnd="true"
+                android:visibility="gone" />
+        </RelativeLayout>
 
         <EditText
             android:id="@+id/etStudentName"
@@ -111,14 +128,31 @@
             android:layout_marginBottom="16dp" />
 
         <!-- Input 2: Carnet del alumno (7 dígitos) -->
-        <TextView
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Carnet del alumno (7 dígitos)"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="6dp" />
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Carnet del alumno (7 dígitos)"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_alignParentStart="true" />
+
+            <TextView
+                android:id="@+id/tvCarnetError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Obligatorio"
+                android:textColor="#FF6B6B"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_alignParentEnd="true"
+                android:visibility="gone" />
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -179,11 +213,26 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_alignParentStart="true"
+                android:layout_toStartOf="@id/tvGradeError"
                 android:text="Seleccionar grado y nivel"
                 android:textColor="@color/input_hint"
                 android:textSize="15sp" />
 
+            <TextView
+                android:id="@+id/tvGradeError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/ivGradeChevron"
+                android:layout_marginEnd="8dp"
+                android:text="Obligatorio"
+                android:textColor="#FF6B6B"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
             <ImageView
+                android:id="@+id/ivGradeChevron"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_centerVertical="true"
@@ -224,7 +273,7 @@
                 app:cornerRadius="12dp"
                 app:strokeColor="@color/input_border"
                 app:strokeWidth="1dp"
-                android:backgroundTint="#1D2738" />
+                android:backgroundTint="@color/input_bg" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddStudent"

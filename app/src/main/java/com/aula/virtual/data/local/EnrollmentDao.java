@@ -15,17 +15,26 @@ public interface EnrollmentDao {
     @Query("SELECT * FROM enrollments WHERE subjectId = :subjectId")
     List<Enrollment> getBySubjectId(int subjectId);
 
+    @Query("SELECT * FROM enrollments WHERE studentId = :studentId AND subjectId = :subjectId LIMIT 1")
+    Enrollment getByStudentAndSubject(int studentId, int subjectId);
+
     @Query("SELECT * FROM enrollments WHERE id = :id LIMIT 1")
     Enrollment getById(int id);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Enrollment enrollment);
 
+    @androidx.room.Update
+    void update(Enrollment enrollment);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<Enrollment> enrollments);
 
     @Query("DELETE FROM enrollments WHERE id = :id")
     void deleteById(int id);
+
+    @Query("DELETE FROM enrollments WHERE studentId = :studentId")
+    void deleteByStudentId(int studentId);
 
     @Query("DELETE FROM enrollments WHERE subjectId = :subjectId")
     void deleteBySubjectId(int subjectId);

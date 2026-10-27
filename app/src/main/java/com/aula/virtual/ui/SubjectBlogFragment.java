@@ -25,7 +25,10 @@ import com.aula.virtual.R;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import com.aula.virtual.data.entity.BlogEntry;
+import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentSubjectBlogBinding;
 import java.util.ArrayList;
@@ -38,6 +41,74 @@ public class SubjectBlogFragment extends Fragment {
     private int subjectId;
     private boolean isAdmin;
     private ItemTouchHelper touchHelper;
+    private Subject currentSubject = null;
+
+    private final ActivityResultLauncher<String> saveExcelTemplateLauncher =
+            registerForActivityResult(new ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), uri -> {
+                if (uri != null && currentSubject != null) {
+                    final android.content.Context ctx = getContext();
+                    if (ctx == null) return;
+
+                    android.app.ProgressDialog pd = new android.app.ProgressDialog(ctx);
+                    pd.setMessage("Generando plantilla Excel...");
+                    pd.show();
+
+                    com.aula.virtual.data.local.AppDatabase db = com.aula.virtual.data.local.AppDatabase.getInstance(ctx);
+                    java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                        try {
+                            List<com.aula.virtual.data.entity.Enrollment> enrollments = db.enrollmentDao().getBySubjectId(currentSubject.id);
+                            List<com.aula.virtual.data.StudentGradeInfo> gradeInfos = new ArrayList<>();
+                            if (enrollments != null) {
+                                for (com.aula.virtual.data.entity.Enrollment en : enrollments) {
+                                    com.aula.virtual.data.entity.Student student = db.studentDao().getStudentById(en.studentId);
+                                    if (student != null) {
+                                        com.aula.virtual.data.StudentGradeInfo info = new com.aula.virtual.data.StudentGradeInfo();
+                                        com.aula.virtual.data.entity.User studentUser = new com.aula.virtual.data.entity.User();
+                                        studentUser.id = student.id;
+                                        studentUser.carnet = student.carnet;
+                                        studentUser.name = student.name;
+                                        studentUser.profile_image = student.profile_image;
+                                        studentUser.role = "STUDENT";
+                                        info.student = studentUser;
+                                        info.enrollment = en;
+                                        info.subject = currentSubject;
+                                        gradeInfos.add(info);
+                                    }
+                                }
+                            }
+
+                            try (java.io.OutputStream os = ctx.getContentResolver().openOutputStream(uri)) {
+                                if (os != null) {
+                                    com.aula.virtual.excel.ExcelTemplateGenerator.generateTemplate(ctx, currentSubject, gradeInfos, os);
+                                }
+                            }
+
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    pd.dismiss();
+                                    Toast.makeText(ctx, "¡Plantilla .xlsx generada exitosamente!", Toast.LENGTH_LONG).show();
+                                });
+                            }
+                        } catch (Exception e) {
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    pd.dismiss();
+                                    Toast.makeText(ctx, "Error al generar plantilla: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+    private final ActivityResultLauncher<String[]> openExcelFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri != null && currentSubject != null) {
+                    com.aula.virtual.excel.GradeSyncManager.savePersistableUri(requireContext(), currentSubject.id, uri);
+                    Toast.makeText(getContext(), "Archivo .xlsx vinculado correctamente", Toast.LENGTH_SHORT).show();
+                    showExcelGradeManagerDialog(currentSubject);
+                }
+            });
 
     private final Handler pollHandler = new Handler(Looper.getMainLooper());
     private static final int POLL_INTERVAL = 4000; // Poll blog every 4 seconds
@@ -83,6 +154,16 @@ public class SubjectBlogFragment extends Fragment {
 
         binding.btnBackList.setOnClickListener(v -> Navigation.findNavController(v).navigateUp());
 
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearch.requestFocus();
+                }
+            });
+        }
+
         if (isAdmin) {
             binding.btnAddEntryTop.setVisibility(View.VISIBLE);
             binding.btnAddEntryTop.setOnClickListener(v -> showEntryDialog(null));
@@ -95,6 +176,7 @@ public class SubjectBlogFragment extends Fragment {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     if (binding != null && sub != null) {
+                        currentSubject = sub;
                         binding.tvSubjectName.setText(sub.name);
                         String sec = (sub.section != null && !sub.section.isEmpty()) ? sub.section : "01";
                         binding.tvSubjectSection.setText("Sección: " + sec);
@@ -106,12 +188,18 @@ public class SubjectBlogFragment extends Fragment {
         });
 
         if (binding.btnSubjectAttendanceBlog != null) {
-            if (isAdmin) {
-                binding.btnSubjectAttendanceBlog.setVisibility(View.GONE);
-            } else {
-                binding.btnSubjectAttendanceBlog.setVisibility(View.VISIBLE);
-                binding.btnSubjectAttendanceBlog.setOnClickListener(v -> showSubjectAttendanceDialog(subjectId));
-            }
+            binding.btnSubjectAttendanceBlog.setVisibility(View.VISIBLE);
+            binding.btnSubjectAttendanceBlog.setOnClickListener(v -> {
+                if (currentSubject != null) {
+                    showExcelGradeManagerDialog(currentSubject);
+                } else {
+                    viewModel.getSubjectById(subjectId, sub -> {
+                        if (sub != null && getActivity() != null) {
+                            getActivity().runOnUiThread(() -> showExcelGradeManagerDialog(sub));
+                        }
+                    });
+                }
+            });
         }
 
         binding.btnViewParticipantsBlog.setOnClickListener(v -> {
@@ -130,11 +218,11 @@ public class SubjectBlogFragment extends Fragment {
         pollHandler.postDelayed(pollRunnable, POLL_INTERVAL);
     }
 
-    private void showSubjectAttendanceDialog(int subjectId) {
-        if (getContext() == null) return;
+    public void showExcelGradeManagerDialog(Subject subject) {
+        if (subject == null || getContext() == null) return;
+        currentSubject = subject;
 
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_student_attendance, null);
-
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_excel_grade_manager, null);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
         builder.setView(dialogView);
 
@@ -143,76 +231,99 @@ public class SubjectBlogFragment extends Fragment {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-        TextView tvSubtitle = dialogView.findViewById(R.id.tvAttendanceSubtitle);
-        if (tvSubtitle != null) {
-            tvSubtitle.setText("Control de asistencia según los días de clase de esta materia.");
-        }
-
-        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
-        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
-        View btnSave = dialogView.findViewById(R.id.btnSaveDialog);
-
+        View btnClose = dialogView.findViewById(R.id.btnCloseExcelDialog);
         if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
-        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        LinearLayout layoutRows = dialogView.findViewById(R.id.layoutAttendanceRowsContainer);
-        if (layoutRows != null) {
-            layoutRows.removeAllViews();
-
-            String[] dates = {"Lunes 13/10/2025", "Miércoles 15/10/2025", "Viernes 17/10/2025", "Lunes 20/10/2025", "Miércoles 22/10/2025"};
-            String[] statuses = {"PRESENT", "PRESENT", "ABSENT", "EXCUSED", "PRESENT"};
-
-            for (int i = 0; i < dates.length; i++) {
-                View rowView = LayoutInflater.from(requireContext()).inflate(R.layout.item_attendance_row, null);
-
-                TextView tvDate = rowView.findViewById(R.id.tvAttendanceDate);
-                TextView tvSubj = rowView.findViewById(R.id.tvAttendanceSubject);
-                MaterialButton btnToggle = rowView.findViewById(R.id.btnToggleAttendance);
-
-                if (tvDate != null) tvDate.setText(dates[i]);
-                if (tvSubj != null) tvSubj.setText("Día de clase programado");
-
-                final String[] currentStatus = {statuses[i]};
-
-                Runnable updateButtonUI = () -> {
-                    if ("PRESENT".equals(currentStatus[0])) {
-                        btnToggle.setText("🟢 Asistió");
-                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#10B981")));
-                    } else if ("ABSENT".equals(currentStatus[0])) {
-                        btnToggle.setText("🔴 No asistió");
-                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#EF4444")));
-                    } else {
-                        btnToggle.setText("🟡 Justificado");
-                        btnToggle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F59E0B")));
-                    }
-                };
-
-                updateButtonUI.run();
-
-                btnToggle.setOnClickListener(v -> {
-                    if ("PRESENT".equals(currentStatus[0])) {
-                        currentStatus[0] = "ABSENT";
-                    } else if ("ABSENT".equals(currentStatus[0])) {
-                        currentStatus[0] = "EXCUSED";
-                    } else {
-                        currentStatus[0] = "PRESENT";
-                    }
-                    updateButtonUI.run();
-                });
-
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
-                rowView.setLayoutParams(lp);
-
-                layoutRows.addView(rowView);
-            }
+        TextView tvSubjectCode = dialogView.findViewById(R.id.tvSubjectExcelCode);
+        if (tvSubjectCode != null) {
+            tvSubjectCode.setText(subject.name + " (" + (subject.code != null ? subject.code : "S" + subject.id) + ")");
         }
 
-        if (btnSave != null) {
-            btnSave.setOnClickListener(v -> {
-                Toast.makeText(requireContext(), "Asistencia de la materia guardada exitosamente", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
+        MaterialButton btnGenerate = dialogView.findViewById(R.id.btnGenerateExcelTemplate);
+        MaterialButton btnLink = dialogView.findViewById(R.id.btnLinkExcelFile);
+        TextView tvLinkedFile = dialogView.findViewById(R.id.tvLinkedFileName);
+        TextView tvLastSync = dialogView.findViewById(R.id.tvLastSyncTime);
+        TextView tvRowsOk = dialogView.findViewById(R.id.tvRowsOk);
+        TextView tvRowsError = dialogView.findViewById(R.id.tvRowsError);
+        View layoutErrorBox = dialogView.findViewById(R.id.layoutErrorDetailBox);
+        TextView tvErrorDetailText = dialogView.findViewById(R.id.tvErrorDetailText);
+        MaterialButton btnSync = dialogView.findViewById(R.id.btnSyncNow);
+
+        android.net.Uri linkedUri = com.aula.virtual.excel.GradeSyncManager.getLinkedUri(requireContext(), subject.id);
+        if (linkedUri != null && tvLinkedFile != null) {
+            tvLinkedFile.setText(linkedUri.getLastPathSegment());
+        } else if (tvLinkedFile != null) {
+            tvLinkedFile.setText("Ningún archivo vinculado actualmente.");
+        }
+
+        com.aula.virtual.data.local.AppDatabase db = com.aula.virtual.data.local.AppDatabase.getInstance(requireContext());
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            com.aula.virtual.data.entity.GradeImportLog lastLog = db.gradeImportLogDao().getLastLogForSubject(subject.id);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (lastLog != null) {
+                        if (tvLastSync != null) tvLastSync.setText("Fecha: " + lastLog.importedAt);
+                        if (tvRowsOk != null) tvRowsOk.setText("Correctos: " + lastLog.rowsOk);
+                        if (tvRowsError != null) tvRowsError.setText("Errores: " + lastLog.rowsError);
+
+                        if (lastLog.errorDetail != null && !lastLog.errorDetail.isEmpty()) {
+                            if (layoutErrorBox != null) layoutErrorBox.setVisibility(View.VISIBLE);
+                            if (tvErrorDetailText != null) tvErrorDetailText.setText(lastLog.errorDetail);
+                        } else if (layoutErrorBox != null) {
+                            layoutErrorBox.setVisibility(View.GONE);
+                        }
+                    }
+                });
+            }
+        });
+
+        if (btnGenerate != null) {
+            btnGenerate.setOnClickListener(v -> {
+                saveExcelTemplateLauncher.launch("Plantilla_Notas_" + (subject.code != null ? subject.code : "Materia") + ".xlsx");
+            });
+        }
+
+        if (btnLink != null) {
+            btnLink.setOnClickListener(v -> {
+                openExcelFileLauncher.launch(new String[]{
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "application/vnd.ms-excel"
+                });
+            });
+        }
+
+        if (btnSync != null) {
+            btnSync.setOnClickListener(v -> {
+                android.net.Uri curUri = com.aula.virtual.excel.GradeSyncManager.getLinkedUri(requireContext(), subject.id);
+                if (curUri == null) {
+                    Toast.makeText(getContext(), "Primero debes vincular un archivo Excel (.xlsx)", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                android.app.ProgressDialog pd = new android.app.ProgressDialog(getContext());
+                pd.setMessage("Sincronizando notas desde Excel...");
+                pd.show();
+
+                com.aula.virtual.excel.GradeSyncManager.syncNowInternal(requireContext(), subject, curUri, new com.aula.virtual.excel.GradeSyncManager.SyncCallback() {
+                    @Override
+                    public void onSyncCompleted(com.aula.virtual.excel.ImportResult result) {
+                        pd.dismiss();
+                        Toast.makeText(getContext(), result.message, Toast.LENGTH_LONG).show();
+                        viewModel.refreshData();
+                        dialog.dismiss();
+                    }
+
+                    @Override
+                    public void onSyncSkipped(String reason) {
+                        pd.dismiss();
+                        Toast.makeText(getContext(), reason, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        pd.dismiss();
+                        Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+                    }
+                });
             });
         }
 
@@ -265,10 +376,11 @@ public class SubjectBlogFragment extends Fragment {
 
     private void observeViewModel() {
         viewModel.getSubjectBlog().observe(getViewLifecycleOwner(), entries -> {
+            if (binding == null || !isAdded()) return;
             if (entries != null) {
                 adapter.setEntries(entries);
                 int count = entries.size();
-                if (binding != null && binding.tvBlogEntryCount != null) {
+                if (binding.tvBlogEntryCount != null) {
                     binding.tvBlogEntryCount.setText(count + (count == 1 ? " entrada" : " entradas"));
                     binding.tvBlogEntryCount.setVisibility(View.VISIBLE);
                 }
@@ -348,14 +460,19 @@ public class SubjectBlogFragment extends Fragment {
     }
 
     private void showDeleteDialog(BlogEntry entry) {
-        new MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Eliminar Entrada")
-            .setMessage("¿Estás seguro de eliminar esta asignación?")
-            .setPositiveButton("Eliminar", (dialog, which) -> {
-                viewModel.performOnlineAction(() -> viewModel.deleteBlogEntry(entry));
-            })
-            .setNegativeButton("Cancelar", null)
-            .show();
+        if (entry == null) return;
+        String categoryStr = (entry.category != null && !entry.category.isEmpty()) ? entry.category : "Publicación";
+        DialogUtils.showConfirmDeleteDialog(
+            requireContext(),
+            "Confirmar Eliminación",
+            "¿Estás seguro de que deseas eliminar esta entrada del foro? Se perderán las discusiones y comentarios asociados de forma permanente.",
+            entry.title,
+            categoryStr + " • Foro de la materia",
+            "FORO",
+            null,
+            R.drawable.ic_megaphone,
+            () -> viewModel.performOnlineAction(() -> viewModel.deleteBlogEntry(entry))
+        );
     }
 
     @Override

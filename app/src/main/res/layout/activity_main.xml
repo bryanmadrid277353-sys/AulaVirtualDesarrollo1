@@ -1,196 +1,345 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="?android:attr/colorBackground">
 
-    <!-- Connection Status Banner -->
-    <TextView
-        android:id="@+id/tvConnectionStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/bs_danger"
-        android:padding="4dp"
-        android:text="⚠️ Sin conexión con el servidor"
-        android:textColor="@color/white"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:visibility="gone"/>
-
-    <!-- Fragment Container -->
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/nav_host_fragment"
-        android:name="androidx.navigation.fragment.NavHostFragment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph" />
-
-    <!-- 4-Button Bottom Navigation Bar -->
+    <!-- Main Content Layout (NavHostFragment + Bottom Navigation) -->
     <LinearLayout
-        android:id="@+id/layoutBottomNav"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:background="?attr/colorSurface"
-        android:orientation="horizontal"
-        android:elevation="8dp"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <!-- 1. Home Button -->
-        <LinearLayout
-            android:id="@+id/btnBottomHome"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
+        <!-- Fragment Container -->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/nav_host_fragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/nav_graph" />
 
-            <FrameLayout
-                android:id="@+id/pillNavHome"
-                android:layout_width="54dp"
-                android:layout_height="28dp"
-                android:gravity="center">
-
-                <ImageView
-                    android:id="@+id/ivNavHome"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_home"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Inicio" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/tvNavHomeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Inicio"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <!-- 2. Notifications Button -->
+        <!-- 5-Button Bottom Navigation Bar -->
         <LinearLayout
-            android:id="@+id/btnBottomNotifications"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:id="@+id/layoutBottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorSurface"
             android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            android:elevation="8dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
-            <FrameLayout
-                android:id="@+id/pillNavNotifications"
-                android:layout_width="54dp"
-                android:layout_height="28dp"
-                android:gravity="center">
+            <!-- Top Border Line -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/input_border" />
 
-                <ImageView
-                    android:id="@+id/ivNavNotifications"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_notification"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Notificaciones" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/tvNavNotificationsLabel"
-                android:layout_width="wrap_content"
+            <!-- Navigation Buttons Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Notificaciones"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="11sp" />
-        </LinearLayout>
+                android:minHeight="64dp"
+                android:orientation="horizontal">
 
-        <!-- 3. Settings Button -->
-        <LinearLayout
-            android:id="@+id/btnBottomSettings"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            <!-- 1. Home Button -->
+            <LinearLayout
+                android:id="@+id/btnBottomHome"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
 
-            <FrameLayout
-                android:id="@+id/pillNavSettings"
-                android:layout_width="54dp"
-                android:layout_height="28dp"
-                android:gravity="center">
+                <FrameLayout
+                    android:id="@+id/pillNavHome"
+                    android:layout_width="54dp"
+                    android:layout_height="28dp"
+                    android:gravity="center">
 
-                <ImageView
-                    android:id="@+id/ivNavSettings"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_settings"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Ajustes" />
-            </FrameLayout>
+                    <ImageView
+                        android:id="@+id/ivNavHome"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_home"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Inicio" />
+                </FrameLayout>
 
-            <TextView
-                android:id="@+id/tvNavSettingsLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ajustes"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="11sp" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/tvNavHomeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Inicio"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
 
-        <!-- 4. Profile Button -->
-        <LinearLayout
-            android:id="@+id/btnBottomProfile"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            <!-- 2. Messages Button -->
+            <LinearLayout
+                android:id="@+id/btnBottomMessages"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
 
-            <FrameLayout
-                android:id="@+id/pillNavProfile"
-                android:layout_width="54dp"
-                android:layout_height="28dp"
-                android:gravity="center">
+                <FrameLayout
+                    android:id="@+id/pillNavMessages"
+                    android:layout_width="54dp"
+                    android:layout_height="28dp"
+                    android:gravity="center">
 
-                <ImageView
-                    android:id="@+id/ivNavProfile"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_person"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Perfil" />
-            </FrameLayout>
+                    <ImageView
+                        android:id="@+id/ivNavMessages"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_chat"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Mensajes" />
+                </FrameLayout>
 
-            <TextView
-                android:id="@+id/tvNavProfileLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Perfil"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="11sp" />
+                <TextView
+                    android:id="@+id/tvNavMessagesLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mensajes"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- 3. Avisos Button -->
+            <LinearLayout
+                android:id="@+id/btnBottomNotifications"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <FrameLayout
+                    android:id="@+id/pillNavNotifications"
+                    android:layout_width="54dp"
+                    android:layout_height="28dp"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/ivNavNotifications"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_notification"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Avisos" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvNavNotificationsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Avisos"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- 4. Settings Button -->
+            <LinearLayout
+                android:id="@+id/btnBottomSettings"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <FrameLayout
+                    android:id="@+id/pillNavSettings"
+                    android:layout_width="54dp"
+                    android:layout_height="28dp"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/ivNavSettings"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_settings"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Ajustes" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvNavSettingsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ajustes"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- 5. Profile Button -->
+            <LinearLayout
+                android:id="@+id/btnBottomProfile"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <FrameLayout
+                    android:id="@+id/pillNavProfile"
+                    android:layout_width="54dp"
+                    android:layout_height="28dp"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/ivNavProfile"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_person"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Perfil" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvNavProfileLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Perfil"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+    <!-- Floating Offline Notification Banner -->
+    <LinearLayout
+        android:id="@+id/cardOfflineBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_offline_banner"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp"
+        android:elevation="16dp"
+        android:translationZ="16dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <!-- Left Icon Badge -->
+        <FrameLayout
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_offline_icon_badge"
+            android:layout_marginEnd="10dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_no_connection"
+                app:tint="#FF5252"
+                android:contentDescription="Sin conexión" />
+        </FrameLayout>
+
+        <!-- Title & Subtitle Block -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sin conexión con el servidor"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Modo sin conexión activo"
+                android:textColor="#E57373"
+                android:textSize="11sp"
+                android:layout_marginTop="1dp" />
+        </LinearLayout>
+
+        <!-- Retry Button -->
+        <LinearLayout
+            android:id="@+id/btnRetryConnection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_offline_retry_btn"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_refresh"
+                app:tint="#FFFFFF"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="Reintentar" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reintentar"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Close Button (X) -->
+        <ImageView
+            android:id="@+id/btnCloseOfflineBanner"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_close"
+            app:tint="#E57373"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Cerrar aviso" />
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -37,6 +37,7 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
         default void onStudentClick(StudentGradeInfo info) {}
         default void onAddPeriodClick(StudentGradeInfo info) {}
         default void onViewAttendance(StudentGradeInfo info) {}
+        default void onViewConduct(StudentGradeInfo info) {}
     }
 
     private Map<Integer, String> facilityMap = new HashMap<>();
@@ -141,6 +142,13 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
         if (holder.btnAttendance != null) {
             holder.btnAttendance.setOnClickListener(v -> {
                 if (listener != null) listener.onViewAttendance(info);
+            });
+        }
+
+        // Conducta button click
+        if (holder.btnConduct != null) {
+            holder.btnConduct.setOnClickListener(v -> {
+                if (listener != null) listener.onViewConduct(info);
             });
         }
 
@@ -329,7 +337,7 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvSection, tvFacility, tvProfessor, tvStatusTag, btnAddPeriod, btnAttendance;
+        TextView tvName, tvSection, tvFacility, tvProfessor, tvStatusTag, btnAddPeriod, btnAttendance, btnConduct;
         ImageView btnChevronRight;
         LinearLayout layoutPeriodsContainer;
 
@@ -342,6 +350,7 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
             tvStatusTag = itemView.findViewById(R.id.tvStatusTag);
             btnAddPeriod = itemView.findViewById(R.id.btnAddPeriod);
             btnAttendance = itemView.findViewById(R.id.btnAttendance);
+            btnConduct = itemView.findViewById(R.id.btnConduct);
             btnChevronRight = itemView.findViewById(R.id.btnChevronRight);
             layoutPeriodsContainer = itemView.findViewById(R.id.layoutPeriodsContainer);
         }

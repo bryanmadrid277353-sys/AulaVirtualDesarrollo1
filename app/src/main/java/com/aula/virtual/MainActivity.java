@@ -12,14 +12,19 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.aula.virtual.data.entity.User;
 import com.aula.virtual.service.VirtualFirebaseMessagingService;
 import com.aula.virtual.ui.MainViewModel;
 import com.aula.virtual.ui.ThemeHelper;
@@ -31,16 +36,34 @@ public class MainActivity extends AppCompatActivity {
     private MainViewModel viewModel;
 
     private LinearLayout layoutBottomNav;
-    private View btnBottomHome, btnBottomNotifications, btnBottomSettings, btnBottomProfile;
-    private ImageView ivNavHome, ivNavNotifications, ivNavSettings, ivNavProfile;
-    private TextView tvNavHomeLabel, tvNavNotificationsLabel, tvNavSettingsLabel, tvNavProfileLabel;
-    private View pillNavHome, pillNavNotifications, pillNavSettings, pillNavProfile;
+    private View btnBottomHome, btnBottomMessages, btnBottomNotifications, btnBottomSettings, btnBottomProfile;
+    private ImageView ivNavHome, ivNavMessages, ivNavNotifications, ivNavSettings, ivNavProfile;
+    private TextView tvNavHomeLabel, tvNavMessagesLabel, tvNavNotificationsLabel, tvNavSettingsLabel, tvNavProfileLabel;
+    private View pillNavHome, pillNavMessages, pillNavNotifications, pillNavSettings, pillNavProfile;
+
+    private View cardOfflineBanner;
+    private View btnRetryConnection;
+    private View btnCloseOfflineBanner;
+    private boolean isBannerDismissedManually = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        layoutBottomNav = findViewById(R.id.layoutBottomNav);
+        View mainRoot = findViewById(R.id.mainRootLayout);
+        if (mainRoot != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(mainRoot, (v, windowInsets) -> {
+                Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(0, systemBars.top, 0, 0);
+                if (layoutBottomNav != null) {
+                    layoutBottomNav.setPadding(0, 0, 0, systemBars.bottom);
+                }
+                return windowInsets;
+            });
+        }
 
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
         if (navHostFragment != null) {
@@ -51,28 +74,80 @@ public class MainActivity extends AppCompatActivity {
 
         layoutBottomNav = findViewById(R.id.layoutBottomNav);
         btnBottomHome = findViewById(R.id.btnBottomHome);
+        btnBottomMessages = findViewById(R.id.btnBottomMessages);
         btnBottomNotifications = findViewById(R.id.btnBottomNotifications);
         btnBottomSettings = findViewById(R.id.btnBottomSettings);
         btnBottomProfile = findViewById(R.id.btnBottomProfile);
 
         ivNavHome = findViewById(R.id.ivNavHome);
+        ivNavMessages = findViewById(R.id.ivNavMessages);
         ivNavNotifications = findViewById(R.id.ivNavNotifications);
         ivNavSettings = findViewById(R.id.ivNavSettings);
         ivNavProfile = findViewById(R.id.ivNavProfile);
 
         tvNavHomeLabel = findViewById(R.id.tvNavHomeLabel);
+        tvNavMessagesLabel = findViewById(R.id.tvNavMessagesLabel);
         tvNavNotificationsLabel = findViewById(R.id.tvNavNotificationsLabel);
         tvNavSettingsLabel = findViewById(R.id.tvNavSettingsLabel);
         tvNavProfileLabel = findViewById(R.id.tvNavProfileLabel);
 
         pillNavHome = findViewById(R.id.pillNavHome);
+        pillNavMessages = findViewById(R.id.pillNavMessages);
         pillNavNotifications = findViewById(R.id.pillNavNotifications);
         pillNavSettings = findViewById(R.id.pillNavSettings);
         pillNavProfile = findViewById(R.id.pillNavProfile);
 
-        btnBottomHome.setOnClickListener(v -> navigateToHome());
+        cardOfflineBanner = findViewById(R.id.cardOfflineBanner);
+        btnRetryConnection = findViewById(R.id.btnRetryConnection);
+        btnCloseOfflineBanner = findViewById(R.id.btnCloseOfflineBanner);
+
+        if (btnCloseOfflineBanner != null) {
+            btnCloseOfflineBanner.setOnClickListener(v -> {
+                isBannerDismissedManually = true;
+                if (cardOfflineBanner != null) {
+                    cardOfflineBanner.setVisibility(View.GONE);
+                }
+            });
+        }
+
+        if (btnRetryConnection != null) {
+            btnRetryConnection.setOnClickListener(v -> {
+                isBannerDismissedManually = false;
+                Toast.makeText(this, "Comprobando conexión...", Toast.LENGTH_SHORT).show();
+                if (viewModel != null) {
+                    viewModel.refreshData();
+                    viewModel.startKeepAlive();
+                }
+            });
+        }
+
+        btnBottomHome.setOnClickListener(v -> {
+            triggerHaptic(v);
+            navigateToHome();
+        });
+
+        btnBottomMessages.setOnClickListener(v -> {
+            triggerHaptic(v);
+            hideKeyboard();
+            try {
+                if (navController != null) {
+                    if (navController.getCurrentDestination() == null || 
+                        (navController.getCurrentDestination().getId() != R.id.directMessagesFragment && 
+                         navController.getCurrentDestination().getId() != R.id.directChatFragment)) {
+                        navController.navigate(R.id.action_global_directMessagesFragment);
+                    }
+                }
+            } catch (Exception e) {
+                try {
+                    navController.navigate(R.id.directMessagesFragment);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
 
         btnBottomNotifications.setOnClickListener(v -> {
+            triggerHaptic(v);
             hideKeyboard();
             if (navController != null && navController.getCurrentDestination() != null && 
                 navController.getCurrentDestination().getId() != R.id.notificationListFragment) {
@@ -81,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnBottomSettings.setOnClickListener(v -> {
+            triggerHaptic(v);
             hideKeyboard();
             if (navController != null && navController.getCurrentDestination() != null && 
                 navController.getCurrentDestination().getId() != R.id.settingsFragment) {
@@ -89,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnBottomProfile.setOnClickListener(v -> {
+            triggerHaptic(v);
             hideKeyboard();
             if (navController != null && navController.getCurrentDestination() != null && 
                 navController.getCurrentDestination().getId() != R.id.studentProfileFragment) {
@@ -98,25 +175,21 @@ public class MainActivity extends AppCompatActivity {
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             int id = destination.getId();
-            if (id == R.id.loginFragment) {
+            if (id == R.id.loginFragment || id == R.id.blogDiscussionFragment || id == R.id.directChatFragment) {
                 if (layoutBottomNav != null) layoutBottomNav.setVisibility(View.GONE);
             } else {
                 if (layoutBottomNav != null) layoutBottomNav.setVisibility(View.VISIBLE);
                 updateBottomNavSelection(id);
             }
+            // Mantener estado del banner al cambiar de pantalla sin reiniciar reintentos
+            updateOfflineBannerVisibility(viewModel != null ? viewModel.isServerConnected().getValue() : null);
         });
 
-        TextView tvStatus = findViewById(R.id.tvConnectionStatus);
-        if (ThemeHelper.isLocalMode(this)) {
-            tvStatus.setVisibility(View.GONE);
-        }
-        
         viewModel.isServerConnected().observe(this, connected -> {
-            if (ThemeHelper.isLocalMode(this) || Boolean.TRUE.equals(connected)) {
-                tvStatus.setVisibility(View.GONE);
-            } else {
-                tvStatus.setVisibility(View.VISIBLE);
+            if (Boolean.TRUE.equals(connected)) {
+                isBannerDismissedManually = false;
             }
+            updateOfflineBannerVisibility(connected);
         });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -138,6 +211,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         setupNotificationsAndPermissions();
+    }
+
+    private void updateOfflineBannerVisibility(Boolean isConnected) {
+        if (cardOfflineBanner == null) return;
+        boolean isLocal = ThemeHelper.isLocalMode(this);
+        boolean connected = Boolean.TRUE.equals(isConnected);
+
+        if (isLocal || connected || isBannerDismissedManually) {
+            cardOfflineBanner.setVisibility(View.GONE);
+        } else {
+            if (Boolean.FALSE.equals(isConnected)) {
+                cardOfflineBanner.setVisibility(View.VISIBLE);
+            } else {
+                cardOfflineBanner.setVisibility(View.GONE);
+            }
+        }
     }
 
     private void setupNotificationsAndPermissions() {
@@ -186,11 +275,13 @@ public class MainActivity extends AppCompatActivity {
         boolean isHome = currentDestinationId == R.id.adminHomeFragment || 
                          currentDestinationId == R.id.studentHomeFragment || 
                          currentDestinationId == R.id.professorHomeFragment;
+        boolean isMessages = currentDestinationId == R.id.directMessagesFragment || currentDestinationId == R.id.directChatFragment;
         boolean isNotif = currentDestinationId == R.id.notificationListFragment;
         boolean isSettings = currentDestinationId == R.id.settingsFragment || currentDestinationId == R.id.settingsAdvancedFragment;
         boolean isProfile = currentDestinationId == R.id.studentProfileFragment;
 
         setTabState(pillNavHome, ivNavHome, tvNavHomeLabel, isHome, primaryColor, secondaryColor);
+        if (pillNavMessages != null) setTabState(pillNavMessages, ivNavMessages, tvNavMessagesLabel, isMessages, primaryColor, secondaryColor);
         setTabState(pillNavNotifications, ivNavNotifications, tvNavNotificationsLabel, isNotif, primaryColor, secondaryColor);
         setTabState(pillNavSettings, ivNavSettings, tvNavSettingsLabel, isSettings, primaryColor, secondaryColor);
         setTabState(pillNavProfile, ivNavProfile, tvNavProfileLabel, isProfile, primaryColor, secondaryColor);
@@ -219,6 +310,8 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if (viewModel != null) {
             viewModel.startKeepAlive();
+            isBannerDismissedManually = false;
+            updateOfflineBannerVisibility(viewModel.isServerConnected().getValue());
         }
     }
 
@@ -260,17 +353,41 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void triggerHaptic(View view) {
+        if (ThemeHelper.isHapticFeedbackEnabled(this)) {
+            if (view != null) {
+                view.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+            }
+        }
+    }
+
     public void navigateToHome() {
-        if (viewModel == null || viewModel.getCurrentUser().getValue() == null) return;
-        String role = viewModel.getCurrentUser().getValue().role;
+        if (viewModel == null || viewModel.getCurrentUser() == null) return;
+        User user = viewModel.getCurrentUser().getValue();
+        if (user == null || user.role == null) return;
+
+        String role = user.role;
         int homeId = -1;
-        if ("ADMIN".equals(role)) homeId = R.id.adminHomeFragment;
-        else if ("PROFESSOR".equals(role)) homeId = R.id.professorHomeFragment;
-        else if ("STUDENT".equals(role) || "ENCARGADO".equals(role) || "GUARDIAN".equals(role)) homeId = R.id.studentHomeFragment;
-        
-        if (homeId != -1 && navController != null && navController.getCurrentDestination() != null && 
-            navController.getCurrentDestination().getId() != homeId) {
-            navController.popBackStack(homeId, false);
+        if ("ADMIN".equalsIgnoreCase(role)) homeId = R.id.adminHomeFragment;
+        else if ("PROFESSOR".equalsIgnoreCase(role)) homeId = R.id.professorHomeFragment;
+        else if ("STUDENT".equalsIgnoreCase(role) || "ENCARGADO".equalsIgnoreCase(role) || "GUARDIAN".equalsIgnoreCase(role)) homeId = R.id.studentHomeFragment;
+
+        if (homeId != -1 && navController != null) {
+            if (navController.getCurrentDestination() != null && navController.getCurrentDestination().getId() == homeId) {
+                return;
+            }
+            try {
+                boolean popped = navController.popBackStack(homeId, false);
+                if (!popped) {
+                    navController.navigate(homeId);
+                }
+            } catch (Exception e) {
+                try {
+                    navController.navigate(homeId);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 

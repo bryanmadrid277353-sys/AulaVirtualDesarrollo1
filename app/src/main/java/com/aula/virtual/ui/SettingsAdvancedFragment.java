@@ -1,7 +1,10 @@
 package com.aula.virtual.ui;
 
 import android.app.ProgressDialog;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.util.TypedValue;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -58,10 +61,7 @@ public class SettingsAdvancedFragment extends Fragment {
         binding.btnConfigureServerUrl.setOnClickListener(v -> showServerUrlDialog());
 
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
-            updateVisibilityForMode(user);
-            if (user != null && !"ADMIN".equals(user.role)) {
-                RetrofitClient.setCustomUrl(requireContext(), RetrofitClient.BASE_URL);
-            }
+            updateVisibilityForMode();
         });
 
         viewModel.getModificationError().observe(getViewLifecycleOwner(), error -> {
@@ -72,27 +72,38 @@ public class SettingsAdvancedFragment extends Fragment {
         });
     }
 
-    private void updateVisibilityForMode(User currentUser) {
-        boolean isAdmin = currentUser != null && "ADMIN".equals(currentUser.role);
+    private void updateVisibilityForMode() {
+        if (binding == null || getContext() == null) return;
+        String currentMode = ThemeHelper.getDataMode(requireContext());
+        boolean isLocal = ThemeHelper.MODE_LOCAL.equals(currentMode);
 
-        if (isAdmin) {
-            // Admins see all options regardless of local or server mode
-            binding.layoutTransferCategory.setVisibility(View.VISIBLE);
-            binding.layoutClearCategory.setVisibility(View.VISIBLE);
-        } else {
-            // Professors, Encargados, and Students see ONLY the local/server data mode selection option
-            binding.layoutTransferCategory.setVisibility(View.GONE);
-            binding.layoutClearCategory.setVisibility(View.GONE);
+        // 1. Servidor y Conexión: Visible SOLO en Modo Servidor
+        int serverConfigVisibility = isLocal ? View.GONE : View.VISIBLE;
+        if (binding.layoutServerConfigCategory != null) {
+            binding.layoutServerConfigCategory.setVisibility(serverConfigVisibility);
+        } else if (binding.btnConfigureServerUrl != null) {
+            binding.btnConfigureServerUrl.setVisibility(serverConfigVisibility);
+        }
+
+        // 2. Transferencia de Datos: Visible SOLO en Modo Servidor
+        if (binding.layoutTransferCategory != null) {
+            binding.layoutTransferCategory.setVisibility(isLocal ? View.GONE : View.VISIBLE);
+        }
+
+        // 3. Datos Descargados: Visible SOLO en Modo Local
+        if (binding.layoutClearCategory != null) {
+            binding.layoutClearCategory.setVisibility(isLocal ? View.VISIBLE : View.GONE);
         }
     }
 
     private void setupDataModeSelector() {
         String currentMode = ThemeHelper.getDataMode(requireContext());
-        updateVisibilityForMode(viewModel.getCurrentUser().getValue());
-
         boolean isLocal = ThemeHelper.MODE_LOCAL.equals(currentMode);
+
         binding.ivRadioLocal.setImageResource(isLocal ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
         binding.ivRadioServer.setImageResource(isLocal ? R.drawable.ic_radio_unchecked : R.drawable.ic_radio_checked);
+
+        updateVisibilityForMode();
 
         if (isLocal) {
             binding.tvDataModeTitle.setText("Estás trabajando en modo local");
@@ -155,79 +166,158 @@ public class SettingsAdvancedFragment extends Fragment {
     }
 
     private void showServerUrlDialog() {
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), "Configurar Servidor");
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_configure_server, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        View cardCloudflare = dialogView.findViewById(R.id.cardOptionCloudflare);
+        View cardEmulator = dialogView.findViewById(R.id.cardOptionEmulator);
+        View cardLocalNet = dialogView.findViewById(R.id.cardOptionLocalNet);
+
+        ImageView ivRadioCloudflare = dialogView.findViewById(R.id.ivRadioCloudflare);
+        ImageView ivRadioEmulator = dialogView.findViewById(R.id.ivRadioEmulator);
+        ImageView ivRadioLocalNet = dialogView.findViewById(R.id.ivRadioLocalNet);
+
+        TextView tvSslBadge = dialogView.findViewById(R.id.tvSslBadge);
+        EditText etServerUrl = dialogView.findViewById(R.id.etServerUrl);
+
+        ImageView btnToggleMask = dialogView.findViewById(R.id.btnToggleMask);
+
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnSave = dialogView.findViewById(R.id.btnSaveServerUrl);
 
         String currentUrl = RetrofitClient.getActiveUrl(requireContext());
+        etServerUrl.setText(currentUrl);
 
-        TextView tvHeader = new TextView(requireContext());
-        tvHeader.setText("Selecciona el tipo de conexión:");
-        tvHeader.setTextSize(14f);
-        tvHeader.setTypeface(null, Typeface.BOLD);
-        tvHeader.setPadding(0, 0, 0, (int) (6 * getResources().getDisplayMetrics().density));
-        layout.addView(tvHeader);
+        int colorPrimary = ContextCompat.getColor(requireContext(), R.color.bs_primary);
+        int colorBorder = ContextCompat.getColor(requireContext(), R.color.input_border);
 
-        // Input field for URL (masked for security)
-        final EditText etUrl = DialogUtils.createStyledEditText(requireContext(), "Dirección del Servidor", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        etUrl.setText(currentUrl);
-        etUrl.setTransformationMethod(PasswordTransformationMethod.getInstance());
+        Runnable updateSelectionUI = () -> {
+            String url = etServerUrl.getText().toString().trim();
 
-        // Option 1: Cloudflare Tunnel
-        TextView btnPresetCloudflare = DialogUtils.createDialogOptionButton(requireContext(), 
-            "🌐 Cloudflare Tunnel (Servidor Nube)");
-        btnPresetCloudflare.setOnClickListener(v -> etUrl.setText(RetrofitClient.BASE_URL));
-        layout.addView(btnPresetCloudflare);
+            boolean isCloudflare = url.equals(RetrofitClient.BASE_URL) || url.contains("trycloudflare.com") || url.contains("https://");
+            boolean isEmulator = url.equals(RetrofitClient.EMULATOR_URL) || url.contains("10.0.2.2");
+            boolean isLocalNet = url.contains("192.168.") || url.contains("localhost");
 
-        // Option 2: Android Emulator
-        TextView btnPresetEmulator = DialogUtils.createDialogOptionButton(requireContext(), 
-            "📱 Emulador de Android Studio");
-        btnPresetEmulator.setOnClickListener(v -> etUrl.setText(RetrofitClient.EMULATOR_URL));
-        layout.addView(btnPresetEmulator);
-
-        // Option 3: Local Network
-        TextView btnPresetLocalNet = DialogUtils.createDialogOptionButton(requireContext(), 
-            "💻 Red Local Wi-Fi");
-        btnPresetLocalNet.setOnClickListener(v -> {
-            if (!etUrl.getText().toString().contains("192.168.")) {
-                etUrl.setText("http://192.168.1.100:8000/");
+            if (!isCloudflare && !isEmulator && !isLocalNet) {
+                isCloudflare = true;
             }
+
+            if (cardCloudflare instanceof com.google.android.material.card.MaterialCardView) {
+                ((com.google.android.material.card.MaterialCardView) cardCloudflare).setStrokeColor(isCloudflare ? colorPrimary : colorBorder);
+            }
+            if (cardEmulator instanceof com.google.android.material.card.MaterialCardView) {
+                ((com.google.android.material.card.MaterialCardView) cardEmulator).setStrokeColor(isEmulator ? colorPrimary : colorBorder);
+            }
+            if (cardLocalNet instanceof com.google.android.material.card.MaterialCardView) {
+                ((com.google.android.material.card.MaterialCardView) cardLocalNet).setStrokeColor(isLocalNet ? colorPrimary : colorBorder);
+            }
+
+            ImageView ivIconCloudflare = dialogView.findViewById(R.id.ivIconCloudflare);
+            ImageView ivIconEmulator = dialogView.findViewById(R.id.ivIconEmulator);
+            ImageView ivIconLocalNet = dialogView.findViewById(R.id.ivIconLocalNet);
+
+            TypedValue typedValue = new TypedValue();
+            requireContext().getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValue, true);
+            int colorSecondary = typedValue.data;
+
+            if (ivIconCloudflare != null) ivIconCloudflare.setImageTintList(ColorStateList.valueOf(isCloudflare ? colorPrimary : colorSecondary));
+            if (ivIconEmulator != null) ivIconEmulator.setImageTintList(ColorStateList.valueOf(isEmulator ? colorPrimary : colorSecondary));
+            if (ivIconLocalNet != null) ivIconLocalNet.setImageTintList(ColorStateList.valueOf(isLocalNet ? colorPrimary : colorSecondary));
+
+            if (ivRadioCloudflare != null) {
+                ivRadioCloudflare.setImageResource(isCloudflare ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
+            }
+            if (ivRadioEmulator != null) {
+                ivRadioEmulator.setImageResource(isEmulator ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
+            }
+            if (ivRadioLocalNet != null) {
+                ivRadioLocalNet.setImageResource(isLocalNet ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
+            }
+
+            if (tvSslBadge != null) {
+                if (url.startsWith("https://")) {
+                    tvSslBadge.setText("🟢 SSL ACTIVO");
+                    tvSslBadge.setTextColor(Color.parseColor("#10B981"));
+                    tvSslBadge.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#064E3B")));
+                } else {
+                    tvSslBadge.setText("🟡 HTTP LOCAL");
+                    tvSslBadge.setTextColor(Color.parseColor("#F59E0B"));
+                    tvSslBadge.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#451A03")));
+                }
+            }
+        };
+
+        updateSelectionUI.run();
+
+        cardCloudflare.setOnClickListener(v -> {
+            etServerUrl.setText(RetrofitClient.BASE_URL);
+            updateSelectionUI.run();
+            Toast.makeText(getContext(), "Seleccionado: Servidor Nube (Cloudflare)", Toast.LENGTH_SHORT).show();
         });
-        layout.addView(btnPresetLocalNet);
 
-        TextView tvLabelEdit = new TextView(requireContext());
-        tvLabelEdit.setText("Dirección del servidor:");
-        tvLabelEdit.setTextSize(14f);
-        tvLabelEdit.setTypeface(null, Typeface.BOLD);
-        tvLabelEdit.setPadding(0, (int) (12 * getResources().getDisplayMetrics().density), 0, (int) (4 * getResources().getDisplayMetrics().density));
-        layout.addView(tvLabelEdit);
-        layout.addView(etUrl);
+        cardEmulator.setOnClickListener(v -> {
+            etServerUrl.setText(RetrofitClient.EMULATOR_URL);
+            updateSelectionUI.run();
+            Toast.makeText(getContext(), "Seleccionado: Emulador Android Studio", Toast.LENGTH_SHORT).show();
+        });
 
-        TextView btnToggleMask = new TextView(requireContext());
-        btnToggleMask.setText("👁️ Mostrar / Ocultar Dirección");
-        btnToggleMask.setTextSize(12f);
-        btnToggleMask.setTextColor(ContextCompat.getColor(requireContext(), R.color.bs_secondary));
-        btnToggleMask.setPadding(0, (int) (4 * getResources().getDisplayMetrics().density), 0, (int) (8 * getResources().getDisplayMetrics().density));
-        btnToggleMask.setOnClickListener(v -> {
-            if (etUrl.getTransformationMethod() instanceof PasswordTransformationMethod) {
-                etUrl.setTransformationMethod(null);
+        cardLocalNet.setOnClickListener(v -> {
+            if (!etServerUrl.getText().toString().contains("192.168.")) {
+                etServerUrl.setText("http://192.168.1.100:8000/");
+            }
+            updateSelectionUI.run();
+            Toast.makeText(getContext(), "Seleccionado: Red Local Wi-Fi", Toast.LENGTH_SHORT).show();
+        });
+
+        ImageView btnCopyServerUrl = dialogView.findViewById(R.id.btnCopyServerUrl);
+        if (btnCopyServerUrl != null) {
+            btnCopyServerUrl.setOnClickListener(v -> {
+                String urlToCopy = etServerUrl.getText().toString().trim();
+                if (!urlToCopy.isEmpty()) {
+                    ClipboardUtils.copyToClipboard(requireContext(), "Dirección del Servidor", urlToCopy);
+                    Toast.makeText(getContext(), "Dirección copiada al portapapeles", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "No hay dirección para copiar", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        View.OnClickListener toggleMaskAction = v -> {
+            if (etServerUrl.getTransformationMethod() instanceof PasswordTransformationMethod) {
+                etServerUrl.setTransformationMethod(null);
+                if (btnToggleMask != null) btnToggleMask.setImageResource(R.drawable.ic_visibility);
             } else {
-                etUrl.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                etServerUrl.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                if (btnToggleMask != null) btnToggleMask.setImageResource(R.drawable.ic_visibility_off);
             }
-            if (etUrl.getText() != null) etUrl.setSelection(etUrl.getText().length());
-        });
-        layout.addView(btnToggleMask);
+            if (etServerUrl.getText() != null) {
+                etServerUrl.setSelection(etServerUrl.getText().length());
+            }
+        };
 
-        builder.setView(layout);
-        builder.setPositiveButton("Probar y Guardar", (dialog, which) -> {
-            String newUrl = etUrl.getText().toString().trim();
+        if (btnToggleMask != null) btnToggleMask.setOnClickListener(toggleMaskAction);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String newUrl = etServerUrl.getText().toString().trim();
             if (!newUrl.isEmpty()) {
                 RetrofitClient.setCustomUrl(requireContext(), newUrl);
                 Toast.makeText(getContext(), "Configuración guardada. Probando conexión con el servidor...", Toast.LENGTH_SHORT).show();
                 viewModel.refreshData();
+                dialog.dismiss();
+            } else {
+                etServerUrl.setError("Ingrese una dirección válida");
             }
         });
-        builder.setNegativeButton("Cancelar", null);
-        builder.show();
+
+        dialog.show();
     }
 
     private void showChangePasswordDialog() {
@@ -355,41 +445,69 @@ public class SettingsAdvancedFragment extends Fragment {
             return;
         }
         if (!viewModel.performOnlineAction(() -> {})) return;
-        
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("⚠️ Confirmar Sincronización")
-                .setMessage("ADVERTENCIA: Al descargar los datos del servidor, se BORRARÁN PRIMERO todos los datos locales actuales para evitar duplicados o incongruencias, y se establecerán únicamente los datos actualizados del servidor.\n\n¿Deseas continuar?")
-                .setPositiveButton("Sí, Borrar y Sincronizar", (dialog, which) -> {
-                    ProgressDialog progressDialog = new ProgressDialog(getContext());
-                    progressDialog.setMessage("Sincronizando y descargando datos del servidor...");
-                    progressDialog.setCancelable(false);
-                    progressDialog.show();
 
-                    viewModel.downloadAllDataForOffline(new VirtualAulaRepository.SyncCallback() {
-                        @Override
-                        public void onSuccess(String message) {
-                            if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> {
-                                    progressDialog.dismiss();
-                                    Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
-                                    viewModel.refreshData();
-                                });
-                            }
-                        }
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_confirm_sync, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
-                        @Override
-                        public void onError(String error) {
-                            if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> {
-                                    progressDialog.dismiss();
-                                    Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
-                                });
-                            }
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvServerHost = dialogView.findViewById(R.id.tvServerHostName);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelSync);
+        View btnConfirm = dialogView.findViewById(R.id.btnConfirmSync);
+
+        String activeUrl = RetrofitClient.getActiveUrl(requireContext());
+        String hostLabel = activeUrl;
+        try {
+            java.net.URI uri = new java.net.URI(activeUrl);
+            String host = uri.getHost();
+            if (host != null && !host.isEmpty()) {
+                hostLabel = host + " (Activo)";
+            }
+        } catch (Exception ignored) {}
+
+        if (tvServerHost != null) tvServerHost.setText(hostLabel);
+
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                dialog.dismiss();
+
+                ProgressDialog progressDialog = new ProgressDialog(getContext());
+                progressDialog.setMessage("Sincronizando y descargando datos del servidor...");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
+                viewModel.downloadAllDataForOffline(new VirtualAulaRepository.SyncCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                progressDialog.dismiss();
+                                Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+                                viewModel.refreshData();
+                            });
                         }
-                    });
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                progressDialog.dismiss();
+                                Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        dialog.show();
     }
 
     private void confirmClearOfflineData() {
@@ -398,33 +516,48 @@ public class SettingsAdvancedFragment extends Fragment {
             Toast.makeText(getContext(), "Acción no permitida: Los Profesores y Estudiantes no pueden eliminar datos de la aplicación en Modo Local.", Toast.LENGTH_LONG).show();
             return;
         }
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Eliminar Datos Descargados")
-                .setMessage("¿Estás seguro de que deseas eliminar del dispositivo todos los datos descargados previamente del servidor?")
-                .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.clearAllOfflineData(new VirtualAulaRepository.SyncCallback() {
-                        @Override
-                        public void onSuccess(String message) {
-                            if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
-                                    viewModel.refreshData();
-                                });
-                            }
-                        }
 
-                        @Override
-                        public void onError(String error) {
-                            if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> {
-                                    Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
-                                });
-                            }
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_confirm_clear_offline, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        View btnCancel = dialogView.findViewById(R.id.btnCancelClear);
+        View btnConfirm = dialogView.findViewById(R.id.btnConfirmClear);
+
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                dialog.dismiss();
+                viewModel.clearAllOfflineData(new VirtualAulaRepository.SyncCallback() {
+                    @Override
+                    public void onSuccess(String message) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+                                viewModel.refreshData();
+                            });
                         }
-                    });
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        dialog.show();
     }
 
     private void confirmUploadOfflineData() {
@@ -433,12 +566,29 @@ public class SettingsAdvancedFragment extends Fragment {
             Toast.makeText(getContext(), "Acción no permitida: Los Profesores y Estudiantes no pueden subir datos al servidor en Modo Local.", Toast.LENGTH_LONG).show();
             return;
         }
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("📤 Subir Registros Locales al Servidor")
-                .setMessage("⚠️ PRECAUCIÓN Y ADVERTENCIA:\n\nTodos los registros actuales almacenados en el dispositivo (Modo Offline) se subirán y se SUMARÁN a los registros actuales del Servidor SQL en línea como NUEVOS REGISTROS.\n\nEsta acción registrará tus materias, facultades, instalaciones, usuarios, foros y notificaciones locales directamente en el servidor como entradas completamente nuevas. ¿Deseas continuar?")
-                .setPositiveButton("Sí, Subir al Servidor", (dialog, which) -> uploadOfflineData())
-                .setNegativeButton("Cancelar", null)
-                .show();
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_confirm_upload_offline, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        View btnCancel = dialogView.findViewById(R.id.btnCancelUpload);
+        View btnConfirm = dialogView.findViewById(R.id.btnConfirmUpload);
+
+        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                dialog.dismiss();
+                uploadOfflineData();
+            });
+        }
+
+        dialog.show();
     }
 
     private void uploadOfflineData() {

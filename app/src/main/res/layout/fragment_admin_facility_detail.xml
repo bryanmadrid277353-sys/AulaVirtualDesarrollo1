@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Top Header with Back Button and Title -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp">
+
+            <ImageButton
+                android:id="@+id/btnBackDetail"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_back"
+                app:tint="?android:attr/textColorPrimary"
+                android:contentDescription="Atrás" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/btnBackDetail"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvDetailTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Detalle Instalación"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gestión de espacio físico y recursos"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- General Information Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardFormContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_bg"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/input_border">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Field 1: Nombre completo -->
+                <TextView
+                    android:id="@+id/tvLabelField1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre completo"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+
+                    <EditText
+                        android:id="@+id/etField1"
+                        style="@style/Widget.Bootstrap.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:hint="Nombre (Ej: Aula 01)"
+                        android:paddingEnd="44dp"
+                        android:singleLine="true" />
+
+                    <ImageButton
+                        android:id="@+id/btnCopyField1"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_input_field"
+                        android:src="@drawable/ic_copy"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Copiar" />
+                </RelativeLayout>
+
+                <!-- Field 2: Carnet / ID Instalación (INSTA + 5 dígitos) -->
+                <TextView
+                    android:id="@+id/tvLabelField2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Carnet / ID Instalación"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_input_field"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="44dp">
+
+                        <TextView
+                            android:id="@+id/tvCodePrefix"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="INSTA "
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="4dp" />
+
+                        <EditText
+                            android:id="@+id/etField2"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="10001"
+                            android:inputType="number"
+                            android:maxLength="5"
+                            android:singleLine="true"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textColorHint="@color/input_hint"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/btnCopyField2"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_input_field"
+                        android:src="@drawable/ic_copy"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Copiar" />
+                </RelativeLayout>
+
+                <!-- Field 3: Tipo de Instalación -->
+                <TextView
+                    android:id="@+id/tvLabelType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tipo de Instalación"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+
+                    <EditText
+                        android:id="@+id/etType"
+                        style="@style/Widget.Bootstrap.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:hint="Ej: Aulas, Laboratorio, Deportes"
+                        android:paddingEnd="44dp"
+                        android:singleLine="true" />
+
+                    <ImageButton
+                        android:id="@+id/btnCopyType"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_input_field"
+                        android:src="@drawable/ic_copy"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Copiar" />
+                </RelativeLayout>
+
+                <!-- Field 4: Descripción de la instalación -->
+                <TextView
+                    android:id="@+id/tvLabelDescription"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Descripción de la instalación"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:id="@+id/etDesc"
+                        style="@style/Widget.Bootstrap.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="100dp"
+                        android:gravity="top|start"
+                        android:hint="Ubicación o detalles del espacio"
+                        android:inputType="textMultiLine"
+                        android:paddingEnd="44dp" />
+
+                    <ImageButton
+                        android:id="@+id/btnCopyDesc"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentTop="true"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_input_field"
+                        android:src="@drawable/ic_copy"
+                        app:tint="?attr/colorPrimary"
+                        android:contentDescription="Copiar" />
+                </RelativeLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Bottom Action Buttons Row: Delete / Save -->
+        <LinearLayout
+            android:id="@+id/layoutActionButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDelete"
+                style="@style/Widget.Bootstrap.Button.Danger"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="Eliminar"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_delete"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/white"
+                app:backgroundTint="#EF4444"
+                app:elevation="0dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSave"
+                style="@style/Widget.Bootstrap.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="Guardar Cambios"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:elevation="0dp" />
+        </LinearLayout>
+
+        <!-- Footer Audit Info -->
+        <TextView
+            android:id="@+id/tvLastModifiedFooter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Última modificación: Hoy"
+            android:textAlignment="center"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+</ScrollView>

@@ -118,7 +118,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="5 Períodos evaluativos"
-                                android:textColor="@color/white"
+                                android:textColor="?android:attr/textColorPrimary"
                                 android:textSize="14sp"
                                 android:textStyle="bold" />
 
@@ -146,7 +146,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:text="- Quitar"
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textAllCaps="false"
@@ -154,9 +154,9 @@
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             app:cornerRadius="10dp"
-                            app:strokeColor="#233550"
+                            app:strokeColor="@color/input_border"
                             app:strokeWidth="1dp"
-                            android:backgroundTint="#131B2E"
+                            android:backgroundTint="@color/input_bg"
                             android:layout_marginEnd="6dp" />
 
                         <com.google.android.material.button.MaterialButton
@@ -165,7 +165,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:text="+ Añadir"
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textAllCaps="false"
@@ -173,9 +173,9 @@
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             app:cornerRadius="10dp"
-                            app:strokeColor="#233550"
+                            app:strokeColor="@color/input_border"
                             app:strokeWidth="1dp"
-                            android:backgroundTint="#131B2E" />
+                            android:backgroundTint="@color/input_bg" />
                     </LinearLayout>
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -216,7 +216,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Promedio calculado: "
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -270,7 +270,7 @@
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/input_border"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="#1D2738" />
+                    android:backgroundTint="@color/input_bg" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSaveDialog"

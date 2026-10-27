@@ -39,7 +39,7 @@
                     android:id="@+id/tvSubjectName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/white"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     tools:text="Matemáticas 1" />
@@ -104,17 +104,18 @@
                 android:gravity="center_vertical" />
         </HorizontalScrollView>
 
-        <!-- Bottom Row: Status Tag & Action Links (Asistencia | Modificar Notas) -->
-        <RelativeLayout
+        <!-- Bottom Row: Status Tag & Action Buttons -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/tvStatusTag"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
+                android:layout_weight="1"
                 android:text="🟢 Aprobado • Ciclo 2025"
                 android:textColor="#10B981"
                 android:textSize="12sp"
@@ -124,40 +125,86 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/btnAttendance"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnConduct"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="38dp"
+                    android:text="Conducta"
+                    android:textColor="#F59E0B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:icon="@drawable/ic_conduct"
+                    app:iconTint="#F59E0B"
+                    app:iconSize="16dp"
+                    app:iconPadding="6dp"
+                    app:iconGravity="textStart"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="#F59E0B"
+                    app:strokeWidth="1dp"
+                    android:backgroundTint="@color/input_bg"
+                    android:layout_marginEnd="6dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAttendance"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
                     android:text="Asistencia"
                     android:textColor="#10B981"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="4dp"
-                    android:layout_marginEnd="10dp" />
+                    android:textAllCaps="false"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:icon="@drawable/ic_attendance"
+                    app:iconTint="#10B981"
+                    app:iconSize="16dp"
+                    app:iconPadding="6dp"
+                    app:iconGravity="textStart"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="#10B981"
+                    app:strokeWidth="1dp"
+                    android:backgroundTint="@color/input_bg"
+                    android:layout_marginEnd="6dp" />
 
-                <TextView
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddPeriod"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="38dp"
                     android:text="Modificar Notas"
                     android:textColor="#38BDF8"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="4dp" />
+                    android:textAllCaps="false"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:icon="@drawable/ic_edit_grades"
+                    app:iconTint="#38BDF8"
+                    app:iconSize="16dp"
+                    app:iconPadding="6dp"
+                    app:iconGravity="textStart"
+                    app:cornerRadius="10dp"
+                    app:strokeColor="#38BDF8"
+                    app:strokeWidth="1dp"
+                    android:backgroundTint="@color/input_bg"
+                    android:visibility="gone" />
             </LinearLayout>
 
-        </RelativeLayout>
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

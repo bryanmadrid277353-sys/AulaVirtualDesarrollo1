@@ -1,85 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="start"
-    android:padding="8dp"
-    android:layout_marginBottom="8dp">
+    android:padding="6dp"
+    android:layout_marginBottom="10dp">
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp"
-        android:layout_marginTop="2dp">
-        <ImageView
-            android:id="@+id/ivUserPhoto"
+    <!-- Left Avatar / Initials -->
+    <FrameLayout
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_circle_primary"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="8dp">
+
+        <TextView
+            android:id="@+id/tvCommentInitials"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="PR" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCommentPhoto"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/ic_person"
-            android:scaleType="centerCrop"
-            app:tint="?attr/colorPrimary"
-            android:padding="6dp"/>
-    </androidx.cardview.widget.CardView>
+            android:visibility="gone"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="@android:color/transparent">
 
-    <LinearLayout
+            <ImageView
+                android:id="@+id/ivUserPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="Foto de perfil" />
+        </com.google.android.material.card.MaterialCardView>
+    </FrameLayout>
+
+    <!-- Message Bubble Card -->
+    <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:maxWidth="280dp"
-        android:orientation="vertical"
-        android:background="@drawable/bg_bubble_others"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="8dp">
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/input_bg"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/input_border">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <TextView
-                android:id="@+id/tvUserName"
+            android:orientation="vertical"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="10dp">
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nombre Usuario"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorPrimary"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:id="@+id/tvUserName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre Usuario"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    tools:text="Prof. Ricardo Valenzuela" />
+
+                <TextView
+                    android:id="@+id/tvUserRole"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="1dp"
+                    android:text="Estudiante"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_badge_primary" />
+            </LinearLayout>
+
             <TextView
-                android:id="@+id/tvUserRole"
+                android:id="@+id/tvCommentContent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:paddingHorizontal="6dp"
-                android:paddingVertical="1dp"
-                android:text="Rol"
-                android:textColor="@color/white"
-                android:textSize="9sp"
-                android:textStyle="bold"
-                android:background="@drawable/bg_badge_primary"/>
+                android:text="Contenido del mensaje..."
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <TextView
+                android:id="@+id/tvCommentTimestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="6dp"
+                android:text="2025-01-22 16:15"
+                android:textSize="10sp"
+                android:textColor="?android:attr/textColorSecondary"
+                tools:text="2025-01-22 16:15" />
+
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvCommentContent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Contenido del mensaje..."
-            android:textSize="14sp"
-            android:textColor="?android:attr/textColorPrimary"/>
-
-        <TextView
-            android:id="@+id/tvCommentTimestamp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="4dp"
-            android:text="14/09/2026 08:30 AM"
-            android:textSize="10sp"
-            android:textColor="?android:attr/textColorSecondary"/>
-
-    </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 </LinearLayout>

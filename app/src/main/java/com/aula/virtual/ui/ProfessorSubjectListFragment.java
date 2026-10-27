@@ -1,5 +1,8 @@
 package com.aula.virtual.ui;
 
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -8,8 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -19,11 +25,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.aula.virtual.MainActivity;
 import com.aula.virtual.R;
+import com.aula.virtual.data.entity.GradeImportLog;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.entity.User;
+import com.aula.virtual.data.local.AppDatabase;
 import com.aula.virtual.databinding.FragmentAdminProfessorDetailBinding;
+import com.aula.virtual.excel.ExcelTemplateGenerator;
+import com.aula.virtual.excel.GradeSyncManager;
+import com.aula.virtual.excel.ImportResult;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +46,74 @@ public class ProfessorSubjectListFragment extends Fragment {
     private MainViewModel viewModel;
     private SubjectAdapter adapter;
     private List<Subject> allProfSubjects = new ArrayList<>();
+    private Subject activeExcelSubject = null;
+
+    private final ActivityResultLauncher<String> saveExcelTemplateLauncher =
+            registerForActivityResult(new ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), uri -> {
+                if (uri != null && activeExcelSubject != null) {
+                    final android.content.Context ctx = getContext();
+                    if (ctx == null) return;
+
+                    ProgressDialog pd = new ProgressDialog(ctx);
+                    pd.setMessage("Generando plantilla Excel...");
+                    pd.show();
+
+                    AppDatabase db = AppDatabase.getInstance(ctx);
+                    java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                        try {
+                            List<com.aula.virtual.data.entity.Enrollment> enrollments = db.enrollmentDao().getBySubjectId(activeExcelSubject.id);
+                            List<com.aula.virtual.data.StudentGradeInfo> gradeInfos = new ArrayList<>();
+                            if (enrollments != null) {
+                                for (com.aula.virtual.data.entity.Enrollment en : enrollments) {
+                                    com.aula.virtual.data.entity.Student student = db.studentDao().getStudentById(en.studentId);
+                                    if (student != null) {
+                                        com.aula.virtual.data.StudentGradeInfo info = new com.aula.virtual.data.StudentGradeInfo();
+                                        com.aula.virtual.data.entity.User studentUser = new com.aula.virtual.data.entity.User();
+                                        studentUser.id = student.id;
+                                        studentUser.carnet = student.carnet;
+                                        studentUser.name = student.name;
+                                        studentUser.profile_image = student.profile_image;
+                                        studentUser.role = "STUDENT";
+                                        info.student = studentUser;
+                                        info.enrollment = en;
+                                        info.subject = activeExcelSubject;
+                                        gradeInfos.add(info);
+                                    }
+                                }
+                            }
+
+                            try (OutputStream os = ctx.getContentResolver().openOutputStream(uri)) {
+                                if (os != null) {
+                                    ExcelTemplateGenerator.generateTemplate(ctx, activeExcelSubject, gradeInfos, os);
+                                }
+                            }
+
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    pd.dismiss();
+                                    Toast.makeText(ctx, "¡Plantilla .xlsx generada exitosamente!", Toast.LENGTH_LONG).show();
+                                });
+                            }
+                        } catch (Exception e) {
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    pd.dismiss();
+                                    Toast.makeText(ctx, "Error al generar plantilla: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+    private final ActivityResultLauncher<String[]> openExcelFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri != null && activeExcelSubject != null) {
+                    GradeSyncManager.savePersistableUri(requireContext(), activeExcelSubject.id, uri);
+                    Toast.makeText(getContext(), "Archivo .xlsx vinculado correctamente", Toast.LENGTH_SHORT).show();
+                    showExcelGradeManagerDialog(activeExcelSubject);
+                }
+            });
 
     @Nullable
     @Override
@@ -125,6 +206,118 @@ public class ProfessorSubjectListFragment extends Fragment {
             args.putInt("subjectId", subject.id);
             Navigation.findNavController(view).navigate(R.id.action_professorSubjectListFragment_to_subjectBlogFragment, args);
         });
+    }
+
+    public void showExcelGradeManagerDialog(Subject subject) {
+        if (subject == null || getContext() == null) return;
+        activeExcelSubject = subject;
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_excel_grade_manager, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        View btnClose = dialogView.findViewById(R.id.btnCloseExcelDialog);
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        TextView tvSubjectCode = dialogView.findViewById(R.id.tvSubjectExcelCode);
+        if (tvSubjectCode != null) {
+            tvSubjectCode.setText(subject.name + " (" + (subject.code != null ? subject.code : "S" + subject.id) + ")");
+        }
+
+        MaterialButton btnGenerate = dialogView.findViewById(R.id.btnGenerateExcelTemplate);
+        MaterialButton btnLink = dialogView.findViewById(R.id.btnLinkExcelFile);
+        TextView tvLinkedFile = dialogView.findViewById(R.id.tvLinkedFileName);
+        TextView tvLastSync = dialogView.findViewById(R.id.tvLastSyncTime);
+        TextView tvRowsOk = dialogView.findViewById(R.id.tvRowsOk);
+        TextView tvRowsError = dialogView.findViewById(R.id.tvRowsError);
+        View layoutErrorBox = dialogView.findViewById(R.id.layoutErrorDetailBox);
+        TextView tvErrorDetailText = dialogView.findViewById(R.id.tvErrorDetailText);
+        MaterialButton btnSync = dialogView.findViewById(R.id.btnSyncNow);
+
+        Uri linkedUri = GradeSyncManager.getLinkedUri(requireContext(), subject.id);
+        if (linkedUri != null && tvLinkedFile != null) {
+            tvLinkedFile.setText(linkedUri.getLastPathSegment());
+        } else if (tvLinkedFile != null) {
+            tvLinkedFile.setText("Ningún archivo vinculado actualmente.");
+        }
+
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+            GradeImportLog lastLog = db.gradeImportLogDao().getLastLogForSubject(subject.id);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (lastLog != null) {
+                        if (tvLastSync != null) tvLastSync.setText("Fecha: " + lastLog.importedAt);
+                        if (tvRowsOk != null) tvRowsOk.setText("Correctos: " + lastLog.rowsOk);
+                        if (tvRowsError != null) tvRowsError.setText("Errores: " + lastLog.rowsError);
+
+                        if (lastLog.errorDetail != null && !lastLog.errorDetail.isEmpty()) {
+                            if (layoutErrorBox != null) layoutErrorBox.setVisibility(View.VISIBLE);
+                            if (tvErrorDetailText != null) tvErrorDetailText.setText(lastLog.errorDetail);
+                        } else if (layoutErrorBox != null) {
+                            layoutErrorBox.setVisibility(View.GONE);
+                        }
+                    }
+                });
+            }
+        });
+
+        if (btnGenerate != null) {
+            btnGenerate.setOnClickListener(v -> {
+                saveExcelTemplateLauncher.launch("Plantilla_Notas_" + (subject.code != null ? subject.code : "Materia") + ".xlsx");
+            });
+        }
+
+        if (btnLink != null) {
+            btnLink.setOnClickListener(v -> {
+                openExcelFileLauncher.launch(new String[]{
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "application/vnd.ms-excel"
+                });
+            });
+        }
+
+        if (btnSync != null) {
+            btnSync.setOnClickListener(v -> {
+                Uri curUri = GradeSyncManager.getLinkedUri(requireContext(), subject.id);
+                if (curUri == null) {
+                    Toast.makeText(getContext(), "Primero debes vincular un archivo Excel (.xlsx)", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                ProgressDialog pd = new ProgressDialog(getContext());
+                pd.setMessage("Sincronizando notas desde Excel...");
+                pd.show();
+
+                GradeSyncManager.syncNowInternal(requireContext(), subject, curUri, new GradeSyncManager.SyncCallback() {
+                    @Override
+                    public void onSyncCompleted(ImportResult result) {
+                        pd.dismiss();
+                        Toast.makeText(getContext(), result.message, Toast.LENGTH_LONG).show();
+                        viewModel.refreshData();
+                        dialog.dismiss();
+                    }
+
+                    @Override
+                    public void onSyncSkipped(String reason) {
+                        pd.dismiss();
+                        Toast.makeText(getContext(), reason, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        pd.dismiss();
+                        Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+                    }
+                });
+            });
+        }
+
+        dialog.show();
     }
 
     private String getInitials(String name) {

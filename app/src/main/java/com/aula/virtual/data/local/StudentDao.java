@@ -34,6 +34,9 @@ public interface StudentDao {
     @Query("DELETE FROM students WHERE id = :id")
     void deleteById(int id);
 
+    @Query("DELETE FROM students WHERE encargadoId = :encargadoId")
+    void deleteByEncargadoId(int encargadoId);
+
     @Query("DELETE FROM students")
     void deleteAll();
 }

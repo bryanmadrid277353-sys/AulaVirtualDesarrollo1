@@ -30,7 +30,7 @@ import com.aula.virtual.data.StudentGradeInfo;
 import com.aula.virtual.data.entity.Enrollment;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.entity.User;
-import com.aula.virtual.databinding.FragmentDetailBinding;
+import com.aula.virtual.databinding.FragmentSubjectDetailBinding;
 import com.google.android.material.button.MaterialButton;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SubjectDetailFragment extends Fragment {
-    private FragmentDetailBinding binding;
+    private FragmentSubjectDetailBinding binding;
     private MainViewModel viewModel;
     private Subject subject;
     private String selectedColor = "BLUE";
@@ -49,7 +49,7 @@ public class SubjectDetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentDetailBinding.inflate(inflater, container, false);
+        binding = FragmentSubjectDetailBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -76,23 +76,14 @@ public class SubjectDetailFragment extends Fragment {
     }
 
     private void setupUI() {
-        binding.tvDetailTitle.setText("Detalle Materia");
-        binding.etField1.setHint("Nombre de la Materia");
-        binding.etField2.setHint("Descripción");
-        
-        // Field 3 hidden
-        binding.tvLabelField3.setVisibility(View.GONE);
-        binding.etField3.setVisibility(View.GONE);
-        binding.layoutCopyToggles.setVisibility(View.GONE);
-
-        binding.etField4.setHint("Sección (Ej: 01, 02)");
-        binding.etField4.setVisibility(View.VISIBLE);
-        binding.etField4.setInputType(InputType.TYPE_CLASS_TEXT);
-
+        binding.btnBackDetail.setOnClickListener(v -> popBackToManagementMenu());
         binding.btnSave.setOnClickListener(v -> saveChanges());
         binding.btnDelete.setOnClickListener(v -> showDeleteConfirmation());
         binding.btnManageStudents.setOnClickListener(v -> navigateToStudents());
         binding.btnUnenrollMember.setOnClickListener(v -> showUnenrollMemberDialog());
+
+        binding.etField4.setInputType(InputType.TYPE_CLASS_NUMBER);
+        binding.etField4.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(1)});
     }
 
     private void setupColorSelector() {
@@ -162,8 +153,6 @@ public class SubjectDetailFragment extends Fragment {
             binding.etField1.setClickable(false);
             binding.etField2.setFocusable(false);
             binding.etField2.setClickable(false);
-            binding.etField3.setFocusable(false);
-            binding.etField3.setClickable(false);
             binding.etField4.setFocusable(false);
             binding.etField4.setClickable(false);
             
@@ -233,14 +222,36 @@ public class SubjectDetailFragment extends Fragment {
             binding.btnUnenrollMember.setVisibility(View.GONE);
         }
 
-        DialogUtils.arrangeGridButtons(binding.layoutActionButtons);
-
         viewModel.getSelectedSubject().observe(getViewLifecycleOwner(), sub -> {
             if (sub != null) {
                 subject = sub;
                 binding.etField1.setText(subject.name);
-                binding.etField2.setText(subject.description);
-                binding.etField4.setText(subject.section != null ? subject.section : "01");
+
+                String codeStr = (subject.code != null && !subject.code.isEmpty()) ? subject.code : ("ASIGN" + (10000 + subject.id));
+                if (codeStr.startsWith("ASIGN")) {
+                    codeStr = codeStr.substring(5);
+                }
+                binding.etField2.setText(codeStr);
+
+                String descStr = (subject.description != null) ? subject.description : "";
+                binding.etDesc.setText(descStr);
+
+                String sec = (subject.section != null && !subject.section.isEmpty()) ? subject.section : "01";
+                String secNum = sec.replace("Sección", "").trim();
+                if (secNum.startsWith("0") && secNum.length() > 1) {
+                    secNum = secNum.substring(1);
+                }
+                binding.etField4.setText(secNum);
+
+                binding.btnCopyField1.setOnClickListener(v -> 
+                    ClipboardUtils.copyToClipboard(getContext(), "Nombre de materia", binding.etField1.getText().toString()));
+                binding.btnCopyField2.setOnClickListener(v -> 
+                    ClipboardUtils.copyToClipboard(getContext(), "ID Materia", "ASIGN" + binding.etField2.getText().toString().trim()));
+                binding.btnCopyDesc.setOnClickListener(v -> 
+                    ClipboardUtils.copyToClipboard(getContext(), "Descripción de materia", binding.etDesc.getText().toString()));
+
+                String modUser = (currentUser != null && currentUser.name != null) ? currentUser.name : "Admin Maestro";
+                binding.tvLastModifiedFooter.setText("Última modificación: Hoy a las 08:33 por " + modUser);
 
                 DialogUtils.hideLoadingOverlay(binding.getRoot());
 
@@ -327,36 +338,43 @@ public class SubjectDetailFragment extends Fragment {
                 return;
             }
 
-            String name = binding.etField1.getText().toString();
+            String name = binding.etField1.getText().toString().trim();
             if (name.isEmpty()) {
                 binding.etField1.setError("El nombre es obligatorio");
                 return;
             }
+
+            String codeInput = binding.etField2.getText().toString().trim();
+            String codeDigits = codeInput;
+            if (codeDigits.startsWith("ASIGN")) codeDigits = codeDigits.substring(5);
+
+            if (!codeDigits.matches("\\d{5}")) {
+                binding.etField2.setError("ID Materia inválido (debe ingresar exactamente 5 dígitos numéricos)");
+                return;
+            }
             
-            String sectionStr = binding.etField4.getText().toString().trim();
-            if (sectionStr.isEmpty()) {
+            String sectionInput = binding.etField4.getText().toString().trim();
+            if (sectionInput.isEmpty()) {
                 binding.etField4.setError("La sección es obligatoria");
                 return;
             }
             
-            // Si el usuario escribió un solo dígito como '2', convertirlo automáticamente a formato '02'
-            String formattedSection = sectionStr;
+            String formattedSection = "01";
             try {
-                int val = Integer.parseInt(sectionStr);
+                int val = Integer.parseInt(sectionInput);
                 if (val < 1 || val > 9) {
-                    binding.etField4.setError("La sección debe ser un número entero entre 1 y 9");
+                    binding.etField4.setError("Debe ser un número entero entre 1 y 9");
                     return;
                 }
-                if (sectionStr.length() == 1) {
-                    formattedSection = "0" + val;
-                }
+                formattedSection = "0" + val;
             } catch (NumberFormatException e) {
-                binding.etField4.setError("Debe introducir un número entero válido (1-9)");
+                binding.etField4.setError("Debe ser un número del 1 al 9");
                 return;
             }
 
             subject.name = name;
-            subject.description = binding.etField2.getText().toString();
+            subject.code = "ASIGN" + codeDigits;
+            subject.description = binding.etDesc.getText().toString().trim();
             subject.section = formattedSection;
             
             viewModel.performOnlineAction(() -> {
@@ -385,20 +403,26 @@ public class SubjectDetailFragment extends Fragment {
     }
 
     private void showDeleteConfirmation() {
-        new MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Confirmar Eliminación")
-            .setMessage("¿Estás seguro de que deseas eliminar esta materia?")
-            .setPositiveButton("Eliminar", (dialog, which) -> {
-                if (subject != null) {
-                    viewModel.performOnlineAction(() -> {
-                        viewModel.deleteSubject(subject);
-                        Toast.makeText(getContext(), "Materia eliminada", Toast.LENGTH_SHORT).show();
-                        popBackToManagementMenu();
-                    });
-                }
-            })
-            .setNegativeButton("Cancelar", null)
-            .show();
+        if (subject == null) return;
+        String secStr = "Sección " + (subject.section != null ? subject.section : "01");
+        String badge = subject.code != null ? subject.code : ("ASIGN" + (10000 + subject.id));
+        DialogUtils.showConfirmDeleteDialog(
+            requireContext(),
+            "Confirmar Eliminación",
+            "¿Estás seguro de que deseas eliminar esta materia? Se perderán las inscripciones, notas y publicaciones asociadas de forma permanente.",
+            subject.name,
+            secStr + " • Asignatura",
+            badge,
+            null,
+            R.drawable.ic_open_book,
+            () -> {
+                viewModel.performOnlineAction(() -> {
+                    viewModel.deleteSubject(subject);
+                    Toast.makeText(getContext(), "Materia eliminada", Toast.LENGTH_SHORT).show();
+                    popBackToManagementMenu();
+                });
+            }
+        );
     }
 
     private void showUnenrollMemberDialog() {

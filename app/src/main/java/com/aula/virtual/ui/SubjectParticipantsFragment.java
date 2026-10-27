@@ -32,10 +32,27 @@ public class SubjectParticipantsFragment extends Fragment {
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         subjectId = getArguments().getInt("subjectId");
 
-        binding.tvTitle.setText("Integrantes de la Materia");
+        if (binding.btnBackList != null) {
+            binding.btnBackList.setOnClickListener(v -> Navigation.findNavController(view).popBackStack());
+        }
+        if (binding.tvHeaderTitle != null) {
+            binding.tvHeaderTitle.setText("Integrantes de la materia");
+        }
+        if (binding.tvTitle != null) {
+            binding.tvTitle.setVisibility(View.GONE);
+        }
+        if (binding.tvSubtitle != null) {
+            binding.tvSubtitle.setVisibility(View.GONE);
+        }
         binding.btnAdd.setVisibility(View.GONE);
+        if (binding.btnToggleSearch != null) {
+            binding.btnToggleSearch.setVisibility(View.GONE);
+        }
+        if (binding.layoutSearchContainer != null) {
+            binding.layoutSearchContainer.setVisibility(View.VISIBLE);
+        }
         binding.spinnerFilter.setVisibility(View.GONE);
-        binding.etSearch.setHint("Buscar compañero...");
+        binding.etSearch.setHint("Buscar integrante...");
 
         adapter = new ParticipantAdapter(user -> {
             Bundle args = new Bundle();
@@ -52,6 +69,10 @@ public class SubjectParticipantsFragment extends Fragment {
         binding.recyclerView.setAdapter(adapter);
 
         viewModel.getSubjectParticipants(subjectId).observe(getViewLifecycleOwner(), participants -> {
+            int count = (participants != null) ? participants.size() : 0;
+            if (binding.tvRecordCount != null) {
+                binding.tvRecordCount.setText(count + (count == 1 ? " registro" : " registros"));
+            }
             adapter.setParticipants(participants);
         });
     }

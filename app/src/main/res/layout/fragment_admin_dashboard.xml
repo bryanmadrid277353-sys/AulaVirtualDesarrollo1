@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
 
+    <!-- Fixed Header Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingLeft="20dp"
+        android:paddingTop="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="12dp">
 
         <!-- Top Header with Back Button and Title -->
         <LinearLayout
@@ -36,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:text="Encargados"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textSize="24sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -59,30 +64,53 @@
             android:textSize="14sp"
             android:layout_marginBottom="16dp" />
 
-        <!-- Primary Action Button: Añadir -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAdd"
-            style="@style/Widget.Bootstrap.Button.Primary"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="+ Añadir encargado"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:cornerRadius="12dp"
-            app:backgroundTint="?attr/colorPrimary"
-            app:elevation="0dp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Search and Filter Bar -->
+        <!-- Top Action Row: Add Button + Search Toggle Button on Right -->
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <!-- Primary Action Button: Añadir -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAdd"
+                style="@style/Widget.Bootstrap.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="52dp"
+                android:text="+ Añadir encargado"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:elevation="0dp" />
+
+            <!-- Search Toggle ImageButton -->
+            <ImageButton
+                android:id="@+id/btnToggleSearch"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_search"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="Alternar búsqueda" />
+        </LinearLayout>
+
+        <!-- Search and Filter Bar (Collapsible / Toggleable) -->
+        <LinearLayout
+            android:id="@+id/layoutSearchContainer"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_input_field"
             android:paddingHorizontal="14dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <ImageView
                 android:layout_width="20dp"
@@ -118,15 +146,7 @@
             android:layout_height="wrap_content"
             android:text="1 registro"
             android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp"
-            android:layout_marginBottom="12dp" />
-
-        <!-- RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false" />
+            android:textSize="13sp" />
 
         <!-- Extra views kept for compatibility -->
         <LinearLayout
@@ -136,6 +156,17 @@
             <com.google.android.material.button.MaterialButton android:id="@+id/btnHeaderAction" android:layout_width="wrap_content" android:layout_height="wrap_content" />
             <com.google.android.material.button.MaterialButton android:id="@+id/btnHeaderDetail" android:layout_width="wrap_content" android:layout_height="wrap_content" />
         </LinearLayout>
-
     </LinearLayout>
-</ScrollView>
+
+    <!-- Scrollable Records List Only -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        android:id="@+id/recyclerView" />
+
+</LinearLayout>

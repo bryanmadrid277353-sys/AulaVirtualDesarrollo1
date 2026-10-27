@@ -200,7 +200,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Canales, sonido, horarios y silencio"
+                            android:text="Sonido, horarios y silencio"
                             android:textColor="?android:attr/textColorSecondary"
                             android:textSize="13sp"
                             android:layout_marginTop="2dp" />
@@ -220,6 +220,7 @@
 
                 <!-- Divider -->
                 <View
+                    android:id="@+id/dividerAdvanced"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:background="@color/input_border" />
@@ -287,6 +288,70 @@
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
                         android:contentDescription="Ir" />
+                </RelativeLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/input_border" />
+
+                <!-- Row 3: Vibración en botones -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:id="@+id/iconVibrationBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_refresh"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Vibración" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconVibrationBox"
+                        android:layout_toStartOf="@id/switchHapticFeedback"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Vibración en botones"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Vibración háptica al pulsar la barra inferior"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchHapticFeedback"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        app:useMaterialThemeColors="true" />
                 </RelativeLayout>
 
             </LinearLayout>

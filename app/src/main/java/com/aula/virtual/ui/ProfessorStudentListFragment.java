@@ -84,6 +84,24 @@ public class ProfessorStudentListFragment extends Fragment {
                 args.putInt("studentId", info.enrollment.studentId);
                 Navigation.findNavController(requireView()).navigate(R.id.action_professorStudentListFragment_to_studentProfileFragment, args);
             }
+
+            @Override
+            public void onViewConduct(StudentGradeInfo info) {
+                if (info == null || info.enrollment == null) return;
+                Bundle args = new Bundle();
+                args.putInt("studentId", info.enrollment.studentId);
+                args.putInt("subjectId", subjectId);
+                Navigation.findNavController(requireView()).navigate(R.id.action_global_studentConductFragment, args);
+            }
+
+            @Override
+            public void onViewAttendance(StudentGradeInfo info) {
+                if (info == null || info.enrollment == null) return;
+                Bundle args = new Bundle();
+                args.putInt("studentId", info.enrollment.studentId);
+                args.putInt("subjectId", subjectId);
+                Navigation.findNavController(requireView()).navigate(R.id.action_global_studentAttendanceFragment, args);
+            }
         });
 
         binding.btnAdd.setOnClickListener(v -> {

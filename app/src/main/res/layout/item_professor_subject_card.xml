@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardSubjectItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/input_bg"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/input_border"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+
+        <!-- 1. Left Icon Box -->
+        <FrameLayout
+            android:id="@+id/iconSubjectBox"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_input_field"
+            android:layout_marginEnd="12dp">
+
+            <ImageView
+                android:id="@+id/ivSubjectIcon"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_open_book"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="Materia" />
+        </FrameLayout>
+
+        <!-- 2. Middle Info Column (Title, Subtitle, Schedule) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="8dp">
+
+            <TextView
+                android:id="@+id/tvSubjectTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="Matemáticas 5º Grado" />
+
+            <TextView
+                android:id="@+id/tvSubjectSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="Aula Magna A-1 • Sección 01" />
+
+            <TextView
+                android:id="@+id/tvScheduleDays"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#F59E0B"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="Martes, Jueves (07:30 AM - 09:00 AM)" />
+        </LinearLayout>
+
+        <!-- 3. Right Side: Chevron -->
+        <ImageView
+            android:id="@+id/btnChevronRight"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="?android:attr/textColorSecondary"
+            android:contentDescription="Gestionar" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

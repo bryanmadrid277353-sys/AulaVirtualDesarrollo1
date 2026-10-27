@@ -1,8 +1,6 @@
 package com.aula.virtual.ui;
 
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +26,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     }
 
     public void setParticipants(List<User> participants) {
-        this.participants = participants;
+        this.participants = participants != null ? participants : new ArrayList<>();
         notifyDataSetChanged();
     }
 
@@ -42,12 +40,46 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         User user = participants.get(position);
-        holder.tvName.setText(user.name);
-        holder.tvRole.setText("PROFESSOR".equals(user.role) ? "Profesor" : "Estudiante");
+        holder.tvName.setText(user.name != null ? user.name : "-");
+        
+        String roleText = "Estudiante";
+        if ("PROFESSOR".equals(user.role)) {
+            roleText = "Profesor";
+        } else if ("ADMIN".equals(user.role)) {
+            roleText = "Administrador";
+        } else if ("ENCARGADO".equals(user.role)) {
+            roleText = "Encargado";
+        }
+        holder.tvRole.setText(roleText);
 
-        ImageUtils.setProfileImage(holder.ivPhoto, user.profile_image, user.name);
+        if (holder.tvInitials != null) {
+            holder.tvInitials.setText(getInitials(user.name));
+        }
+
+        if (user.profile_image != null && !user.profile_image.isEmpty()) {
+            Bitmap b = ImageUtils.base64ToBitmap(user.profile_image);
+            if (b != null) {
+                holder.ivPhoto.setImageBitmap(b);
+                if (holder.cardPhoto != null) holder.cardPhoto.setVisibility(View.VISIBLE);
+            } else {
+                if (holder.cardPhoto != null) holder.cardPhoto.setVisibility(View.GONE);
+            }
+        } else {
+            if (holder.cardPhoto != null) holder.cardPhoto.setVisibility(View.GONE);
+        }
 
         holder.btnProfile.setOnClickListener(v -> listener.onProfileClick(user));
+        holder.itemView.setOnClickListener(v -> listener.onProfileClick(user));
+    }
+
+    private String getInitials(String name) {
+        if (name == null || name.trim().isEmpty()) return "U";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        } else {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+        }
     }
 
     @Override
@@ -56,15 +88,17 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvRole;
+        TextView tvName, tvRole, tvInitials;
         ImageView ivPhoto;
-        View btnProfile;
+        View cardPhoto, btnProfile;
 
         ViewHolder(View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvParticipantName);
             tvRole = itemView.findViewById(R.id.tvParticipantRole);
+            tvInitials = itemView.findViewById(R.id.tvParticipantInitials);
             ivPhoto = itemView.findViewById(R.id.ivParticipantPhoto);
+            cardPhoto = itemView.findViewById(R.id.cardParticipantPhoto);
             btnProfile = itemView.findViewById(R.id.btnViewProfile);
         }
     }

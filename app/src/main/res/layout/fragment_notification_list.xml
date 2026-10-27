@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
+    <!-- Fixed Top Header & Filters Container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingLeft="20dp"
+        android:paddingTop="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="4dp">
 
         <!-- Navigation Header with Back Button & Title -->
         <LinearLayout
@@ -19,7 +23,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="12dp">
 
             <ImageButton
                 android:id="@+id/btnBackNotifications"
@@ -34,97 +38,60 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Notificaciones"
+                android:text="Avisos"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Title & Description Section -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Listado de notificaciones"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Gestiona los avisos institucionales y la mensajería dirigida del aula virtual."
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="20dp" />
-
-        <!-- Push Disabled Warning Card -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardPushDisabledNotice"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#26FF9800"
-            app:strokeWidth="1dp"
-            app:strokeColor="#80FF9800"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="14dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="⚠️ Las notificaciones Push están desactivadas en tus ajustes."
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnConfigurePush"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="Configurar"
-                    android:textAllCaps="false"
-                    android:textSize="13sp"
-                    android:textColor="?attr/colorPrimary" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Main CTA Button: Crear notificación general (for Admin) -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCreateNotification"
-            style="@style/Widget.Bootstrap.Button.Primary"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="+ Crear notificación general"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:cornerRadius="16dp"
-            app:backgroundTint="?attr/colorPrimary"
-            app:elevation="0dp"
-            android:layout_marginBottom="16dp"
-            android:visibility="visible" />
-
-        <!-- Search Bar -->
+        <!-- Top Action Row: Create Button + Search Toggle Button on Right -->
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <!-- Main CTA Button: Crear aviso general (for Admin) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCreateNotification"
+                style="@style/Widget.Bootstrap.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="52dp"
+                android:text="+ Crear aviso general"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:backgroundTint="?attr/colorPrimary"
+                app:elevation="0dp"
+                android:visibility="visible" />
+
+            <!-- Search Toggle ImageButton -->
+            <ImageButton
+                android:id="@+id/btnToggleSearch"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_input_field"
+                android:src="@drawable/ic_search"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="Alternar búsqueda" />
+        </LinearLayout>
+
+        <!-- Search and Filter Bar (Collapsible / Toggleable) -->
+        <LinearLayout
+            android:id="@+id/layoutSearchContainer"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:background="@drawable/bg_input_field"
             android:paddingHorizontal="14dp"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <ImageView
                 android:layout_width="20dp"
@@ -153,37 +120,6 @@
                 android:backgroundTint="?attr/colorPrimary" />
         </LinearLayout>
 
-        <!-- Canales de Difusión Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="CANALES DE DIFUSIÓN"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/btnViewAllChannels"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ver todos"
-                android:textColor="#38BDF8"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground"
-                android:padding="4dp" />
-        </LinearLayout>
-
         <!-- Filter Chips Row -->
         <HorizontalScrollView
             android:id="@+id/chipsScrollView"
@@ -191,7 +127,7 @@
             android:layout_height="wrap_content"
             android:scrollbars="none"
             android:overScrollMode="never"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="8dp">
 
             <LinearLayout
                 android:id="@+id/chipsLayout"
@@ -202,377 +138,97 @@
                 android:paddingBottom="2dp"/>
         </HorizontalScrollView>
 
-        <!-- Sección Dedicada: Avisos a Usuarios Específicos -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardDirectMessagingContainer"
+        <!-- Hidden Compatibility views -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#0D1527"
-            app:strokeWidth="1dp"
-            app:strokeColor="#2563EB">
+            android:visibility="gone">
+            <TextView android:id="@+id/btnViewAllChannels" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <androidx.cardview.widget.CardView android:id="@+id/cardPushDisabledNotice" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <Button android:id="@+id/btnConfigurePush" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </LinearLayout>
 
-            <LinearLayout
+    <!-- Scrollable Content Container (Notifications List Only) -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="80dp"
+            android:paddingTop="8dp">
+
+            <!-- Record Count Counter -->
+            <TextView
+                android:id="@+id/tvRecordCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Avisos publicados (0 registros)"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Login Required Notice Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardLoginNotice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:visibility="gone">
 
-                <!-- Header of Direct Messaging -->
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_alignParentStart="true"
-                        android:layout_toStartOf="@id/tagDirecto">
-
-                        <FrameLayout
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:background="@drawable/bg_badge_primary"
-                            android:layout_marginEnd="10dp">
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_chat"
-                                app:tint="#38BDF8"
-                                android:contentDescription="Inbox" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Avisos a Usuarios Específicos"
-                                android:textColor="@color/white"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Mensajería directa y avisos individuales por rol"
-                                android:textColor="?android:attr/textColorSecondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-                    </LinearLayout>
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:gravity="center">
 
                     <TextView
-                        android:id="@+id/tagDirecto"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:text="Directo"
-                        android:textColor="#38BDF8"
-                        android:textSize="11sp"
+                        android:text="🔒 Acceso Restringido"
+                        android:textSize="16sp"
                         android:textStyle="bold"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="3dp"
-                        android:background="@drawable/bg_badge_primary" />
-                </RelativeLayout>
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="8dp"/>
 
-                <!-- Option 1: Encargados y Familias -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="@color/input_bg"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/input_border">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
+                        android:text="Debe iniciar sesión para poder ver los avisos y boletines de su cuenta."
+                        android:textSize="13sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:gravity="center"
+                        android:layout_marginBottom="16dp"/>
 
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_input_field"
-                            android:layout_marginEnd="10dp">
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_person_badge"
-                                app:tint="#38BDF8"
-                                android:contentDescription="Encargados" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Encargados y Familias"
-                                android:textColor="@color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Padres, tutores y representantes"
-                                android:textColor="?android:attr/textColorSecondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnComposeEncargados"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:text="Redactar"
-                            android:textColor="#38BDF8"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textAllCaps="false"
-                            app:icon="@drawable/ic_edit"
-                            app:iconGravity="textStart"
-                            app:iconSize="16dp"
-                            app:iconTint="#38BDF8"
-                            app:cornerRadius="8dp"
-                            app:strokeColor="#2563EB"
-                            app:strokeWidth="1dp"
-                            android:backgroundTint="@color/input_bg" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- Option 2: Profesores y Tutores -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="@color/input_bg"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/input_border">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <Button
+                        android:id="@+id/btnGoLogin"
+                        style="@style/Widget.Bootstrap.Button.Primary"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
+                        android:text="Ir a Iniciar Sesión"
+                        android:textAllCaps="false"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_input_field"
-                            android:layout_marginEnd="10dp">
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_person"
-                                app:tint="#F59E0B"
-                                android:contentDescription="Profesores" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Profesores y Tutores"
-                                android:textColor="@color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Docentes de área y jefes de curso"
-                                android:textColor="?android:attr/textColorSecondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnComposeProfessors"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:text="Redactar"
-                            android:textColor="#F59E0B"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textAllCaps="false"
-                            app:icon="@drawable/ic_edit"
-                            app:iconGravity="textStart"
-                            app:iconSize="16dp"
-                            app:iconTint="#F59E0B"
-                            app:cornerRadius="8dp"
-                            app:strokeColor="#D97706"
-                            app:strokeWidth="1dp"
-                            android:backgroundTint="@color/input_bg" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- Option 3: Otros Administradores -->
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="@color/input_bg"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/input_border">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="@drawable/bg_input_field"
-                            android:layout_marginEnd="10dp">
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_shield_check"
-                                app:tint="#06B6D4"
-                                android:contentDescription="Admins" />
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Otros Administradores"
-                                android:textColor="@color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Equipo directivo y soporte IT"
-                                android:textColor="?android:attr/textColorSecondary"
-                                android:textSize="11sp" />
-                        </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnComposeAdmins"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:text="Redactar"
-                            android:textColor="#06B6D4"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textAllCaps="false"
-                            app:icon="@drawable/ic_edit"
-                            app:iconGravity="textStart"
-                            app:iconSize="16dp"
-                            app:iconTint="#06B6D4"
-                            app:cornerRadius="8dp"
-                            app:strokeColor="#06B6D4"
-                            app:strokeWidth="1dp"
-                            android:backgroundTint="@color/input_bg" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Record Count Counter -->
-        <TextView
-            android:id="@+id/tvRecordCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Avisos publicados (0 registros)"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp"
-            android:layout_marginBottom="12dp" />
-
-        <!-- Login Required Notice Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardLoginNotice"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            android:visibility="gone">
-
+            <!-- Notifications List Container -->
             <LinearLayout
+                android:id="@+id/notificationsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp"
-                android:gravity="center">
+                android:orientation="vertical" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🔒 Acceso Restringido"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginBottom="8dp"/>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Debe iniciar sesión para poder ver las notificaciones y avisos de su cuenta."
-                    android:textSize="13sp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:gravity="center"
-                    android:layout_marginBottom="16dp"/>
-
-                <Button
-                    android:id="@+id/btnGoLogin"
-                    style="@style/Widget.Bootstrap.Button.Primary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ir a Iniciar Sesión"
-                    android:textAllCaps="false"/>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Notifications List Container -->
-        <LinearLayout
-            android:id="@+id/notificationsContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>

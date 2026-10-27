@@ -55,9 +55,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import androidx.core.content.ContextCompat;
+import android.content.res.ColorStateList;
+
 public class NotificationListFragment extends Fragment {
     private FragmentNotificationListBinding binding;
     private MainViewModel viewModel;
+    private boolean isSpecificTab = false;
     private User currentUser;
     private List<Notification> allUserNotifications = new ArrayList<>();
     private List<Notification> rawServerNotifications = new ArrayList<>();
@@ -82,7 +86,6 @@ public class NotificationListFragment extends Fragment {
 
         if (currentUser == null) {
             binding.cardLoginNotice.setVisibility(View.VISIBLE);
-            binding.cardDirectMessagingContainer.setVisibility(View.GONE);
             binding.chipsScrollView.setVisibility(View.GONE);
             binding.etSearchNotification.setVisibility(View.GONE);
 
@@ -101,21 +104,32 @@ public class NotificationListFragment extends Fragment {
             }
         });
 
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearchNotification.requestFocus();
+                }
+            });
+        }
+
         binding.btnConfigurePush.setOnClickListener(v -> 
             Navigation.findNavController(v).navigate(R.id.action_notificationListFragment_to_notificationSettingsFragment));
 
         boolean isAdmin = "ADMIN".equals(currentUser.role);
-        binding.btnCreateNotification.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
-        binding.cardDirectMessagingContainer.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
 
-        binding.btnCreateNotification.setOnClickListener(v -> showCreateNotificationDialog(null, "ALL"));
-        binding.btnComposeEncargados.setOnClickListener(v -> showCreateNotificationDialog(null, "ROLE_GUARDIANS"));
-        binding.btnComposeProfessors.setOnClickListener(v -> showCreateNotificationDialog(null, "ROLE_PROFESSORS"));
-        binding.btnComposeAdmins.setOnClickListener(v -> showCreateNotificationDialog(null, "ROLE_ADMINS"));
-        binding.btnViewAllChannels.setOnClickListener(v -> {
-            selectedChannelFilter[0] = "ALL";
-            renderNotificationsAndChips();
-        });
+        if (binding.btnCreateNotification != null) {
+            binding.btnCreateNotification.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+            binding.btnCreateNotification.setOnClickListener(v -> showCreateNotificationDialog(null, "ALL"));
+        }
+
+        if (binding.btnViewAllChannels != null) {
+            binding.btnViewAllChannels.setOnClickListener(v -> {
+                selectedChannelFilter[0] = "ALL";
+                renderNotificationsAndChips();
+            });
+        }
 
         setupSearch();
 
@@ -284,7 +298,7 @@ public class NotificationListFragment extends Fragment {
     }
 
     private void renderNotificationsAndChips() {
-        if (binding == null) return;
+        if (binding == null || !isAdded()) return;
 
         String query = binding.etSearchNotification.getText().toString().toLowerCase().trim();
 
@@ -488,8 +502,8 @@ public class NotificationListFragment extends Fragment {
             card.setCardElevation(0f);
             card.setRadius(24f);
             card.setStrokeWidth(1);
-            card.setStrokeColor(ColorStateList.valueOf(0xFF1E293B));
-            card.setCardBackgroundColor(ColorStateList.valueOf(0xFF121929));
+            card.setStrokeColor(ColorStateList.valueOf(isDark ? 0xFF1E293B : 0xFFCBD5E1));
+            card.setCardBackgroundColor(ColorStateList.valueOf(isDark ? 0xFF121929 : 0xFFF1F5F9));
             
             LinearLayout cardLayout = new LinearLayout(requireContext());
             cardLayout.setOrientation(LinearLayout.VERTICAL);
@@ -519,30 +533,30 @@ public class NotificationListFragment extends Fragment {
 
             String iconKind = n.iconType != null ? n.iconType.toUpperCase() : "GENERAL";
             if ("ACADEMIC".equals(iconKind)) {
-                capsuleBg.setColor(0xFF291F15);
+                capsuleBg.setColor(isDark ? 0xFF291F15 : 0xFFFEF3C7);
                 capsuleBg.setStroke((int) (1f * getResources().getDisplayMetrics().density), 0x66D97706);
                 ivIcon.setImageResource(R.drawable.ic_person);
-                ivIcon.setImageTintList(ColorStateList.valueOf(0xFFF59E0B));
+                ivIcon.setImageTintList(ColorStateList.valueOf(0xFFD97706));
             } else if ("ALERT".equals(iconKind)) {
-                capsuleBg.setColor(0xFF0E242D);
+                capsuleBg.setColor(isDark ? 0xFF0E242D : 0xFFCFFAFE);
                 capsuleBg.setStroke((int) (1f * getResources().getDisplayMetrics().density), 0x6606B6D4);
                 ivIcon.setImageResource(R.drawable.ic_notification);
-                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF06B6D4));
+                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF0284C7));
             } else if ("SYSTEM".equals(iconKind)) {
-                capsuleBg.setColor(0xFF1E1B2E);
+                capsuleBg.setColor(isDark ? 0xFF1E1B2E : 0xFFF3E8FF);
                 capsuleBg.setStroke((int) (1f * getResources().getDisplayMetrics().density), 0x668B5CF6);
                 ivIcon.setImageResource(R.drawable.ic_settings);
-                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF8B5CF6));
+                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF7C3AED));
             } else if ("SUBJECT".equals(iconKind)) {
-                capsuleBg.setColor(0xFF0D281E);
+                capsuleBg.setColor(isDark ? 0xFF0D281E : 0xD1FAE5);
                 capsuleBg.setStroke((int) (1f * getResources().getDisplayMetrics().density), 0x6610B981);
                 ivIcon.setImageResource(R.drawable.ic_open_book);
-                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF10B981));
+                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF059669));
             } else {
-                capsuleBg.setColor(0xFF131D33);
+                capsuleBg.setColor(isDark ? 0xFF131D33 : 0xFFE0F2FE);
                 capsuleBg.setStroke((int) (1f * getResources().getDisplayMetrics().density), 0x6638BDF8);
                 ivIcon.setImageResource(R.drawable.ic_megaphone);
-                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF38BDF8));
+                ivIcon.setImageTintList(ColorStateList.valueOf(0xFF0284C7));
             }
             iconCapsule.setBackground(capsuleBg);
             iconCapsule.addView(ivIcon);
@@ -565,26 +579,26 @@ public class NotificationListFragment extends Fragment {
             GradientDrawable tagBg = new GradientDrawable();
             tagBg.setCornerRadius(100f);
 
-            int tagColor = 0xFF38BDF8;
-            int tagBgColor = 0xFF131D33;
+            int tagColor = 0xFF0284C7;
+            int tagBgColor = isDark ? 0xFF131D33 : 0xFFE0F2FE;
             int tagBorderColor = 0x8038BDF8;
 
             String type = n.targetType != null ? n.targetType.toUpperCase() : "ALL";
             if ("ROLE_PROFESSORS".equals(type)) {
-                tagColor = 0xFFF59E0B;
-                tagBgColor = 0xFF291F15;
+                tagColor = 0xFFD97706;
+                tagBgColor = isDark ? 0xFF291F15 : 0xFFFEF3C7;
                 tagBorderColor = 0x80D97706;
             } else if ("ROLE_STUDENTS".equals(type)) {
-                tagColor = 0xFF06B6D4;
-                tagBgColor = 0xFF0E242D;
+                tagColor = 0xFF087990;
+                tagBgColor = isDark ? 0xFF0E242D : 0xFFCFFAFE;
                 tagBorderColor = 0x8006B6D4;
             } else if ("ROLE_ADMINS".equals(type)) {
-                tagColor = 0xFF8B5CF6;
-                tagBgColor = 0xFF1E1B2E;
+                tagColor = 0xFF7C3AED;
+                tagBgColor = isDark ? 0xFF1E1B2E : 0xFFF3E8FF;
                 tagBorderColor = 0x808B5CF6;
             } else if ("SUBJECT".equals(type)) {
-                tagColor = 0xFF10B981;
-                tagBgColor = 0xFF0D281E;
+                tagColor = 0xFF059669;
+                tagBgColor = isDark ? 0xFF0D281E : 0xFFD1FAE5;
                 tagBorderColor = 0x8010B981;
             }
 
@@ -606,12 +620,12 @@ public class NotificationListFragment extends Fragment {
             tvTitle.setText(n.title != null ? n.title : "Notificación");
             tvTitle.setTextSize(15);
             tvTitle.setTypeface(null, Typeface.BOLD);
-            tvTitle.setTextColor(0xFFFFFFFF);
+            tvTitle.setTextColor(primaryTextColor);
 
             TextView tvMsg = new TextView(requireContext());
             tvMsg.setText(n.message != null ? n.message : "");
             tvMsg.setTextSize(13);
-            tvMsg.setTextColor(0xFF8E9BB0);
+            tvMsg.setTextColor(secondaryTextColor);
             tvMsg.setPadding(0, 4, 0, 0);
 
             contentCol.addView(tvTag);
@@ -627,7 +641,7 @@ public class NotificationListFragment extends Fragment {
                     LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * getResources().getDisplayMetrics().density));
             divLp.setMargins(0, 16, 0, 12);
             divider.setLayoutParams(divLp);
-            divider.setBackgroundColor(0xFF1E293B);
+            divider.setBackgroundColor(isDark ? 0xFF1E293B : 0xFFE2E8F0);
             cardLayout.addView(divider);
 
             LinearLayout bottomRow = new LinearLayout(requireContext());
@@ -793,17 +807,23 @@ public class NotificationListFragment extends Fragment {
 
     private void showDeleteNotificationConfirmation(Notification n) {
         if (n == null) return;
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Eliminar Notificación")
-                .setMessage("¿Estás seguro de que deseas eliminar esta notificación?")
-                .setPositiveButton("Eliminar", (dialog, which) -> {
-                    viewModel.deleteNotification(n.id, () -> {
-                        Toast.makeText(getContext(), "Notificación eliminada", Toast.LENGTH_SHORT).show();
-                        viewModel.fetchNotifications();
-                    });
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+        String senderStr = (n.senderName != null && !n.senderName.isEmpty()) ? ("Emisor: " + n.senderName) : "Notificación";
+        DialogUtils.showConfirmDeleteDialog(
+            requireContext(),
+            "Confirmar Eliminación",
+            "¿Estás seguro de que deseas eliminar este aviso o notificación? Se removerá del historial de todos los destinatarios.",
+            n.title,
+            senderStr + " • Comunicado",
+            "AVISO",
+            null,
+            R.drawable.ic_notification,
+            () -> {
+                viewModel.deleteNotification(n.id, () -> {
+                    Toast.makeText(getContext(), "Notificación eliminada", Toast.LENGTH_SHORT).show();
+                    viewModel.fetchNotifications();
+                });
+            }
+        );
     }
 
     private <T> void observeOnce(LiveData<T> liveData, Observer<T> observer) {

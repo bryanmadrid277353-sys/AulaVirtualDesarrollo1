@@ -216,12 +216,17 @@ public class LoginFragment extends Fragment {
 
     private void showDeleteAccountConfirmation(String carnet, String name, Runnable onDelete) {
         String displayName = (name != null && !name.equals(carnet)) ? name : carnet;
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Eliminar cuenta guardada")
-                .setMessage("¿Deseas eliminar las credenciales guardadas para \"" + displayName + "\"?")
-                .setPositiveButton("Eliminar", (dialog, which) -> onDelete.run())
-                .setNegativeButton("Cancelar", null)
-                .show();
+        DialogUtils.showConfirmDeleteDialog(
+            requireContext(),
+            "Confirmar Eliminación",
+            "¿Estás seguro de que deseas eliminar las credenciales guardadas para esta cuenta en este dispositivo?",
+            displayName,
+            "Cuenta guardada para acceso rápido",
+            carnet,
+            null,
+            0,
+            onDelete::run
+        );
     }
 
     private void authenticateBiometrically(String carnet) {

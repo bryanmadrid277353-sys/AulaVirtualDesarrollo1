@@ -72,6 +72,16 @@ public class AdminEnrollmentListFragment extends Fragment {
         binding.tvTitle.setText("Materias inscritas");
         binding.tvSubtitle.setText("Consulta y gestiona las materias del estudiante.");
 
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearch.requestFocus();
+                }
+            });
+        }
+
         viewModel.fetchStudentById(studentId);
         viewModel.getSelectedStudentRecord().observe(getViewLifecycleOwner(), student -> {
             if (student != null && binding != null) {
@@ -135,7 +145,7 @@ public class AdminEnrollmentListFragment extends Fragment {
         adapter.setOnGradeActionListener(new GradeAdapter.OnGradeActionListener() {
             @Override
             public void onEditGrades(StudentGradeInfo info) {
-                showEditGradesDialog(info);
+                // Manual grade editing disabled
             }
 
             @Override
@@ -147,13 +157,26 @@ public class AdminEnrollmentListFragment extends Fragment {
             }
 
             @Override
+            public void onViewConduct(StudentGradeInfo info) {
+                if (info == null || info.subject == null) return;
+                Bundle args = new Bundle();
+                args.putInt("studentId", studentId);
+                args.putInt("subjectId", info.subject.id);
+                Navigation.findNavController(requireView()).navigate(R.id.action_global_studentConductFragment, args);
+            }
+
+            @Override
             public void onAddPeriodClick(StudentGradeInfo info) {
-                showEditGradesDialog(info);
+                // Period count modification disabled
             }
 
             @Override
             public void onViewAttendance(StudentGradeInfo info) {
-                showSubjectAttendanceDialog(info);
+                if (info == null || info.subject == null) return;
+                Bundle args = new Bundle();
+                args.putInt("studentId", studentId);
+                args.putInt("subjectId", info.subject.id);
+                Navigation.findNavController(requireView()).navigate(R.id.action_global_studentAttendanceFragment, args);
             }
 
             @Override
@@ -237,172 +260,7 @@ public class AdminEnrollmentListFragment extends Fragment {
         binding.tvNoSubjectsMessage.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
-    private void showEditGradesDialog(StudentGradeInfo info) {
-        if (info == null || info.enrollment == null) return;
 
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_grades, null);
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
-        builder.setView(dialogView);
-
-        AlertDialog dialog = builder.create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-
-        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
-        btnClose.setOnClickListener(v -> dialog.dismiss());
-
-        TextView tvSubjectSubtitle = dialogView.findViewById(R.id.tvSubjectNameSubtitle);
-        if (info.subject != null && info.subject.name != null) {
-            tvSubjectSubtitle.setText("Materia: " + info.subject.name);
-        }
-
-        TextView tvPeriodsHeader = dialogView.findViewById(R.id.tvPeriodsCountHeader);
-        View btnRemovePeriod = dialogView.findViewById(R.id.btnRemovePeriod);
-        View btnAddPeriod = dialogView.findViewById(R.id.btnAddPeriod);
-
-        LinearLayout layoutRowsContainer = dialogView.findViewById(R.id.layoutGradesRowsContainer);
-        TextView tvCalcAvg = dialogView.findViewById(R.id.tvCalculatedAverage);
-        TextView tvStatusBadge = dialogView.findViewById(R.id.tvCalculatedStatusBadge);
-
-        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
-        View btnSave = dialogView.findViewById(R.id.btnSaveDialog);
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
-
-        com.aula.virtual.data.entity.Enrollment e = info.enrollment;
-        final int[] periodsCount = {e.periodsCount > 0 ? e.periodsCount : 5};
-        List<EditText> inputFields = new ArrayList<>();
-
-        String[] periodNames = {"Primer Parcial", "Segundo Parcial", "Tercer Parcial", "Cuarto Parcial", "Quinto Parcial", "Sexto Parcial", "Séptimo Parcial", "Octavo Parcial"};
-
-        Runnable calculateAndRenderUI = () -> {
-            tvPeriodsHeader.setText(periodsCount[0] + " Períodos evaluativos");
-            layoutRowsContainer.removeAllViews();
-            inputFields.clear();
-
-            double sum = 0;
-            int filledCount = 0;
-
-            for (int i = 1; i <= periodsCount[0]; i++) {
-                final int periodIndex = i;
-                View rowView = LayoutInflater.from(requireContext()).inflate(R.layout.item_dialog_grade_row, null);
-
-                TextView tvBadge = rowView.findViewById(R.id.tvPeriodBadge);
-                TextView tvName = rowView.findViewById(R.id.tvPeriodName);
-                EditText etGrade = rowView.findViewById(R.id.etPeriodGrade);
-
-                tvBadge.setText("P" + periodIndex);
-                tvName.setText("Nota " + periodIndex);
-
-                Double currentVal = getGradeForPeriodIndex(e, periodIndex);
-                if (currentVal != null) {
-                    etGrade.setText(String.format(java.util.Locale.getDefault(), "%.1f", currentVal));
-                    sum += currentVal;
-                    filledCount++;
-                } else {
-                    etGrade.setText("");
-                }
-
-                inputFields.add(etGrade);
-
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(0, 0, 0, (int) (10 * getResources().getDisplayMetrics().density));
-                rowView.setLayoutParams(lp);
-
-                layoutRowsContainer.addView(rowView);
-            }
-
-            // Real Average treating missing grades as 0
-            double avgReal = sum / periodsCount[0];
-            tvCalcAvg.setText(String.format(java.util.Locale.getDefault(), "%.1f / 10", avgReal));
-
-            boolean hasPending = filledCount < periodsCount[0];
-            if (hasPending) {
-                tvStatusBadge.setText("🟡 En curso");
-                tvStatusBadge.setTextColor(Color.parseColor("#F59E0B"));
-            } else if (avgReal >= 6.0) {
-                tvStatusBadge.setText("✓ Aprobado");
-                tvStatusBadge.setTextColor(Color.parseColor("#10B981"));
-            } else {
-                tvStatusBadge.setText("✕ Reprobado");
-                tvStatusBadge.setTextColor(Color.parseColor("#EF4444"));
-            }
-        };
-
-        calculateAndRenderUI.run();
-
-        btnRemovePeriod.setOnClickListener(v -> {
-            if (periodsCount[0] > 1) {
-                periodsCount[0]--;
-                calculateAndRenderUI.run();
-            } else {
-                Toast.makeText(requireContext(), "El mínimo es 1 período", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnAddPeriod.setOnClickListener(v -> {
-            if (periodsCount[0] < 8) {
-                periodsCount[0]++;
-                calculateAndRenderUI.run();
-            } else {
-                Toast.makeText(requireContext(), "El máximo es 8 períodos", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnSave.setOnClickListener(v -> {
-            e.periodsCount = periodsCount[0];
-
-            for (int i = 0; i < inputFields.size(); i++) {
-                int periodIndex = i + 1;
-                String valStr = inputFields.get(i).getText().toString().trim();
-                Double val = null;
-                if (!valStr.isEmpty()) {
-                    try { val = Double.parseDouble(valStr.replace(",", ".")); } catch (Exception ignored) {}
-                }
-                setGradeForPeriodIndex(e, periodIndex, val);
-            }
-
-            viewModel.performOnlineAction(() -> {
-                viewModel.updateEnrollment(e);
-                Toast.makeText(getContext(), "Calificaciones actualizadas exitosamente", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
-            });
-        });
-
-        dialog.show();
-    }
-
-    private Double getGradeForPeriodIndex(com.aula.virtual.data.entity.Enrollment e, int index) {
-        if (e == null) return null;
-        switch (index) {
-            case 1: return e.grade1;
-            case 2: return e.grade2;
-            case 3: return e.grade3;
-            case 4: return e.grade4;
-            case 5: return e.grade5;
-            case 6: return e.grade6;
-            case 7: return e.grade7;
-            case 8: return e.grade8;
-            default: return null;
-        }
-    }
-
-    private void setGradeForPeriodIndex(com.aula.virtual.data.entity.Enrollment e, int index, Double val) {
-        if (e == null) return;
-        switch (index) {
-            case 1: e.grade1 = val; break;
-            case 2: e.grade2 = val; break;
-            case 3: e.grade3 = val; break;
-            case 4: e.grade4 = val; break;
-            case 5: e.grade5 = val; break;
-            case 6: e.grade6 = val; break;
-            case 7: e.grade7 = val; break;
-            case 8: e.grade8 = val; break;
-        }
-    }
 
     private <T> void observeOnce(androidx.lifecycle.LiveData<T> liveData, androidx.lifecycle.Observer<T> observer) {
         liveData.observe(getViewLifecycleOwner(), new androidx.lifecycle.Observer<T>() {
@@ -471,96 +329,6 @@ public class AdminEnrollmentListFragment extends Fragment {
                 .setNegativeButton("Cancelar", null)
                 .show();
         });
-    }
-
-    private void showSubjectAttendanceDialog(StudentGradeInfo info) {
-        if (info == null || info.subject == null || getContext() == null) return;
-
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_student_attendance, null);
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
-        builder.setView(dialogView);
-
-        AlertDialog dialog = builder.create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-
-        TextView tvSubtitle = dialogView.findViewById(R.id.tvAttendanceSubtitle);
-        if (tvSubtitle != null) {
-            String studentName = (info.student != null && info.student.name != null) ? info.student.name : "Estudiante";
-            tvSubtitle.setText("Asistencia de " + studentName + " en " + info.subject.name);
-        }
-
-        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
-        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
-        View btnSave = dialogView.findViewById(R.id.btnSaveDialog);
-
-        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
-        if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
-
-        LinearLayout layoutRows = dialogView.findViewById(R.id.layoutAttendanceRowsContainer);
-        if (layoutRows != null) {
-            layoutRows.removeAllViews();
-
-            String[] dates = {"Lunes 13/10/2025", "Miércoles 15/10/2025", "Viernes 17/10/2025", "Lunes 20/10/2025", "Miércoles 22/10/2025"};
-            String[] statuses = {"PRESENT", "PRESENT", "ABSENT", "EXCUSED", "PRESENT"};
-
-            for (int i = 0; i < dates.length; i++) {
-                View rowView = LayoutInflater.from(requireContext()).inflate(R.layout.item_attendance_row, null);
-
-                TextView tvDate = rowView.findViewById(R.id.tvAttendanceDate);
-                TextView tvSubj = rowView.findViewById(R.id.tvAttendanceSubject);
-                com.google.android.material.button.MaterialButton btnToggle = rowView.findViewById(R.id.btnToggleAttendance);
-
-                if (tvDate != null) tvDate.setText(dates[i]);
-                if (tvSubj != null) tvSubj.setText(info.subject.name + " • Horario de clases");
-
-                final String[] currentStatus = {statuses[i]};
-
-                Runnable updateButtonUI = () -> {
-                    if ("PRESENT".equals(currentStatus[0])) {
-                        btnToggle.setText("🟢 Asistió");
-                        btnToggle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#10B981")));
-                    } else if ("ABSENT".equals(currentStatus[0])) {
-                        btnToggle.setText("🔴 No asistió");
-                        btnToggle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#EF4444")));
-                    } else {
-                        btnToggle.setText("🟡 Justificado");
-                        btnToggle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#F59E0B")));
-                    }
-                };
-
-                updateButtonUI.run();
-
-                btnToggle.setOnClickListener(v -> {
-                    if ("PRESENT".equals(currentStatus[0])) {
-                        currentStatus[0] = "ABSENT";
-                    } else if ("ABSENT".equals(currentStatus[0])) {
-                        currentStatus[0] = "EXCUSED";
-                    } else {
-                        currentStatus[0] = "PRESENT";
-                    }
-                    updateButtonUI.run();
-                });
-
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
-                rowView.setLayoutParams(lp);
-
-                layoutRows.addView(rowView);
-            }
-        }
-
-        if (btnSave != null) {
-            btnSave.setOnClickListener(v -> {
-                Toast.makeText(requireContext(), "Control de asistencia guardado exitosamente", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
-            });
-        }
-
-        dialog.show();
     }
 
     @Override

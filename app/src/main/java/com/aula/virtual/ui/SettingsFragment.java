@@ -44,6 +44,19 @@ public class SettingsFragment extends Fragment {
             requireActivity().recreate();
         });
 
+        boolean isHaptic = ThemeHelper.isHapticFeedbackEnabled(requireContext());
+        if (binding.switchHapticFeedback != null) {
+            binding.switchHapticFeedback.setChecked(isHaptic);
+            binding.switchHapticFeedback.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                ThemeHelper.setHapticFeedbackEnabled(requireContext(), isChecked);
+            });
+        }
+
+        binding.btnGoToAdvancedSettings.setVisibility(View.VISIBLE);
+        if (binding.dividerAdvanced != null) {
+            binding.dividerAdvanced.setVisibility(View.VISIBLE);
+        }
+
         binding.btnNotificationSettings.setOnClickListener(v -> 
             Navigation.findNavController(v).navigate(R.id.action_settingsFragment_to_notificationSettingsFragment));
 

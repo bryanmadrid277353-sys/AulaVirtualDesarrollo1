@@ -30,7 +30,7 @@ import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.entity.User;
-import com.aula.virtual.databinding.FragmentAdminDashboardBinding;
+import com.aula.virtual.databinding.FragmentAdminFacilitySchedulesBinding;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AdminFacilitySchedulesFragment extends Fragment {
-    private FragmentAdminDashboardBinding binding;
+    private FragmentAdminFacilitySchedulesBinding binding;
     private MainViewModel viewModel;
     private ScheduleAdapter adapter;
     private int facilityId;
@@ -53,7 +53,7 @@ public class AdminFacilitySchedulesFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentAdminDashboardBinding.inflate(inflater, container, false);
+        binding = FragmentAdminFacilitySchedulesBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -62,6 +62,10 @@ public class AdminFacilitySchedulesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         facilityId = getArguments().getInt("facilityId");
+
+        if (binding.btnBackList != null) {
+            binding.btnBackList.setOnClickListener(v -> Navigation.findNavController(view).popBackStack());
+        }
 
         adapter = new ScheduleAdapter(new ScheduleAdapter.OnScheduleActionListener() {
             @Override public void onDelete(ScheduleInfo info) { showDeleteScheduleConfirmation(info); }
@@ -80,34 +84,37 @@ public class AdminFacilitySchedulesFragment extends Fragment {
             }
         });
 
-        binding.btnAdd.setText("Programar Clase");
+        binding.btnAdd.setText("+ Programar Clase");
         binding.btnAdd.setOnClickListener(v -> showAddScheduleDialog(null));
-        binding.spinnerFilter.setVisibility(View.VISIBLE);
-        binding.etSearch.setVisibility(View.VISIBLE);
-        binding.etSearch.setHint("Buscar horario...");
         setupSearch();
 
-        // Make Timetable Card Header Action VISIBLE and Clickable!
-        binding.btnHeaderAction.setVisibility(View.VISIBLE);
-        binding.btnHeaderAction.setIconResource(R.drawable.ic_timetable);
-        
+        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
+            binding.btnToggleSearch.setOnClickListener(v -> {
+                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                if (!isVisible) {
+                    binding.etSearch.requestFocus();
+                }
+            });
+        }
+
         View.OnClickListener openTimetable = v -> {
             Bundle args = new Bundle();
             args.putInt("facilityId", facilityId);
             Navigation.findNavController(view).navigate(R.id.action_adminFacilitySchedulesFragment_to_adminFacilityTimetableFragment, args);
         };
-        binding.btnHeaderAction.setOnClickListener(openTimetable);
-
-        // Make Detalle Header Action VISIBLE and Clickable (with ic_building)
-        binding.btnHeaderDetail.setVisibility(View.VISIBLE);
-        binding.btnHeaderDetail.setIconResource(R.drawable.ic_building);
+        if (binding.btnViewTimetable != null) {
+            binding.btnViewTimetable.setOnClickListener(openTimetable);
+        }
 
         View.OnClickListener openFacilityDetail = v -> {
             Bundle args = new Bundle();
             args.putInt("facilityId", facilityId);
             Navigation.findNavController(view).navigate(R.id.action_adminFacilitySchedulesFragment_to_adminFacilityDetailFragment, args);
         };
-        binding.btnHeaderDetail.setOnClickListener(openFacilityDetail);
+        if (binding.btnHeaderDetail != null) {
+            binding.btnHeaderDetail.setOnClickListener(openFacilityDetail);
+        }
     }
 
     private void setupSearch() {
@@ -139,7 +146,7 @@ public class AdminFacilitySchedulesFragment extends Fragment {
 
         if (query.isEmpty()) {
             adapter.setSchedules(currentSchedules);
-            binding.tvRecordCount.setText(currentSchedules.size() + (currentSchedules.size() == 1 ? " horario" : " horarios"));
+            binding.tvRecordCount.setText(currentSchedules.size() + (currentSchedules.size() == 1 ? " horario programado" : " horarios programados"));
             return;
         }
 
@@ -163,16 +170,23 @@ public class AdminFacilitySchedulesFragment extends Fragment {
         }).collect(Collectors.toList());
 
         adapter.setSchedules(filtered);
-        binding.tvRecordCount.setText(filtered.size() + (filtered.size() == 1 ? " horario" : " horarios"));
+        binding.tvRecordCount.setText(filtered.size() + (filtered.size() == 1 ? " horario programado" : " horarios programados"));
     }
 
     private void observeViewModel() {
         viewModel.getAllFacilities().observe(getViewLifecycleOwner(), facilities -> {
             for (Facility f : facilities) {
                 if (f.id == facilityId) {
-                    binding.tvTitle.setText("Horarios: " + f.name);
-                    binding.tvSubtitle.setText(f.type + " - " + f.description);
-                    binding.tvSubtitle.setVisibility(View.VISIBLE);
+                    if (binding.tvFacilityName != null) {
+                        binding.tvFacilityName.setText(f.name);
+                    }
+                    if (binding.tvFacilityTypePill != null) {
+                        binding.tvFacilityTypePill.setText(f.type != null ? f.type.toUpperCase(Locale.ROOT) : "AULA");
+                    }
+                    if (binding.tvFacilityDescription != null) {
+                        String desc = (f.description != null && !f.description.isEmpty()) ? f.description : "Espacio educativo";
+                        binding.tvFacilityDescription.setText((f.type != null ? f.type : "Aulas") + " • " + desc);
+                    }
                     break;
                 }
             }
@@ -581,13 +595,21 @@ public class AdminFacilitySchedulesFragment extends Fragment {
     }
 
     private void showDeleteScheduleConfirmation(ScheduleInfo info) {
-        new MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Eliminar Horario")
-            .setMessage("¿Estás seguro de eliminar esta programación?")
-            .setPositiveButton("Eliminar", (dialog, which) -> {
-                viewModel.performOnlineAction(() -> viewModel.deleteSchedule(info.schedule));
-            })
-            .setNegativeButton("Cancelar", null).show();
+        if (info == null || info.schedule == null) return;
+        String daysStr = info.schedule.days != null ? info.schedule.days : "Días por definir";
+        String timeStr = (info.schedule.startTime != null && info.schedule.endTime != null) ? (info.schedule.startTime + " - " + info.schedule.endTime) : "";
+        String titleStr = (info.subjectName != null ? info.subjectName : "Materia") + " (" + daysStr + ")";
+        DialogUtils.showConfirmDeleteDialog(
+            requireContext(),
+            "Confirmar Eliminación",
+            "¿Estás seguro de eliminar esta programación de clase? El bloque de horario quedará liberado en la instalación.",
+            titleStr,
+            timeStr + " • Horario Asignado",
+            "HORARIO",
+            null,
+            R.drawable.ic_timetable,
+            () -> viewModel.performOnlineAction(() -> viewModel.deleteSchedule(info.schedule))
+        );
     }
 
     private void showTimePicker(TextView target) {

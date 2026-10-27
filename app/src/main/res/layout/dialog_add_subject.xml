@@ -33,21 +33,38 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Crea una materia e indica su descripción y sección."
+                android:text="Crea una materia e indica sus datos, ID y descripción."
                 android:textColor="?android:attr/textColorSecondary"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="24dp" />
 
             <!-- Field 1: Nombre de materia -->
-            <TextView
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Nombre de materia"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nombre de materia"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvNameError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -71,11 +88,70 @@
                     android:textSize="15sp" />
             </LinearLayout>
 
-            <!-- Field 2: Descripción -->
+            <!-- Field 2: Carnet / ID Materia (ASIGN + 5 dígitos) -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Carnet / ID Materia (5 dígitos)"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvCodeError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_input_field"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="14dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ASIGN"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="6dp" />
+
+                <EditText
+                    android:id="@+id/etCodeDigits"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:hint="12345"
+                    android:inputType="number"
+                    android:maxLength="5"
+                    android:singleLine="true"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColorHint="@color/input_hint"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <!-- Field 3: Descripción de la materia (Debajo del ID) -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Descripción"
+                android:text="Descripción de la materia"
                 android:textColor="?android:attr/textColorSecondary"
                 android:textSize="13sp"
                 android:textStyle="bold"
@@ -94,7 +170,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@null"
-                    android:hint="Descripción de la materia"
+                    android:hint="Resumen o contenido del curso"
                     android:gravity="top|start"
                     android:inputType="textMultiLine"
                     android:textColor="?android:attr/textColorPrimary"
@@ -102,15 +178,32 @@
                     android:textSize="15sp" />
             </LinearLayout>
 
-            <!-- Field 3: Sección (1 al 9) -->
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Field 4: Sección (1 al 9) -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Sección (1 al 9)"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sección (1 al 9)"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true" />
+
+                <TextView
+                    android:id="@+id/tvSectionError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obligatorio"
+                    android:textColor="#FF6B6B"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="gone" />
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -165,7 +258,7 @@
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/input_border"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="#1D2738" />
+                    android:backgroundTint="@color/input_bg" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAddDialog"

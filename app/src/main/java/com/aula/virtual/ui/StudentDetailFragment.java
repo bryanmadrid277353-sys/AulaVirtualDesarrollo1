@@ -187,16 +187,19 @@ public class StudentDetailFragment extends Fragment {
     private void saveChanges() {
         if (studentRecord != null) {
             String name = binding.etField1.getText().toString().trim();
-            String carnet = binding.etField2.getText().toString().trim();
+            String carnetInput = binding.etField2.getText().toString().trim();
             String grade = binding.etAddress.getText().toString().trim();
+
+            String carnetDigits = carnetInput;
+            if (carnetDigits.startsWith("EST")) carnetDigits = carnetDigits.substring(3);
 
             boolean isValid = true;
             if (name.isEmpty()) {
                 binding.etField1.setError("El nombre es obligatorio");
                 isValid = false;
             }
-            if (!carnet.matches("\\d{7}")) {
-                binding.etField2.setError("Carnet inválido (7 dígitos numéricos)");
+            if (!carnetDigits.matches("\\d{7}")) {
+                binding.etField2.setError("Carnet inválido (debe ingresar exactamente 7 dígitos numéricos)");
                 isValid = false;
             }
             if (grade.isEmpty()) {
@@ -206,7 +209,7 @@ public class StudentDetailFragment extends Fragment {
 
             if (isValid) {
                 studentRecord.name = name;
-                studentRecord.carnet = "EST" + carnet;
+                studentRecord.carnet = "EST" + carnetDigits;
                 studentRecord.grade = grade;
 
                 viewModel.performOnlineAction(() -> {
@@ -228,31 +231,37 @@ public class StudentDetailFragment extends Fragment {
     }
 
     private void showDeleteConfirmation() {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Confirmar Eliminación")
-                .setMessage("¿Estás seguro de que deseas eliminar este registro de alumno?")
-                .setPositiveButton("Eliminar", (dialog, which) -> {
-                    if (studentRecord != null) {
-                        viewModel.performOnlineAction(() -> {
-                            viewModel.deleteStudentRecord(studentRecord.id, new retrofit2.Callback<Void>() {
-                                @Override
-                                public void onResponse(@NonNull retrofit2.Call<Void> call, @NonNull retrofit2.Response<Void> response) {
-                                    Toast.makeText(getContext(), "Alumno eliminado", Toast.LENGTH_SHORT).show();
-                                    if (!Navigation.findNavController(requireView()).popBackStack(R.id.adminStudentListFragment, false)) {
-                                        Navigation.findNavController(requireView()).popBackStack();
-                                    }
-                                }
+        if (studentRecord == null) return;
+        String gradeStr = studentRecord.grade != null ? studentRecord.grade : "Estudiante";
+        String badge = studentRecord.carnet != null ? studentRecord.carnet : "";
+        DialogUtils.showConfirmDeleteDialog(
+            requireContext(),
+            "Confirmar Eliminación",
+            "¿Estás seguro de que deseas eliminar este registro de alumno? Se perderán las inscripciones y notas asociadas de forma permanente.",
+            studentRecord.name,
+            gradeStr + " • AulaV",
+            badge,
+            null,
+            0,
+            () -> {
+                viewModel.performOnlineAction(() -> {
+                    viewModel.deleteStudentRecord(studentRecord.id, new retrofit2.Callback<Void>() {
+                        @Override
+                        public void onResponse(@NonNull retrofit2.Call<Void> call, @NonNull retrofit2.Response<Void> response) {
+                            Toast.makeText(getContext(), "Alumno eliminado", Toast.LENGTH_SHORT).show();
+                            if (!Navigation.findNavController(requireView()).popBackStack(R.id.adminStudentListFragment, false)) {
+                                Navigation.findNavController(requireView()).popBackStack();
+                            }
+                        }
 
-                                @Override
-                                public void onFailure(@NonNull retrofit2.Call<Void> call, @NonNull Throwable t) {
-                                    Toast.makeText(getContext(), "Error al eliminar alumno", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        });
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+                        @Override
+                        public void onFailure(@NonNull retrofit2.Call<Void> call, @NonNull Throwable t) {
+                            Toast.makeText(getContext(), "Error al eliminar alumno", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                });
+            }
+        );
     }
 
     private void navigateToGrades() {

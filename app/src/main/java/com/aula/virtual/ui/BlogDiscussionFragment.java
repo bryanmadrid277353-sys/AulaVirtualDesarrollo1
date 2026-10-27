@@ -20,19 +20,27 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.aula.virtual.R;
+import com.aula.virtual.data.CommentInfo;
 import com.aula.virtual.data.entity.BlogComment;
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentBlogDiscussionBinding;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class BlogDiscussionFragment extends Fragment {
     private FragmentBlogDiscussionBinding binding;
     private MainViewModel viewModel;
     private BlogCommentAdapter adapter;
     private int blogEntryId;
+    private List<CommentInfo> rawComments = new ArrayList<>();
+    private String currentSearchQuery = "";
     
     private final Handler pollHandler = new Handler(Looper.getMainLooper());
     private static final int POLL_INTERVAL = 4000; // Poll every 4 seconds
@@ -88,9 +96,66 @@ public class BlogDiscussionFragment extends Fragment {
             return insets;
         });
 
-        if (isAdmin) {
-            binding.btnClearChat.setVisibility(View.VISIBLE);
-            binding.btnClearChat.setOnClickListener(v -> showClearChatConfirmation());
+        if (binding.btnBackDiscussion != null) {
+            binding.btnBackDiscussion.setOnClickListener(v -> Navigation.findNavController(view).navigateUp());
+        }
+
+        if (binding.btnChatMenu != null) {
+            binding.btnChatMenu.setOnClickListener(v -> {
+                android.widget.PopupMenu popup = new android.widget.PopupMenu(requireContext(), v);
+                popup.getMenu().add(0, 1, 0, "🔍 Buscar mensaje");
+                popup.getMenu().add(0, 2, 1, "🔕 Silenciar Notificaciones");
+                popup.getMenu().add(0, 3, 2, "🗑️ Vaciar chat");
+                popup.setOnMenuItemClickListener(item -> {
+                    int id = item.getItemId();
+                    if (id == 1) {
+                        if (binding.layoutSearchContainer != null) {
+                            boolean isVis = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                            binding.layoutSearchContainer.setVisibility(isVis ? View.GONE : View.VISIBLE);
+                            if (!isVis) {
+                                binding.etSearchChat.requestFocus();
+                            } else {
+                                currentSearchQuery = "";
+                                binding.etSearchChat.setText("");
+                                applyChatSearch();
+                            }
+                        }
+                        return true;
+                    } else if (id == 2) {
+                        Toast.makeText(getContext(), "Notificaciones del chat silenciadas", Toast.LENGTH_SHORT).show();
+                        return true;
+                    } else if (id == 3) {
+                        showClearChatConfirmation();
+                        return true;
+                    }
+                    return false;
+                });
+                popup.show();
+            });
+        }
+
+
+
+        if (binding.btnCloseSearch != null) {
+            binding.btnCloseSearch.setOnClickListener(v -> {
+                if (binding.layoutSearchContainer != null) {
+                    binding.layoutSearchContainer.setVisibility(View.GONE);
+                    currentSearchQuery = "";
+                    binding.etSearchChat.setText("");
+                    applyChatSearch();
+                }
+            });
+        }
+
+        if (binding.etSearchChat != null) {
+            binding.etSearchChat.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    currentSearchQuery = s != null ? s.toString().toLowerCase().trim() : "";
+                    applyChatSearch();
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
         }
 
         adapter.setOnCommentLongClickListener(comment -> showMessageOptionsDialog(comment, currentUserId, isAdmin));
@@ -104,12 +169,8 @@ public class BlogDiscussionFragment extends Fragment {
 
         viewModel.getBlogComments().observe(getViewLifecycleOwner(), comments -> {
             if (comments != null) {
-                int oldSize = adapter.getItemCount();
-                adapter.setComments(comments);
-                int newSize = adapter.getItemCount();
-                if (newSize > oldSize && newSize > 0) {
-                    binding.rvComments.scrollToPosition(newSize - 1);
-                }
+                rawComments = new ArrayList<>(comments);
+                applyChatSearch();
             }
         });
 
@@ -165,6 +226,28 @@ public class BlogDiscussionFragment extends Fragment {
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
+    }
+
+    private void applyChatSearch() {
+        if (binding == null) return;
+        List<CommentInfo> filtered;
+        if (currentSearchQuery.isEmpty()) {
+            filtered = rawComments;
+        } else {
+            filtered = rawComments.stream().filter(info -> {
+                if (info == null || info.comment == null) return false;
+                String content = info.comment.content != null ? info.comment.content.toLowerCase() : "";
+                String author = info.userName != null ? info.userName.toLowerCase() : "";
+                return content.contains(currentSearchQuery) || author.contains(currentSearchQuery);
+            }).collect(Collectors.toList());
+        }
+
+        int oldSize = adapter.getItemCount();
+        adapter.setComments(filtered);
+        int newSize = adapter.getItemCount();
+        if (newSize > oldSize && newSize > 0 && currentSearchQuery.isEmpty()) {
+            binding.rvComments.scrollToPosition(newSize - 1);
+        }
     }
 
     @Override

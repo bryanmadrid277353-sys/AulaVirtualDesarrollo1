@@ -39,4 +39,7 @@ public interface BlogDao {
 
     @Query("DELETE FROM blog_comments WHERE blogEntryId = :entryId")
     void deleteCommentsByEntry(int entryId);
+
+    @Query("DELETE FROM blog_entries WHERE subjectId = :subjectId")
+    void deleteEntriesBySubject(int subjectId);
 }

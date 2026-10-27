@@ -46,6 +46,12 @@
         <action
             android:id="@+id/action_professorHomeFragment_to_studentProfileFragment"
             app:destination="@id/studentProfileFragment" />
+        <action
+            android:id="@+id/action_professorHomeFragment_to_professorStudentListFragment"
+            app:destination="@id/professorStudentListFragment" />
+        <action
+            android:id="@+id/action_professorHomeFragment_to_subjectBlogFragment"
+            app:destination="@id/subjectBlogFragment" />
     </fragment>
 
     <fragment
@@ -120,6 +126,9 @@
         <action
             android:id="@+id/action_adminHomeFragment_to_studentProfileFragment"
             app:destination="@id/studentProfileFragment" />
+        <action
+            android:id="@+id/action_adminHomeFragment_to_academicCalendarFragment"
+            app:destination="@id/academicCalendarFragment" />
     </fragment>
 
     <fragment
@@ -413,6 +422,12 @@
     </fragment>
 
     <fragment
+        android:id="@+id/academicCalendarFragment"
+        android:name="com.aula.virtual.ui.AcademicCalendarFragment"
+        android:label="Calendario Académico"
+        tools:layout="@layout/fragment_academic_calendar" />
+
+    <fragment
         android:id="@+id/adminFacilityListFragment"
         android:name="com.aula.virtual.ui.AdminFacilityListFragment"
         android:label="Listado de Instalaciones"
@@ -484,10 +499,48 @@
         app:destination="@id/notificationListFragment" />
 
     <action
+        android:id="@+id/action_global_studentConductFragment"
+        app:destination="@id/studentConductFragment" />
+
+    <action
+        android:id="@+id/action_global_studentAttendanceFragment"
+        app:destination="@id/studentAttendanceFragment" />
+
+    <action
         android:id="@+id/action_global_loginFragment"
         app:destination="@id/loginFragment"
         app:popUpTo="@id/nav_graph"
         app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/action_global_directMessagesFragment"
+        app:destination="@id/directMessagesFragment" />
+
+    <fragment
+        android:id="@+id/studentConductFragment"
+        android:name="com.aula.virtual.ui.StudentConductFragment"
+        android:label="Registro de Conducta"
+        tools:layout="@layout/fragment_student_conduct">
+        <argument
+            android:name="studentId"
+            app:argType="integer" />
+        <argument
+            android:name="subjectId"
+            app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/studentAttendanceFragment"
+        android:name="com.aula.virtual.ui.StudentAttendanceFragment"
+        android:label="Registro de Asistencia"
+        tools:layout="@layout/fragment_student_attendance">
+        <argument
+            android:name="studentId"
+            app:argType="integer" />
+        <argument
+            android:name="subjectId"
+            app:argType="integer" />
+    </fragment>
 
     <fragment
         android:id="@+id/notificationListFragment"
@@ -507,5 +560,34 @@
         android:name="com.aula.virtual.ui.NotificationSettingsFragment"
         android:label="Ajustes de Notificaciones"
         tools:layout="@layout/fragment_notification_settings" />
+
+    <fragment
+        android:id="@+id/directMessagesFragment"
+        android:name="com.aula.virtual.ui.DirectMessagesFragment"
+        android:label="Mensajes Directos"
+        tools:layout="@layout/fragment_direct_messages">
+        <action
+            android:id="@+id/action_directMessagesFragment_to_directChatFragment"
+            app:destination="@id/directChatFragment" />
+        <action
+            android:id="@+id/action_directMessagesFragment_to_studentProfileFragment"
+            app:destination="@id/studentProfileFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/directChatFragment"
+        android:name="com.aula.virtual.ui.DirectChatFragment"
+        android:label="Chat Privado"
+        tools:layout="@layout/fragment_direct_chat">
+        <argument
+            android:name="chatRoomId"
+            app:argType="string" />
+        <argument
+            android:name="contactId"
+            app:argType="integer" />
+        <argument
+            android:name="contactName"
+            app:argType="string" />
+    </fragment>
 
 </navigation>

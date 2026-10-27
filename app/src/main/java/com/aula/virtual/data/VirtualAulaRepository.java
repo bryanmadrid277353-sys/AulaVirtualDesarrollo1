@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import com.aula.virtual.data.entity.BlogComment;
 import com.aula.virtual.data.entity.BlogEntry;
+import com.aula.virtual.data.entity.DirectMessage;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
 import com.aula.virtual.data.entity.Enrollment;
@@ -71,7 +72,14 @@ public class VirtualAulaRepository {
     }
 
     private int consecutiveFailures = 0;
-    private static final int FAILURE_THRESHOLD = 3;
+    private static final int FAILURE_THRESHOLD = 2;
+
+    public void resetConnectionFailures() {
+        consecutiveFailures = 0;
+        if (connectionStatusListener != null && !isLocalMode()) {
+            connectionStatusListener.onStatusChanged(true);
+        }
+    }
 
     private boolean isLocalMode() {
         return context != null && ThemeHelper.isLocalMode(context);
@@ -165,43 +173,19 @@ public class VirtualAulaRepository {
         }
 
         // 2. Check Master Admin
-        if (("ADMIN12345".equalsIgnoreCase(c) || "Admin Maestro".equalsIgnoreCase(c) || "ADMIN".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
-            User existing = db.userDao().getUserById(1);
-            if (existing != null) return existing;
-            User masterAdmin = new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN");
-            masterAdmin.id = 1;
+        if (("ADMIN12345".equalsIgnoreCase(c) || "Admin Maestro".equalsIgnoreCase(c) || "ADMIN".equalsIgnoreCase(c)) && ("ASD###".equalsIgnoreCase(p) || "ASD###".equalsIgnoreCase(password))) {
+            User masterAdmin = db.userDao().getUserByCarnetOrName("ADMIN12345");
+            if (masterAdmin == null) {
+                masterAdmin = new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN");
+                masterAdmin.id = 1;
+            } else {
+                masterAdmin.carnet = "ADMIN12345";
+                masterAdmin.name = "Admin Maestro";
+                masterAdmin.password = "ASD###";
+                masterAdmin.role = "ADMIN";
+            }
             try { db.userDao().insert(masterAdmin); } catch (Exception ignored) {}
             return masterAdmin;
-        }
-
-        // 3. Check Default Profesor
-        if (("PROF100001".equalsIgnoreCase(c) || "Profesor".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
-            User existing = db.userDao().getUserById(2);
-            if (existing != null) return existing;
-            User profUser = new User("PROF100001", "Prof. Ricardo Valenzuela", "ASD###", "PROFESSOR");
-            profUser.id = 2;
-            try { db.userDao().insert(profUser); } catch (Exception ignored) {}
-            return profUser;
-        }
-
-        // 4. Check Default Encargado
-        if (("ENC1444444".equalsIgnoreCase(c) || "Encargado".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
-            User existing = db.userDao().getUserById(4);
-            if (existing != null) return existing;
-            User encUser = new User("ENC1444444", "Bryan Antonio Madrid Cortez", "ASD###", "ENCARGADO");
-            encUser.id = 4;
-            try { db.userDao().insert(encUser); } catch (Exception ignored) {}
-            return encUser;
-        }
-
-        // 5. Check Default Estudiante
-        if (("EST6197088".equalsIgnoreCase(c) || "Estudiante".equalsIgnoreCase(c)) && ("ASD###".equals(p) || "ASD###".equals(password))) {
-            User existing = db.userDao().getUserById(3);
-            if (existing != null) return existing;
-            User stuUser = new User("EST6197088", "Diego Salvador Madrid Cortez", "ASD###", "STUDENT");
-            stuUser.id = 3;
-            try { db.userDao().insert(stuUser); } catch (Exception ignored) {}
-            return stuUser;
         }
 
         // 6. Check any user in users table by carnet or name
@@ -250,6 +234,13 @@ public class VirtualAulaRepository {
         }
 
         java.util.concurrent.atomic.AtomicBoolean responded = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+        // Fast fallback timer: if server doesn't respond in 3 seconds, fallback to local login immediately
+        mainHandler.postDelayed(() -> {
+            if (responded.compareAndSet(false, true)) {
+                fallbackToLocalDb(carnet, password, null, callback, responded);
+            }
+        }, 3000);
 
         performCall(getApiService().login(carnet, password), new Callback<User>() {
             @Override
@@ -330,62 +321,111 @@ public class VirtualAulaRepository {
     }
 
     public void getEncargadosOnly(Callback<List<User>> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                try {
-                    List<User> cached = db.userDao().getEncargadosOnly();
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(deduplicateUsers(cached))));
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(null, e));
-                }
-            });
-        } else {
-            callback.onResponse(null, Response.success(new ArrayList<>()));
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        List<User> cached = db.userDao().getEncargadosOnly();
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(deduplicateUsers(cached))));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            } else {
+                callback.onResponse(null, Response.success(new ArrayList<>()));
+            }
+            return;
         }
+
+        performCall(getApiService().getEncargados(), new Callback<List<User>>() {
+            @Override
+            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onResponse(call, Response.success(deduplicateUsers(response.body())));
+                } else {
+                    callback.onResponse(call, response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<User>> call, Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
     }
 
     public void getStudentsByEncargado(int encargadoId, Callback<List<Student>> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                try {
-                    List<Student> students = db.studentDao().getStudentsByEncargado(encargadoId);
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(students)));
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(null, e));
-                }
-            });
-        } else {
-            callback.onResponse(null, Response.success(new ArrayList<>()));
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        List<Student> students = db.studentDao().getStudentsByEncargado(encargadoId);
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(students)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            } else {
+                callback.onResponse(null, Response.success(new ArrayList<>()));
+            }
+            return;
         }
+
+        performCall(getApiService().getStudentsByEncargado(encargadoId), callback);
     }
 
     public void getAllStudentRecords(Callback<List<Student>> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                try {
-                    List<Student> students = db.studentDao().getAllStudents();
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(students)));
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(null, e));
-                }
-            });
-        } else {
-            callback.onResponse(null, Response.success(new ArrayList<>()));
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        List<Student> students = db.studentDao().getAllStudents();
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(students)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            } else {
+                callback.onResponse(null, Response.success(new ArrayList<>()));
+            }
+            return;
         }
+
+        performCall(getApiService().getAllStudentRecords(), callback);
     }
 
     public void insertStudent(Student student, Callback<Student> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                try {
-                    long id = db.studentDao().insert(student);
-                    student.id = (int) id;
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(student)));
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(null, e));
-                }
-            });
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        long id = db.studentDao().insert(student);
+                        student.id = (int) id;
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(student)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            }
+            return;
         }
+        performCall(getApiService().createStudent(student), new Callback<Student>() {
+            @Override
+            public void onResponse(Call<Student> call, Response<Student> response) {
+                if (response.isSuccessful() && response.body() != null && db != null) {
+                    Student created = response.body();
+                    executor.execute(() -> {
+                        try { db.studentDao().insert(created); } catch (Exception e) { e.printStackTrace(); }
+                    });
+                }
+                callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Student> call, Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
     }
 
     public void getStudentById(int id, Callback<Student> callback) {
@@ -393,50 +433,85 @@ public class VirtualAulaRepository {
             executor.execute(() -> {
                 try {
                     Student student = db.studentDao().getStudentById(id);
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(student)));
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(null, e));
-                }
+                    if (student != null) {
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(student)));
+                    }
+                } catch (Exception e) { e.printStackTrace(); }
             });
-        } else {
-            callback.onResponse(null, Response.success(null));
         }
+        if (isLocalMode()) return;
+        performCall(getApiService().getStudentById(id), callback);
     }
 
     public void updateStudent(Student student, Callback<Student> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                try {
-                    db.studentDao().update(student);
-                    User u = db.userDao().getUserById(student.id);
-                    if (u == null && student.carnet != null) {
-                        u = db.userDao().getUserByCarnetOrName(student.carnet);
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        db.studentDao().update(student);
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(student)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
                     }
-                    if (u != null) {
-                        u.name = student.name;
-                        u.carnet = student.carnet;
-                        u.profile_image = student.profile_image;
-                        db.userDao().insert(u);
-                    }
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(student)));
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(null, e));
-                }
-            });
+                });
+            }
+            return;
         }
+        performCall(getApiService().updateStudent(student.id, student), new Callback<Student>() {
+            @Override
+            public void onResponse(Call<Student> call, Response<Student> response) {
+                if (response.isSuccessful() && response.body() != null && db != null) {
+                    Student updated = response.body();
+                    executor.execute(() -> {
+                        try { db.studentDao().insert(updated); } catch (Exception e) { e.printStackTrace(); }
+                    });
+                }
+                callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Student> call, Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
     }
 
     public void deleteStudent(int id, Callback<Void> callback) {
-        if (db != null) {
-            executor.execute(() -> {
+        Runnable localCascadeDelete = () -> {
+            if (db != null) {
                 try {
                     db.studentDao().deleteById(id);
+                    db.enrollmentDao().deleteByStudentId(id);
+                } catch (Exception e) { e.printStackTrace(); }
+            }
+        };
+
+        if (isLocalMode()) {
+            executor.execute(() -> {
+                try {
+                    localCascadeDelete.run();
                     mainHandler.post(() -> callback.onResponse(null, Response.success(null)));
                 } catch (Exception e) {
                     mainHandler.post(() -> callback.onFailure(null, e));
                 }
             });
+            return;
         }
+
+        performCall(getApiService().deleteStudent(id), new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    executor.execute(localCascadeDelete);
+                }
+                callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
     }
 
     public void getAllAdmins(Callback<List<User>> callback) {
@@ -535,6 +610,7 @@ public class VirtualAulaRepository {
                 } catch (Exception e) { e.printStackTrace(); }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getStudentSchedules(studentId), new Callback<List<ScheduleInfo>>() {
             @Override
             public void onResponse(Call<List<ScheduleInfo>> call, Response<List<ScheduleInfo>> response) {
@@ -621,6 +697,7 @@ public class VirtualAulaRepository {
                 } catch (Exception e) { e.printStackTrace(); }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getProfessorSchedules(professorId), new Callback<List<ScheduleInfo>>() {
             @Override
             public void onResponse(Call<List<ScheduleInfo>> call, Response<List<ScheduleInfo>> response) {
@@ -775,27 +852,47 @@ public class VirtualAulaRepository {
     }
 
     public void deleteUser(int userId, Callback<Void> callback) {
-        if (isLocalMode()) {
+        Runnable localCascadeDelete = () -> {
             if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        db.userDao().deleteById(userId);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(null));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
+                try {
+                    db.userDao().deleteById(userId);
+                    db.studentDao().deleteByEncargadoId(userId);
+                    db.facilityScheduleDao().deleteByProfessorId(userId);
+                    db.userSubjectColorDao().deleteByUserId(userId);
+                } catch (Exception e) { e.printStackTrace(); }
             }
+        };
+
+        if (isLocalMode()) {
+            executor.execute(() -> {
+                try {
+                    localCascadeDelete.run();
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onResponse(null, Response.success(null));
+                    });
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onFailure(null, e);
+                    });
+                }
+            });
             return;
         }
 
-        performCall(getApiService().deleteUser(userId), callback);
+        performCall(getApiService().deleteUser(userId), new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    executor.execute(localCascadeDelete);
+                }
+                if (callback != null) callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                if (callback != null) callback.onFailure(call, t);
+            }
+        });
     }
 
     public void insertSubject(Subject subject, Callback<Subject> callback) {
@@ -848,29 +945,48 @@ public class VirtualAulaRepository {
     }
 
     public void deleteSubject(int subId, Callback<Void> callback) {
-        if (isLocalMode()) {
+        Runnable localCascadeDelete = () -> {
             if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        db.subjectDao().deleteById(subId);
-                        db.enrollmentDao().deleteBySubjectId(subId);
-                        db.facilityScheduleDao().deleteBySubjectId(subId);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(null));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
+                try {
+                    db.subjectDao().deleteById(subId);
+                    db.enrollmentDao().deleteBySubjectId(subId);
+                    db.facilityScheduleDao().deleteBySubjectId(subId);
+                    db.blogDao().deleteEntriesBySubject(subId);
+                    db.userSubjectColorDao().deleteBySubjectId(subId);
+                } catch (Exception e) { e.printStackTrace(); }
             }
+        };
+
+        if (isLocalMode()) {
+            executor.execute(() -> {
+                try {
+                    localCascadeDelete.run();
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onResponse(null, Response.success(null));
+                    });
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onFailure(null, e);
+                    });
+                }
+            });
             return;
         }
 
-        performCall(getApiService().deleteSubject(subId), callback);
+        performCall(getApiService().deleteSubject(subId), new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    executor.execute(localCascadeDelete);
+                }
+                if (callback != null) callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                if (callback != null) callback.onFailure(call, t);
+            }
+        });
     }
 
     public void enrollStudent(Enrollment enrollment, Callback<Enrollment> callback) {
@@ -975,6 +1091,7 @@ public class VirtualAulaRepository {
                 }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getGradeInfoForStudent(studentId), new Callback<List<StudentGradeInfo>>() {
             @Override
             public void onResponse(Call<List<StudentGradeInfo>> call, Response<List<StudentGradeInfo>> response) {
@@ -1024,6 +1141,7 @@ public class VirtualAulaRepository {
                 }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getUserById(id), callback);
     }
 
@@ -1036,6 +1154,7 @@ public class VirtualAulaRepository {
                 }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getSubjectById(id), callback);
     }
 
@@ -1048,6 +1167,7 @@ public class VirtualAulaRepository {
                 }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getFacilityById(id), callback);
     }
 
@@ -1060,6 +1180,7 @@ public class VirtualAulaRepository {
                 }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getEnrollmentById(id), callback);
     }
 
@@ -1274,27 +1395,45 @@ public class VirtualAulaRepository {
     }
 
     public void deleteFacility(int facId, Callback<Void> callback) {
-        if (isLocalMode()) {
+        Runnable localCascadeDelete = () -> {
             if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        db.facilityDao().deleteById(facId);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(null));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
+                try {
+                    db.facilityDao().deleteById(facId);
+                    db.facilityScheduleDao().deleteByFacilityId(facId);
+                } catch (Exception e) { e.printStackTrace(); }
             }
+        };
+
+        if (isLocalMode()) {
+            executor.execute(() -> {
+                try {
+                    localCascadeDelete.run();
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onResponse(null, Response.success(null));
+                    });
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onFailure(null, e);
+                    });
+                }
+            });
             return;
         }
 
-        performCall(getApiService().deleteFacility(facId), callback);
+        performCall(getApiService().deleteFacility(facId), new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    executor.execute(localCascadeDelete);
+                }
+                if (callback != null) callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                if (callback != null) callback.onFailure(call, t);
+            }
+        });
     }
 
     // --- Schedules ---
@@ -1351,6 +1490,7 @@ public class VirtualAulaRepository {
                 } catch (Exception e) { e.printStackTrace(); }
             });
         }
+        if (isLocalMode()) return;
         performCall(getApiService().getFacilitySchedules(facId), new Callback<List<ScheduleInfo>>() {
             @Override
             public void onResponse(Call<List<ScheduleInfo>> call, Response<List<ScheduleInfo>> response) {
@@ -1453,27 +1593,44 @@ public class VirtualAulaRepository {
     }
 
     public void deleteSchedule(int schId, Callback<Void> callback) {
-        if (isLocalMode()) {
+        Runnable localCascadeDelete = () -> {
             if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        db.facilityScheduleDao().deleteById(schId);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(null));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
+                try {
+                    db.facilityScheduleDao().deleteById(schId);
+                } catch (Exception e) { e.printStackTrace(); }
             }
+        };
+
+        if (isLocalMode()) {
+            executor.execute(() -> {
+                try {
+                    localCascadeDelete.run();
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onResponse(null, Response.success(null));
+                    });
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onFailure(null, e);
+                    });
+                }
+            });
             return;
         }
 
-        performCall(getApiService().deleteSchedule(schId), callback);
+        performCall(getApiService().deleteSchedule(schId), new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    executor.execute(localCascadeDelete);
+                }
+                if (callback != null) callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                if (callback != null) callback.onFailure(call, t);
+            }
+        });
     }
 
     public void updateUserSubjectColor(int userId, int subjectId, String color, Callback<Void> callback) {
@@ -1644,27 +1801,45 @@ public class VirtualAulaRepository {
     }
 
     public void deleteBlogEntry(int entryId, Callback<Void> callback) {
-        if (isLocalMode()) {
+        Runnable localCascadeDelete = () -> {
             if (db != null) {
-                executor.execute(() -> {
-                    try {
-                        db.blogDao().deleteEntryById(entryId);
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onResponse(null, Response.success(null));
-                        });
-                    } catch (Exception e) {
-                        mainHandler.post(() -> {
-                            if (callback != null) callback.onFailure(null, e);
-                        });
-                    }
-                });
-            } else {
-                if (callback != null) callback.onFailure(null, new Throwable("Base de datos local no disponible."));
+                try {
+                    db.blogDao().deleteEntryById(entryId);
+                    db.blogDao().deleteCommentsByEntry(entryId);
+                } catch (Exception e) { e.printStackTrace(); }
             }
+        };
+
+        if (isLocalMode()) {
+            executor.execute(() -> {
+                try {
+                    localCascadeDelete.run();
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onResponse(null, Response.success(null));
+                    });
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onFailure(null, e);
+                    });
+                }
+            });
             return;
         }
 
-        performCall(getApiService().deleteBlogEntry(entryId), callback);
+        performCall(getApiService().deleteBlogEntry(entryId), new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    executor.execute(localCascadeDelete);
+                }
+                if (callback != null) callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                if (callback != null) callback.onFailure(call, t);
+            }
+        });
     }
 
     // --- Blog Comments ---
@@ -1915,150 +2090,176 @@ public class VirtualAulaRepository {
     // --- Synchronize all data from SQL Server for Offline use ---
     public void downloadAllDataForOffline(SyncCallback callback) {
         if (db == null) {
-            callback.onError("Base de datos local no disponible");
+            if (callback != null) callback.onError("Base de datos local no disponible");
             return;
         }
 
-        performCall(getApiService().getStudents(), new Callback<List<User>>() {
+        performCall(getApiService().getEncargados(), new Callback<List<User>>() {
             @Override
-            public void onResponse(Call<List<User>> call, Response<List<User>> respStudents) {
-                if (respStudents.isSuccessful() && respStudents.body() != null) {
-                    executor.execute(() -> db.userDao().insertAll(respStudents.body()));
+            public void onResponse(Call<List<User>> call, Response<List<User>> respEnc) {
+                if (respEnc.isSuccessful() && respEnc.body() != null) {
+                    executor.execute(() -> db.userDao().insertAll(respEnc.body()));
                 }
-                performCall(getApiService().getAdmins(), new Callback<List<User>>() {
+                performCall(getApiService().getAllStudentRecords(), new Callback<List<Student>>() {
                     @Override
-                    public void onResponse(Call<List<User>> call, Response<List<User>> respAdmins) {
-                        if (respAdmins.isSuccessful() && respAdmins.body() != null) {
-                            executor.execute(() -> db.userDao().insertAll(respAdmins.body()));
+                    public void onResponse(Call<List<Student>> call, Response<List<Student>> respRecords) {
+                        if (respRecords.isSuccessful() && respRecords.body() != null) {
+                            executor.execute(() -> db.studentDao().insertAll(respRecords.body()));
                         }
-                        performCall(getApiService().getProfessors(), new Callback<List<User>>() {
+                        performCall(getApiService().getStudents(), new Callback<List<User>>() {
                             @Override
-                            public void onResponse(Call<List<User>> call, Response<List<User>> respProfs) {
-                                if (respProfs.isSuccessful() && respProfs.body() != null) {
-                                    executor.execute(() -> db.userDao().insertAll(respProfs.body()));
+                            public void onResponse(Call<List<User>> call, Response<List<User>> respStudents) {
+                                if (respStudents.isSuccessful() && respStudents.body() != null) {
+                                    executor.execute(() -> db.userDao().insertAll(respStudents.body()));
                                 }
-                                performCall(getApiService().getSubjects(), new Callback<List<Subject>>() {
+                                performCall(getApiService().getAdmins(), new Callback<List<User>>() {
+                                    @Override
+                                    public void onResponse(Call<List<User>> call, Response<List<User>> respAdmins) {
+                                        if (respAdmins.isSuccessful() && respAdmins.body() != null) {
+                                            executor.execute(() -> db.userDao().insertAll(respAdmins.body()));
+                                        }
+                                        performCall(getApiService().getProfessors(), new Callback<List<User>>() {
                                             @Override
-                                            public void onResponse(Call<List<Subject>> call, Response<List<Subject>> respSubs) {
-                                                if (respSubs.isSuccessful() && respSubs.body() != null) {
-                                                    List<Subject> subs = respSubs.body();
-                                                    executor.execute(() -> db.subjectDao().insertAll(subs));
-
-                                                    for (Subject s : subs) {
-                                                        performCall(getApiService().getSubjectBlog(s.id), new Callback<List<BlogEntry>>() {
-                                                            @Override
-                                                            public void onResponse(Call<List<BlogEntry>> call, Response<List<BlogEntry>> respBlog) {
-                                                                if (respBlog.isSuccessful() && respBlog.body() != null) {
-                                                                    List<BlogEntry> entries = respBlog.body();
-                                                                    executor.execute(() -> db.blogDao().insertEntries(entries));
-
-                                                                    for (BlogEntry entry : entries) {
-                                                                        performCall(getApiService().getBlogComments(entry.id), new Callback<List<CommentInfo>>() {
-                                                                            @Override
-                                                                            public void onResponse(Call<List<CommentInfo>> call, Response<List<CommentInfo>> respComments) {
-                                                                                if (respComments.isSuccessful() && respComments.body() != null) {
-                                                                                    executor.execute(() -> {
-                                                                                        for (CommentInfo ci : respComments.body()) {
-                                                                                            if (ci.comment != null) db.blogDao().insertComment(ci.comment);
-                                                                                        }
-                                                                                    });
-                                                                                }
-                                                                            }
-                                                                            @Override public void onFailure(Call<List<CommentInfo>> call, Throwable t) {}
-                                                                        });
-                                                                    }
-                                                                }
-                                                            }
-                                                            @Override public void onFailure(Call<List<BlogEntry>> call, Throwable t) {}
-                                                        });
-
-                                                        performCall(getApiService().getSubjectParticipants(s.id), new Callback<List<User>>() {
-                                                            @Override
-                                                            public void onResponse(Call<List<User>> call, Response<List<User>> respPart) {
-                                                                if (respPart.isSuccessful() && respPart.body() != null) {
-                                                                    executor.execute(() -> db.userDao().insertAll(respPart.body()));
-                                                                }
-                                                            }
-                                                            @Override public void onFailure(Call<List<User>> call, Throwable t) {}
-                                                        });
-
-                                                        performCall(getApiService().getSubjectEnrollments(s.id), new Callback<List<StudentGradeInfo>>() {
-                                                            @Override
-                                                            public void onResponse(Call<List<StudentGradeInfo>> call, Response<List<StudentGradeInfo>> respGrades) {
-                                                                if (respGrades.isSuccessful() && respGrades.body() != null) {
-                                                                    executor.execute(() -> {
-                                                                        for (StudentGradeInfo info : respGrades.body()) {
-                                                                            if (info.enrollment != null) db.enrollmentDao().insert(info.enrollment);
-                                                                            if (info.student != null) db.userDao().insert(info.student);
-                                                                            if (info.subject != null) db.subjectDao().insert(info.subject);
-                                                                        }
-                                                                    });
-                                                                }
-                                                            }
-                                                            @Override public void onFailure(Call<List<StudentGradeInfo>> call, Throwable t) {}
-                                                        });
-                                                    }
+                                            public void onResponse(Call<List<User>> call, Response<List<User>> respProfs) {
+                                                if (respProfs.isSuccessful() && respProfs.body() != null) {
+                                                    executor.execute(() -> db.userDao().insertAll(respProfs.body()));
                                                 }
-                                                performCall(getApiService().getFacilities(), new Callback<List<Facility>>() {
+                                                performCall(getApiService().getSubjects(), new Callback<List<Subject>>() {
                                                     @Override
-                                                    public void onResponse(Call<List<Facility>> call, Response<List<Facility>> respFacilities) {
-                                                        if (respFacilities.isSuccessful() && respFacilities.body() != null) {
-                                                            List<Facility> facs = respFacilities.body();
-                                                            executor.execute(() -> db.facilityDao().insertAll(facs));
+                                                    public void onResponse(Call<List<Subject>> call, Response<List<Subject>> respSubs) {
+                                                        if (respSubs.isSuccessful() && respSubs.body() != null) {
+                                                            List<Subject> subs = respSubs.body();
+                                                            executor.execute(() -> db.subjectDao().insertAll(subs));
 
-                                                            for (Facility f : facs) {
-                                                                performCall(getApiService().getFacilitySchedules(f.id), new Callback<List<ScheduleInfo>>() {
+                                                            for (Subject s : subs) {
+                                                                performCall(getApiService().getSubjectBlog(s.id), new Callback<List<BlogEntry>>() {
                                                                     @Override
-                                                                    public void onResponse(Call<List<ScheduleInfo>> call, Response<List<ScheduleInfo>> respSch) {
-                                                                        if (respSch.isSuccessful() && respSch.body() != null) {
-                                                                            executor.execute(() -> {
-                                                                                for (ScheduleInfo info : respSch.body()) {
-                                                                                    if (info.schedule != null) {
-                                                                                        db.facilityScheduleDao().insert(info.schedule);
+                                                                    public void onResponse(Call<List<BlogEntry>> call, Response<List<BlogEntry>> respBlog) {
+                                                                        if (respBlog.isSuccessful() && respBlog.body() != null) {
+                                                                            List<BlogEntry> entries = respBlog.body();
+                                                                            executor.execute(() -> db.blogDao().insertEntries(entries));
+
+                                                                            for (BlogEntry entry : entries) {
+                                                                                performCall(getApiService().getBlogComments(entry.id), new Callback<List<CommentInfo>>() {
+                                                                                    @Override
+                                                                                    public void onResponse(Call<List<CommentInfo>> call, Response<List<CommentInfo>> respComments) {
+                                                                                        if (respComments.isSuccessful() && respComments.body() != null) {
+                                                                                            executor.execute(() -> {
+                                                                                                for (CommentInfo ci : respComments.body()) {
+                                                                                                    if (ci.comment != null) db.blogDao().insertComment(ci.comment);
+                                                                                                }
+                                                                                            });
+                                                                                        }
                                                                                     }
+                                                                                    @Override public void onFailure(Call<List<CommentInfo>> call, Throwable t) {}
+                                                                                });
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    @Override public void onFailure(Call<List<BlogEntry>> call, Throwable t) {}
+                                                                });
+
+                                                                performCall(getApiService().getSubjectParticipants(s.id), new Callback<List<User>>() {
+                                                                    @Override
+                                                                    public void onResponse(Call<List<User>> call, Response<List<User>> respPart) {
+                                                                        if (respPart.isSuccessful() && respPart.body() != null) {
+                                                                            executor.execute(() -> db.userDao().insertAll(respPart.body()));
+                                                                        }
+                                                                    }
+                                                                    @Override public void onFailure(Call<List<User>> call, Throwable t) {}
+                                                                });
+
+                                                                performCall(getApiService().getSubjectEnrollments(s.id), new Callback<List<StudentGradeInfo>>() {
+                                                                    @Override
+                                                                    public void onResponse(Call<List<StudentGradeInfo>> call, Response<List<StudentGradeInfo>> respGrades) {
+                                                                        if (respGrades.isSuccessful() && respGrades.body() != null) {
+                                                                            executor.execute(() -> {
+                                                                                for (StudentGradeInfo info : respGrades.body()) {
+                                                                                    if (info.enrollment != null) db.enrollmentDao().insert(info.enrollment);
+                                                                                    if (info.student != null) db.userDao().insert(info.student);
+                                                                                    if (info.subject != null) db.subjectDao().insert(info.subject);
                                                                                 }
                                                                             });
                                                                         }
                                                                     }
-                                                                    @Override public void onFailure(Call<List<ScheduleInfo>> call, Throwable t) {}
+                                                                    @Override public void onFailure(Call<List<StudentGradeInfo>> call, Throwable t) {}
                                                                 });
                                                             }
                                                         }
+                                                        performCall(getApiService().getFacilities(), new Callback<List<Facility>>() {
+                                                            @Override
+                                                            public void onResponse(Call<List<Facility>> call, Response<List<Facility>> respFacilities) {
+                                                                if (respFacilities.isSuccessful() && respFacilities.body() != null) {
+                                                                    List<Facility> facs = respFacilities.body();
+                                                                    executor.execute(() -> db.facilityDao().insertAll(facs));
 
-                                                        callback.onSuccess("¡Todos los datos del servidor han sido descargados para uso offline!");
+                                                                    for (Facility f : facs) {
+                                                                        performCall(getApiService().getFacilitySchedules(f.id), new Callback<List<ScheduleInfo>>() {
+                                                                            @Override
+                                                                            public void onResponse(Call<List<ScheduleInfo>> call, Response<List<ScheduleInfo>> respSch) {
+                                                                                if (respSch.isSuccessful() && respSch.body() != null) {
+                                                                                    executor.execute(() -> {
+                                                                                        for (ScheduleInfo info : respSch.body()) {
+                                                                                            if (info.schedule != null) {
+                                                                                                db.facilityScheduleDao().insert(info.schedule);
+                                                                                            }
+                                                                                        }
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                            @Override public void onFailure(Call<List<ScheduleInfo>> call, Throwable t) {}
+                                                                        });
+                                                                    }
+                                                                }
+
+                                                                if (callback != null) callback.onSuccess("¡Todos los datos del servidor han sido descargados para uso offline!");
+                                                            }
+
+                                                            @Override
+                                                            public void onFailure(Call<List<Facility>> call, Throwable t) {
+                                                                if (callback != null) callback.onSuccess("Datos guardados parcialmente.");
+                                                            }
+                                                        });
                                                     }
 
                                                     @Override
-                                                    public void onFailure(Call<List<Facility>> call, Throwable t) {
-                                                        callback.onSuccess("Datos guardados parcialmente.");
+                                                    public void onFailure(Call<List<Subject>> call, Throwable t) {
+                                                        if (callback != null) callback.onError("Error al descargar materias.");
                                                     }
                                                 });
                                             }
 
                                             @Override
-                                            public void onFailure(Call<List<Subject>> call, Throwable t) {
-                                                callback.onError("Error al descargar materias.");
+                                            public void onFailure(Call<List<User>> call, Throwable t) {
+                                                if (callback != null) callback.onError("Error al descargar profesores.");
                                             }
                                         });
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<List<User>> call, Throwable t) {
+                                        if (callback != null) callback.onError("Error al descargar administradores.");
+                                    }
+                                });
                             }
 
                             @Override
                             public void onFailure(Call<List<User>> call, Throwable t) {
-                                callback.onError("Error al descargar profesores.");
+                                if (callback != null) callback.onError("Error al descargar estudiantes.");
                             }
                         });
                     }
 
                     @Override
-                    public void onFailure(Call<List<User>> call, Throwable t) {
-                        callback.onError("Error al descargar administradores.");
+                    public void onFailure(Call<List<Student>> call, Throwable t) {
+                        if (callback != null) callback.onError("Error al descargar registros de alumnos.");
                     }
                 });
             }
 
             @Override
             public void onFailure(Call<List<User>> call, Throwable t) {
-                callback.onError("Error de conexión: No se pudo contactar con el servidor SQL.");
+                if (callback != null) callback.onError("Error de conexión: No se pudo contactar con el servidor SQL.");
             }
         });
     }
@@ -2073,6 +2274,10 @@ public class VirtualAulaRepository {
         performCall(getApiService().healthCheck(), new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response != null && response.isSuccessful()) {
+                    consecutiveFailures = 0;
+                    if (connectionStatusListener != null) connectionStatusListener.onStatusChanged(true);
+                }
                 if (callback != null) callback.onResponse(null, Response.success(null));
             }
 
@@ -2204,6 +2409,199 @@ public class VirtualAulaRepository {
                 mainHandler.post(() -> callback.onSuccess("¡Proceso finalizado! Se han subido " + count + " registros locales al servidor como nuevos registros."));
             } catch (Exception e) {
                 mainHandler.post(() -> callback.onError("Error al subir registros al servidor: " + e.getMessage()));
+            }
+        });
+    }
+
+    // --- Direct Messages & Private Chats ---
+    public void getAllEligibleChatContacts(Callback<List<User>> callback) {
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        List<User> allUsers = db.userDao().getAllUsers();
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(deduplicateUsers(allUsers))));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            } else {
+                callback.onResponse(null, Response.success(new ArrayList<>()));
+            }
+            return;
+        }
+
+        List<User> combined = new ArrayList<>();
+        getEncargadosOnly(new Callback<List<User>>() {
+            @Override
+            public void onResponse(Call<List<User>> call, Response<List<User>> respEnc) {
+                if (respEnc.isSuccessful() && respEnc.body() != null) {
+                    combined.addAll(respEnc.body());
+                }
+                getAllProfessors(new Callback<List<User>>() {
+                    @Override
+                    public void onResponse(Call<List<User>> call, Response<List<User>> respProf) {
+                        if (respProf.isSuccessful() && respProf.body() != null) {
+                            combined.addAll(respProf.body());
+                        }
+                        getAllAdmins(new Callback<List<User>>() {
+                            @Override
+                            public void onResponse(Call<List<User>> call, Response<List<User>> respAdmin) {
+                                if (respAdmin.isSuccessful() && respAdmin.body() != null) {
+                                    combined.addAll(respAdmin.body());
+                                }
+                                callback.onResponse(null, Response.success(deduplicateUsers(combined)));
+                            }
+
+                            @Override
+                            public void onFailure(Call<List<User>> call, Throwable t) {
+                                callback.onResponse(null, Response.success(deduplicateUsers(combined)));
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<User>> call, Throwable t) {
+                        callback.onResponse(null, Response.success(deduplicateUsers(combined)));
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Call<List<User>> call, Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
+    }
+
+    public void getUserChatRooms(int userId, Callback<List<ChatRoomInfo>> callback) {
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        List<DirectMessage> allMsgs = db.directMessageDao().getMessagesForUser(userId);
+                        Map<String, ChatRoomInfo> roomMap = new LinkedHashMap<>();
+                        for (DirectMessage msg : allMsgs) {
+                            if (roomMap.containsKey(msg.chatRoomId)) continue;
+                            int contactId = msg.senderId == userId ? msg.receiverId : msg.senderId;
+                            User contact = db.userDao().getUserById(contactId);
+                            if (contact == null) continue;
+
+                            String roleLabel = "Estudiante";
+                            if ("ADMIN".equals(contact.role)) roleLabel = "Administración Central";
+                            else if ("PROFESSOR".equals(contact.role)) roleLabel = "Profesor";
+                            else if ("ENCARGADO".equals(contact.role)) roleLabel = "Encargado de Familia";
+
+                            ChatRoomInfo info = new ChatRoomInfo(
+                                    msg.chatRoomId, contact.id, contact.name, contact.role,
+                                    contact.profile_image, roleLabel, msg.message, msg.timestamp, 0, msg.initiatorId
+                            );
+                            roomMap.put(msg.chatRoomId, info);
+                        }
+                        List<ChatRoomInfo> list = new ArrayList<>(roomMap.values());
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(list)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            }
+            return;
+        }
+
+        performCall(getApiService().getUserChatRooms(userId), callback);
+    }
+
+    public void getDirectMessagesHistory(int userId, int contactId, Callback<List<DirectMessage>> callback) {
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        List<DirectMessage> msgs = db.directMessageDao().getHistory(userId, contactId);
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(msgs)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            }
+            return;
+        }
+
+        performCall(getApiService().getDirectMessagesHistory(userId, contactId), new Callback<List<DirectMessage>>() {
+            @Override
+            public void onResponse(Call<List<DirectMessage>> call, Response<List<DirectMessage>> response) {
+                if (response.isSuccessful() && response.body() != null && db != null) {
+                    List<DirectMessage> msgs = response.body();
+                    executor.execute(() -> db.directMessageDao().insertAll(msgs));
+                }
+                callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<List<DirectMessage>> call, Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
+    }
+
+    public void sendDirectMessage(DirectMessage message, Callback<DirectMessage> callback) {
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        db.directMessageDao().insert(message);
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(message)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            }
+            return;
+        }
+
+        performCall(getApiService().sendDirectMessage(message), new Callback<DirectMessage>() {
+            @Override
+            public void onResponse(Call<DirectMessage> call, Response<DirectMessage> response) {
+                if (response.isSuccessful() && response.body() != null && db != null) {
+                    DirectMessage created = response.body();
+                    executor.execute(() -> db.directMessageDao().insert(created));
+                }
+                callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<DirectMessage> call, Throwable t) {
+                callback.onFailure(call, t);
+            }
+        });
+    }
+
+    public void deleteChatRoom(String chatRoomId, Callback<Void> callback) {
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        db.directMessageDao().deleteChatRoom(chatRoomId);
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(null)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
+                    }
+                });
+            }
+            return;
+        }
+
+        performCall(getApiService().deleteChatRoom(chatRoomId), new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful() && db != null) {
+                    executor.execute(() -> db.directMessageDao().deleteChatRoom(chatRoomId));
+                }
+                callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onFailure(call, t);
             }
         });
     }
