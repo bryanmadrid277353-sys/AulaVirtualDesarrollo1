@@ -49,7 +49,9 @@ public class AdminProfessorListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
+        binding.tvHeaderTitle.setText("Profesores");
         binding.tvTitle.setText("Listado de Profesores");
+        binding.tvSubtitle.setText("Gestiona los docentes y profesores de la institución.");
         adapter = new StudentAdapter();
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);

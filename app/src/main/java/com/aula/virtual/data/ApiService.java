@@ -209,4 +209,53 @@ public interface ApiService {
 
     @DELETE("direct-messages/rooms/{chat_room_id}")
     Call<Void> deleteChatRoom(@Path("chat_room_id") String chatRoomId);
+
+    // --- Academic Calendar & Schedules & Attendance ---
+    @GET("academic-periods")
+    Call<List<com.aula.virtual.data.entity.AcademicPeriod>> getAcademicPeriods();
+
+    @POST("academic-periods")
+    Call<List<com.aula.virtual.data.entity.AcademicPeriod>> saveAcademicPeriods(@Body List<com.aula.virtual.data.entity.AcademicPeriod> periods);
+
+    @GET("non-school-days")
+    Call<List<com.aula.virtual.data.entity.NonSchoolDay>> getNonSchoolDays();
+
+    @POST("non-school-days")
+    Call<com.aula.virtual.data.entity.NonSchoolDay> createNonSchoolDay(@Body com.aula.virtual.data.entity.NonSchoolDay day);
+
+    @DELETE("non-school-days/{id}")
+    Call<Void> deleteNonSchoolDay(@Path("id") int id);
+
+    @GET("facilities/schedules/subject/{sub_id}")
+    Call<List<com.aula.virtual.data.entity.FacilitySchedule>> getFacilitySchedulesBySubject(@Path("sub_id") int subjectId);
+
+    @GET("subjects/{sub_id}/attendance-records")
+    Call<List<com.aula.virtual.data.entity.AttendanceRecord>> getSubjectAttendanceRecords(@Path("sub_id") int subjectId);
+
+    @GET("subjects/{sub_id}/conduct-records")
+    Call<List<com.aula.virtual.data.entity.ConductRecord>> getSubjectConductRecords(@Path("sub_id") int subjectId);
+
+    @GET("students/{student_id}/subjects/{sub_id}/conduct-records")
+    Call<List<com.aula.virtual.data.entity.ConductRecord>> getStudentConductRecords(
+            @Path("student_id") int studentId,
+            @Path("sub_id") int subjectId
+    );
+
+    @GET("students/{student_id}/subjects/{sub_id}/attendance-records")
+    Call<List<com.aula.virtual.data.entity.AttendanceRecord>> getStudentAttendanceRecords(
+            @Path("student_id") int studentId,
+            @Path("sub_id") int subjectId
+    );
+
+    @POST("conduct-records")
+    Call<com.aula.virtual.data.entity.ConductRecord> upsertConductRecord(@Body com.aula.virtual.data.entity.ConductRecord record);
+
+    @POST("attendance-records")
+    Call<com.aula.virtual.data.entity.AttendanceRecord> saveAttendanceRecord(@Body com.aula.virtual.data.entity.AttendanceRecord record);
+
+    @GET("modification-logs/{entity_key}")
+    Call<com.aula.virtual.data.entity.ModificationLog> getModificationLog(@Path("entity_key") String entityKey);
+
+    @POST("modification-logs")
+    Call<com.aula.virtual.data.entity.ModificationLog> saveModificationLog(@Body com.aula.virtual.data.entity.ModificationLog log);
 }

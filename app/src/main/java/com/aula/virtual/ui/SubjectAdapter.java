@@ -88,6 +88,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
         } catch (Exception ignored) {}
 
         holder.tvSection.setText("Sección: " + secNum);
+        holder.tvSection.setTextColor(holder.itemView.getContext().getColor(R.color.accent_cyan));
 
         if (subject.description != null && !subject.description.isEmpty()) {
             holder.tvDescription.setText(subject.description);

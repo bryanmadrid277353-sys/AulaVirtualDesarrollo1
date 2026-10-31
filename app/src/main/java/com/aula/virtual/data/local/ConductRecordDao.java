@@ -14,6 +14,9 @@ public interface ConductRecordDao {
     @Query("SELECT * FROM conduct_records WHERE studentId = :studentId AND subjectId = :subjectId ORDER BY period ASC")
     List<ConductRecord> getRecordsByStudentAndSubject(int studentId, int subjectId);
 
+    @Query("SELECT * FROM conduct_records")
+    List<ConductRecord> getAllRecords();
+
     @Query("SELECT * FROM conduct_records WHERE studentId = :studentId AND subjectId = :subjectId AND period = :period LIMIT 1")
     ConductRecord getRecord(int studentId, int subjectId, int period);
 
@@ -31,4 +34,10 @@ public interface ConductRecordDao {
 
     @Query("DELETE FROM conduct_records WHERE subjectId = :subjectId")
     void deleteBySubject(int subjectId);
+
+    @Query("DELETE FROM conduct_records WHERE studentId = :studentId")
+    void deleteByStudentId(int studentId);
+
+    @Query("DELETE FROM conduct_records")
+    void deleteAll();
 }

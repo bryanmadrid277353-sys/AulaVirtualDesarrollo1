@@ -47,6 +47,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvDetailSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Gestión de espacio físico y recursos"

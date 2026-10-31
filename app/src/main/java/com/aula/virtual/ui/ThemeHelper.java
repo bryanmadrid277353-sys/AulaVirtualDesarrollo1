@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 
 import com.aula.virtual.R;
+import com.aula.virtual.data.local.AppDatabase;
+import java.util.concurrent.Executors;
 
 public class ThemeHelper {
     private static final String PREFS_NAME = "theme_prefs";
@@ -52,6 +54,88 @@ public class ThemeHelper {
         prefs.edit().putString(KEY_DATA_MODE, mode).apply();
     }
 
+    public static void wipeAllResidualData(Context context) {
+        if (context == null) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                AppDatabase db = AppDatabase.getInstance(context);
+                if (db != null) {
+                    androidx.sqlite.db.SupportSQLiteDatabase sqliteDb = db.getOpenHelper().getWritableDatabase();
+                    sqliteDb.execSQL("PRAGMA foreign_keys = OFF;");
+                    sqliteDb.execSQL("DELETE FROM attendance_records;");
+                    sqliteDb.execSQL("DELETE FROM conduct_records;");
+                    sqliteDb.execSQL("DELETE FROM enrollments;");
+                    sqliteDb.execSQL("DELETE FROM blog_comments;");
+                    sqliteDb.execSQL("DELETE FROM blog_entries;");
+                    sqliteDb.execSQL("DELETE FROM facility_schedules;");
+                    sqliteDb.execSQL("DELETE FROM grade_import_log;");
+                    sqliteDb.execSQL("DELETE FROM user_subject_colors;");
+                    sqliteDb.execSQL("DELETE FROM notifications;");
+                    sqliteDb.execSQL("DELETE FROM direct_messages;");
+                    sqliteDb.execSQL("DELETE FROM non_school_days;");
+                    sqliteDb.execSQL("DELETE FROM academic_periods;");
+                    sqliteDb.execSQL("DELETE FROM facilities;");
+                    sqliteDb.execSQL("DELETE FROM subjects;");
+                    sqliteDb.execSQL("DELETE FROM students;");
+                    sqliteDb.execSQL("DELETE FROM users;");
+                    sqliteDb.execSQL("DELETE FROM conduct_levels;");
+                    sqliteDb.execSQL("DELETE FROM attendance_states;");
+                    sqliteDb.execSQL("DELETE FROM sqlite_sequence;");
+                    sqliteDb.execSQL("PRAGMA foreign_keys = ON;");
+
+                    db.clearAllTables();
+
+                    // Re-seed reference tables
+                    sqliteDb.execSQL("INSERT OR IGNORE INTO conduct_levels (value, label) VALUES (1, 'Malo'), (2, 'Regular'), (3, 'Bueno'), (4, 'Muy bueno'), (5, 'Excelente');");
+                    sqliteDb.execSQL("INSERT OR IGNORE INTO attendance_states (value, label) VALUES (0, 'Sin evaluar'), (1, 'Asistió'), (2, 'No asistió'), (3, 'Justificado');");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public static void resetLocalSubjectsAndEnrollments(Context context) {
+        if (context == null) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                AppDatabase db = AppDatabase.getInstance(context);
+                if (db != null) {
+                    db.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM subjects WHERE id > 4 OR code NOT IN ('ASIGN10001', 'ASIGN10002', 'ASIGN10003', 'ASIGN10004');");
+                    db.getOpenHelper().getWritableDatabase().execSQL("INSERT OR IGNORE INTO subjects (id, code, name, description, professorId, section, color) VALUES " +
+                            "(1, 'ASIGN10001', 'Matemáticas 5º Grado', 'Aritmética, geometría básica, fracciones y resolución de problemas aplicados.', 2, '01', 'BLUE'), " +
+                            "(2, 'ASIGN10002', 'Lenguaje y Literatura', 'Gramática, ortografía, redacción estructurada y comprensión lectora.', 3, '01', 'GREEN'), " +
+                            "(3, 'ASIGN10003', 'Ciencias Naturales', 'Biología fundamental, ecosistemas, método científico y cuidado medioambiental.', 4, '01', 'YELLOW_DARK'), " +
+                            "(4, 'ASIGN10004', 'Sociales e Historia', 'Geografía nacional, historia universal contemporánea y formación cívica.', 2, '01', 'PURPLE');");
+                    db.getOpenHelper().getWritableDatabase().execSQL("INSERT OR IGNORE INTO enrollments (id, studentId, subjectId, grade1, grade2, grade3, grade4, grade5, color) VALUES " +
+                            "(1, 1, 1, 8.5, 9.0, 8.0, NULL, NULL, 'BLUE'), " +
+                            "(2, 1, 2, 9.0, 8.5, 9.5, NULL, NULL, 'GREEN'), " +
+                            "(3, 1, 3, 8.0, 8.5, 9.0, NULL, NULL, 'YELLOW_DARK'), " +
+                            "(4, 2, 1, 9.5, 10.0, 9.0, NULL, NULL, 'BLUE'), " +
+                            "(5, 3, 1, 7.5, 8.0, 8.5, NULL, NULL, 'BLUE'), " +
+                            "(6, 4, 4, 9.0, 9.2, 9.5, NULL, NULL, 'PURPLE');");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public static void clearAcademicCalendarLocalData(Context context) {
+        if (context == null) return;
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                AppDatabase db = AppDatabase.getInstance(context);
+                if (db != null && db.academicCalendarDao() != null) {
+                    db.academicCalendarDao().deleteAllPeriods();
+                    db.academicCalendarDao().deleteAllNonSchoolDays();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public static boolean isLocalMode(Context context) {
         return MODE_LOCAL.equals(getDataMode(context));
     }
@@ -66,14 +150,24 @@ public class ThemeHelper {
         prefs.edit().putString(KEY_NAVBAR_POSITION, position).apply();
     }
 
+    public static boolean isSystemDarkMode(Context context) {
+        int currentNightMode = context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        return currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    }
+
     public static void applyTheme(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         
-        boolean isDarkMode = prefs.getBoolean(KEY_IS_DARK_MODE, false);
-        if (isDarkMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        if (!prefs.contains(KEY_IS_DARK_MODE)) {
+            boolean systemDark = isSystemDarkMode(context);
+            AppCompatDelegate.setDefaultNightMode(systemDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
         } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            boolean isDarkMode = prefs.getBoolean(KEY_IS_DARK_MODE, false);
+            if (isDarkMode) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            }
         }
 
         context.setTheme(getAccentTheme(context));
@@ -104,6 +198,9 @@ public class ThemeHelper {
 
     public static boolean isDarkMode(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        if (!prefs.contains(KEY_IS_DARK_MODE)) {
+            return isSystemDarkMode(context);
+        }
         return prefs.getBoolean(KEY_IS_DARK_MODE, false);
     }
 

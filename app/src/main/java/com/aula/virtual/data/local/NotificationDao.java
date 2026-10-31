@@ -24,4 +24,7 @@ public interface NotificationDao {
 
     @Query("DELETE FROM notifications WHERE id = :id")
     void deleteNotificationById(int id);
+
+    @Query("DELETE FROM notifications")
+    void deleteAll();
 }

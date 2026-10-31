@@ -163,7 +163,7 @@ public class SubjectDetailFragment extends Fragment {
 
             if ("PROFESSOR".equals(currentUser.role)) {
                 binding.tvColorLabel.setText("Color Personalizado para tu Horario Semanal");
-                binding.btnManageStudents.setVisibility(View.VISIBLE);
+                binding.btnManageStudents.setVisibility(View.GONE);
             } else {
                 binding.tvColorLabel.setText("Color Materia");
                 binding.btnManageStudents.setVisibility(View.GONE);
@@ -172,35 +172,10 @@ public class SubjectDetailFragment extends Fragment {
                     if (gradeInfos != null && subject != null && binding != null) {
                         for (StudentGradeInfo info : gradeInfos) {
                             if (info.subject != null && info.subject.id == subject.id && info.enrollment != null) {
-                                binding.layoutStudentGrades.setVisibility(View.VISIBLE);
                                 Enrollment e = info.enrollment;
-                                binding.tvDetailP1.setText(formatGrade(e.grade1));
-                                setGradeColor(binding.tvDetailP1, e.grade1);
-                                binding.tvDetailP2.setText(formatGrade(e.grade2));
-                                setGradeColor(binding.tvDetailP2, e.grade2);
-                                binding.tvDetailP3.setText(formatGrade(e.grade3));
-                                setGradeColor(binding.tvDetailP3, e.grade3);
-                                binding.tvDetailP4.setText(formatGrade(e.grade4));
-                                setGradeColor(binding.tvDetailP4, e.grade4);
-                                binding.tvDetailP5.setText(formatGrade(e.grade5));
-                                setGradeColor(binding.tvDetailP5, e.grade5);
-
-                                double sum = 0;
-                                int count = 0;
-                                if (e.grade1 != null) { sum += e.grade1; count++; }
-                                if (e.grade2 != null) { sum += e.grade2; count++; }
-                                if (e.grade3 != null) { sum += e.grade3; count++; }
-                                if (e.grade4 != null) { sum += e.grade4; count++; }
-                                if (e.grade5 != null) { sum += e.grade5; count++; }
-
-                                if (count > 0) {
-                                    double avg = sum / count;
-                                    binding.tvDetailAverage.setText(String.format(Locale.getDefault(), "%.1f", avg));
-                                    setGradeColor(binding.tvDetailAverage, avg);
-                                } else {
-                                    binding.tvDetailAverage.setText("N/A");
-                                    binding.tvDetailAverage.setTextColor(ContextCompat.getColor(requireContext(), R.color.bs_secondary));
-                                }
+                                viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
+                                    displayStudentGrades(e, periods);
+                                });
                                 break;
                             }
                         }
@@ -215,7 +190,7 @@ public class SubjectDetailFragment extends Fragment {
             binding.btnManageStudents.setVisibility(View.GONE);
         }
 
-        boolean canManageMembers = currentUser != null && ("ADMIN".equals(currentUser.role) || "PROFESSOR".equals(currentUser.role));
+        boolean canManageMembers = currentUser != null && "ADMIN".equals(currentUser.role);
         if (canManageMembers) {
             binding.btnUnenrollMember.setVisibility(View.VISIBLE);
         } else {
@@ -250,8 +225,11 @@ public class SubjectDetailFragment extends Fragment {
                 binding.btnCopyDesc.setOnClickListener(v -> 
                     ClipboardUtils.copyToClipboard(getContext(), "Descripción de materia", binding.etDesc.getText().toString()));
 
-                String modUser = (currentUser != null && currentUser.name != null) ? currentUser.name : "Admin Maestro";
-                binding.tvLastModifiedFooter.setText("Última modificación: Hoy a las 08:33 por " + modUser);
+                ModificationLogManager.loadLogTextAsync(requireContext(), "subject_" + subject.id, logText -> {
+                    if (binding != null && binding.tvLastModifiedFooter != null) {
+                        binding.tvLastModifiedFooter.setText(logText);
+                    }
+                });
 
                 DialogUtils.hideLoadingOverlay(binding.getRoot());
 
@@ -265,35 +243,10 @@ public class SubjectDetailFragment extends Fragment {
                             if (gradeInfos != null && binding != null) {
                                 for (StudentGradeInfo info : gradeInfos) {
                                     if (info.subject != null && info.subject.id == subject.id && info.enrollment != null) {
-                                        binding.layoutStudentGrades.setVisibility(View.VISIBLE);
                                         Enrollment e = info.enrollment;
-                                        binding.tvDetailP1.setText(formatGrade(e.grade1));
-                                        setGradeColor(binding.tvDetailP1, e.grade1);
-                                        binding.tvDetailP2.setText(formatGrade(e.grade2));
-                                        setGradeColor(binding.tvDetailP2, e.grade2);
-                                        binding.tvDetailP3.setText(formatGrade(e.grade3));
-                                        setGradeColor(binding.tvDetailP3, e.grade3);
-                                        binding.tvDetailP4.setText(formatGrade(e.grade4));
-                                        setGradeColor(binding.tvDetailP4, e.grade4);
-                                        binding.tvDetailP5.setText(formatGrade(e.grade5));
-                                        setGradeColor(binding.tvDetailP5, e.grade5);
-
-                                        double sum = 0;
-                                        int count = 0;
-                                        if (e.grade1 != null) { sum += e.grade1; count++; }
-                                        if (e.grade2 != null) { sum += e.grade2; count++; }
-                                        if (e.grade3 != null) { sum += e.grade3; count++; }
-                                        if (e.grade4 != null) { sum += e.grade4; count++; }
-                                        if (e.grade5 != null) { sum += e.grade5; count++; }
-
-                                        if (count > 0) {
-                                            double avg = sum / count;
-                                            binding.tvDetailAverage.setText(String.format(Locale.getDefault(), "%.1f", avg));
-                                            setGradeColor(binding.tvDetailAverage, avg);
-                                        } else {
-                                            binding.tvDetailAverage.setText("N/A");
-                                            binding.tvDetailAverage.setTextColor(ContextCompat.getColor(requireContext(), R.color.bs_secondary));
-                                        }
+                                        viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
+                                            displayStudentGrades(e, periods);
+                                        });
                                         break;
                                     }
                                 }
@@ -303,6 +256,49 @@ public class SubjectDetailFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void displayStudentGrades(Enrollment e, List<com.aula.virtual.data.entity.AcademicPeriod> periods) {
+        if (binding == null) return;
+        binding.layoutStudentGrades.setVisibility(View.VISIBLE);
+
+        if (periods == null || periods.isEmpty()) {
+            ((View) binding.tvDetailP1.getParent()).setVisibility(View.GONE);
+            ((View) binding.tvDetailP2.getParent()).setVisibility(View.GONE);
+            ((View) binding.tvDetailP3.getParent()).setVisibility(View.GONE);
+            ((View) binding.tvDetailP4.getParent()).setVisibility(View.GONE);
+            ((View) binding.tvDetailP5.getParent()).setVisibility(View.GONE);
+            binding.tvDetailAverage.setText("Sin Calendario");
+            binding.tvDetailAverage.setTextColor(ContextCompat.getColor(requireContext(), R.color.bs_warning));
+            return;
+        }
+
+        int activeCount = periods.size();
+
+        TextView[] textViews = new TextView[]{
+            binding.tvDetailP1, binding.tvDetailP2, binding.tvDetailP3, binding.tvDetailP4, binding.tvDetailP5
+        };
+        Double[] grades = new Double[]{
+            e.grade1, e.grade2, e.grade3, e.grade4, e.grade5
+        };
+
+        double sum = 0;
+        for (int i = 0; i < 5; i++) {
+            boolean isActive = (i < activeCount);
+            View parentView = (View) textViews[i].getParent();
+            if (isActive) {
+                parentView.setVisibility(View.VISIBLE);
+                textViews[i].setText(formatGrade(grades[i]));
+                setGradeColor(textViews[i], grades[i]);
+                if (grades[i] != null) sum += grades[i];
+            } else {
+                parentView.setVisibility(View.GONE);
+            }
+        }
+
+        double avg = sum / activeCount;
+        binding.tvDetailAverage.setText(String.format(Locale.getDefault(), "%.1f", avg));
+        setGradeColor(binding.tvDetailAverage, avg);
     }
 
     private void setGradeColor(TextView tv, Double grade) {
@@ -377,6 +373,9 @@ public class SubjectDetailFragment extends Fragment {
             subject.description = binding.etDesc.getText().toString().trim();
             subject.section = formattedSection;
             
+            String authorName = (currentUser != null && currentUser.name != null) ? currentUser.name : "Admin Maestro";
+            ModificationLogManager.saveLog(requireContext(), "subject_" + subject.id, authorName);
+
             viewModel.performOnlineAction(() -> {
                 viewModel.updateSubject(subject);
                 Toast.makeText(getContext(), "Materia actualizada", Toast.LENGTH_SHORT).show();
@@ -576,7 +575,7 @@ public class SubjectDetailFragment extends Fragment {
             textLayout.addView(tvName);
             textLayout.addView(tvSub);
 
-            MaterialButton btn = new MaterialButton(parent.getContext(), null, com.google.android.material.R.attr.borderlessButtonStyle);
+            MaterialButton btn = new MaterialButton(parent.getContext(), null, android.R.attr.borderlessButtonStyle);
             btn.setText("Desinscribir");
             btn.setTextSize(12f);
             btn.setAllCaps(false);

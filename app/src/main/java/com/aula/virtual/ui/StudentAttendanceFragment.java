@@ -10,14 +10,23 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import com.aula.virtual.data.RetrofitClient;
 import com.aula.virtual.data.entity.AttendanceRecord;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.local.AppDatabase;
 import com.aula.virtual.databinding.FragmentStudentAttendanceBinding;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Executors;
 
 public class StudentAttendanceFragment extends Fragment {
@@ -58,46 +67,193 @@ public class StudentAttendanceFragment extends Fragment {
     }
 
     private void loadData() {
-        if (getContext() == null || studentId == -1 || subjectId == -1) {
+        android.content.Context ctx = getContext();
+        if (ctx == null || studentId == -1 || subjectId == -1) {
             binding.tvEmptyAttendance.setVisibility(View.VISIBLE);
             return;
         }
 
-        DialogUtils.showLoadingOverlay(binding.getRoot(), requireContext());
+        DialogUtils.showLoadingOverlay(binding.getRoot(), ctx);
+        boolean isLocal = ThemeHelper.isLocalMode(ctx);
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
+            List<AttendanceRecord> dbRecords = new ArrayList<>();
+            List<com.aula.virtual.data.entity.AcademicPeriod> periods = new ArrayList<>();
+            List<com.aula.virtual.data.entity.NonSchoolDay> nsdList = new ArrayList<>();
+            List<com.aula.virtual.data.entity.FacilitySchedule> schedules = new ArrayList<>();
+            String subtitle = null;
 
-            Student student = db.studentDao().getStudentById(studentId);
-            Subject subject = db.subjectDao().getSubjectById(subjectId);
-            List<AttendanceRecord> records = db.attendanceRecordDao().getRecordsByStudentAndSubject(studentId, subjectId);
+            if (!isLocal) {
+                try {
+                    retrofit2.Response<List<AttendanceRecord>> attResp =
+                            RetrofitClient.getApiService(ctx).getStudentAttendanceRecords(studentId, subjectId).execute();
+                    if (attResp.isSuccessful() && attResp.body() != null && !attResp.body().isEmpty()) {
+                        dbRecords = attResp.body();
+                    }
+
+                    retrofit2.Response<List<com.aula.virtual.data.entity.AcademicPeriod>> pResp =
+                            RetrofitClient.getApiService(ctx).getAcademicPeriods().execute();
+                    if (pResp.isSuccessful() && pResp.body() != null) {
+                        periods = pResp.body();
+                    }
+
+                    retrofit2.Response<List<com.aula.virtual.data.entity.NonSchoolDay>> nsdResp =
+                            RetrofitClient.getApiService(ctx).getNonSchoolDays().execute();
+                    if (nsdResp.isSuccessful() && nsdResp.body() != null) {
+                        nsdList = nsdResp.body();
+                    }
+
+                    retrofit2.Response<List<com.aula.virtual.data.entity.FacilitySchedule>> schResp =
+                            RetrofitClient.getApiService(ctx).getFacilitySchedulesBySubject(subjectId).execute();
+                    if (schResp.isSuccessful() && schResp.body() != null) {
+                        schedules = schResp.body();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (dbRecords.isEmpty()) {
+                    try {
+                        dbRecords = AppDatabase.getInstance(ctx).attendanceRecordDao().getRecordsByStudentAndSubject(studentId, subjectId);
+                    } catch (Exception ignored) {}
+                }
+                if (periods.isEmpty()) {
+                    try {
+                        periods = AppDatabase.getInstance(ctx).academicCalendarDao().getAllPeriods();
+                    } catch (Exception ignored) {}
+                }
+                if (nsdList.isEmpty()) {
+                    try {
+                        nsdList = AppDatabase.getInstance(ctx).academicCalendarDao().getAllNonSchoolDays();
+                    } catch (Exception ignored) {}
+                }
+                if (schedules.isEmpty()) {
+                    try {
+                        schedules = AppDatabase.getInstance(ctx).facilityScheduleDao().getBySubjectId(subjectId);
+                    } catch (Exception ignored) {}
+                }
+            } else {
+                AppDatabase db = AppDatabase.getInstance(ctx);
+                Student student = db.studentDao().getStudentById(studentId);
+                Subject subject = db.subjectDao().getSubjectById(subjectId);
+                dbRecords = db.attendanceRecordDao().getRecordsByStudentAndSubject(studentId, subjectId);
+                periods = db.academicCalendarDao().getAllPeriods();
+                nsdList = db.academicCalendarDao().getAllNonSchoolDays();
+                schedules = db.facilityScheduleDao().getBySubjectId(subjectId);
+
+                if (student != null && subject != null) {
+                    subtitle = student.name + " • " + subject.name;
+                } else if (student != null) {
+                    subtitle = student.name;
+                } else if (subject != null) {
+                    subtitle = subject.name;
+                }
+            }
+
+            Map<String, AttendanceRecord> recordMap = new HashMap<>();
+            if (dbRecords != null) {
+                for (AttendanceRecord ar : dbRecords) {
+                    if (ar.classDate != null) {
+                        recordMap.put(ar.classDate, ar);
+                    }
+                }
+            }
+
+            Set<String> nonSchoolDaysSet = new HashSet<>();
+            if (nsdList != null) {
+                for (com.aula.virtual.data.entity.NonSchoolDay nsd : nsdList) {
+                    if (nsd.day != null) nonSchoolDaysSet.add(nsd.day);
+                }
+            }
+
+            Set<Integer> scheduleDaysOfWeek = new HashSet<>();
+            if (schedules != null) {
+                for (com.aula.virtual.data.entity.FacilitySchedule fs : schedules) {
+                    scheduleDaysOfWeek.addAll(parseScheduleDays(fs.days));
+                }
+            }
+
+            SimpleDateFormat ymdFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            TreeSet<String> allDatesSet = new TreeSet<>();
+
+            if (periods != null && !scheduleDaysOfWeek.isEmpty()) {
+                for (com.aula.virtual.data.entity.AcademicPeriod period : periods) {
+                    if (period.startDate == null || period.endDate == null) continue;
+                    try {
+                        Calendar startCal = Calendar.getInstance();
+                        startCal.setTime(ymdFormat.parse(period.startDate));
+
+                        Calendar endCal = Calendar.getInstance();
+                        endCal.setTime(ymdFormat.parse(period.endDate));
+
+                        while (!startCal.after(endCal)) {
+                            int dow = startCal.get(Calendar.DAY_OF_WEEK);
+                            String dateStr = ymdFormat.format(startCal.getTime());
+
+                            if (scheduleDaysOfWeek.contains(dow) && !nonSchoolDaysSet.contains(dateStr)) {
+                                allDatesSet.add(dateStr);
+                            }
+                            startCal.add(Calendar.DAY_OF_MONTH, 1);
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            allDatesSet.addAll(recordMap.keySet());
+
+            List<AttendanceRecord> fullDisplayList = new ArrayList<>();
+            for (String classDate : allDatesSet) {
+                AttendanceRecord ar = recordMap.get(classDate);
+                if (ar == null) {
+                    ar = new AttendanceRecord();
+                    ar.studentId = studentId;
+                    ar.subjectId = subjectId;
+                    ar.classDate = classDate;
+                    ar.status = 0;
+                }
+                fullDisplayList.add(ar);
+            }
+
+            final String finalSubtitle = subtitle;
 
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     DialogUtils.hideLoadingOverlay(binding.getRoot());
 
-                    if (student != null && subject != null) {
-                        binding.tvStudentSubjectSubtitle.setText(student.name + " • " + subject.name);
-                    } else if (student != null) {
-                        binding.tvStudentSubjectSubtitle.setText(student.name);
-                    } else if (subject != null) {
-                        binding.tvStudentSubjectSubtitle.setText(subject.name);
+                    if (finalSubtitle != null) {
+                        binding.tvStudentSubjectSubtitle.setText(finalSubtitle);
                     }
 
-                    if (records == null || records.isEmpty()) {
+                    if (fullDisplayList.isEmpty()) {
                         binding.rvAttendanceDates.setVisibility(View.GONE);
                         binding.tvEmptyAttendance.setVisibility(View.VISIBLE);
                         binding.tvOverallAttendancePercentage.setText("Asistencia: - %");
                     } else {
                         binding.tvEmptyAttendance.setVisibility(View.GONE);
                         binding.rvAttendanceDates.setVisibility(View.VISIBLE);
-                        adapter.setRecords(records);
+                        adapter.setRecords(fullDisplayList);
 
-                        updateSummary(records);
+                        updateSummary(fullDisplayList);
                     }
                 });
             }
         });
+    }
+
+    private Set<Integer> parseScheduleDays(String daysStr) {
+        Set<Integer> daysSet = new HashSet<>();
+        if (daysStr == null) return daysSet;
+        String clean = java.text.Normalizer.normalize(daysStr, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT);
+        if (clean.contains("lunes")) daysSet.add(Calendar.MONDAY);
+        if (clean.contains("martes")) daysSet.add(Calendar.TUESDAY);
+        if (clean.contains("miercoles")) daysSet.add(Calendar.WEDNESDAY);
+        if (clean.contains("jueves")) daysSet.add(Calendar.THURSDAY);
+        if (clean.contains("viernes")) daysSet.add(Calendar.FRIDAY);
+        if (clean.contains("sabado")) daysSet.add(Calendar.SATURDAY);
+        if (clean.contains("domingo")) daysSet.add(Calendar.SUNDAY);
+        return daysSet;
     }
 
     private void updateSummary(List<AttendanceRecord> records) {

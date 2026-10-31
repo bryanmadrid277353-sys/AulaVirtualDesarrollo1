@@ -14,6 +14,9 @@ public interface AcademicCalendarDao {
     @Query("SELECT * FROM academic_periods ORDER BY period ASC")
     List<AcademicPeriod> getAllPeriods();
 
+    @Query("SELECT * FROM academic_periods ORDER BY period ASC")
+    androidx.lifecycle.LiveData<List<AcademicPeriod>> getAllPeriodsLiveData();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertPeriod(AcademicPeriod period);
 
@@ -29,6 +32,12 @@ public interface AcademicCalendarDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insertNonSchoolDay(NonSchoolDay day);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAllNonSchoolDays(List<NonSchoolDay> days);
+
     @Query("DELETE FROM non_school_days WHERE id = :id")
     void deleteNonSchoolDay(int id);
+
+    @Query("DELETE FROM non_school_days")
+    void deleteAllNonSchoolDays();
 }

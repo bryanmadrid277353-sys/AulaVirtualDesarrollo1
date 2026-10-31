@@ -108,27 +108,33 @@ public class StudentHomeFragment extends Fragment {
 
             tvStatusPill.setText("• Regular");
 
-            // Calculate student's average
-            viewModel.getGradeInfoForStudent(s.id).observe(getViewLifecycleOwner(), gradeInfos -> {
-                if (gradeInfos != null && !gradeInfos.isEmpty()) {
-                    double sum = 0;
-                    int totalPeriods = 0;
-                    for (StudentGradeInfo info : gradeInfos) {
-                        if (info != null && info.enrollment != null) {
-                            int pCount = info.enrollment.periodsCount > 0 ? info.enrollment.periodsCount : 5;
-                            totalPeriods += pCount;
-                            if (info.enrollment.grade1 != null) sum += info.enrollment.grade1;
-                            if (info.enrollment.grade2 != null) sum += info.enrollment.grade2;
-                            if (info.enrollment.grade3 != null) sum += info.enrollment.grade3;
-                            if (info.enrollment.grade4 != null) sum += info.enrollment.grade4;
-                            if (info.enrollment.grade5 != null) sum += info.enrollment.grade5;
-                        }
-                    }
-                    double avg = totalPeriods > 0 ? (sum / totalPeriods) : 0;
-                    tvAveragePill.setText(String.format(Locale.getDefault(), "☆ Promedio: %.1f", avg));
-                } else {
-                    tvAveragePill.setText("☆ Promedio: N/A");
+            // Calculate student's average based on active academic periods
+            viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
+                if (periods == null || periods.isEmpty()) {
+                    tvAveragePill.setText("☆ Promedio: Sin Calendario");
+                    return;
                 }
+                int activePeriodsCount = periods.size();
+                viewModel.getGradeInfoForStudent(s.id).observe(getViewLifecycleOwner(), gradeInfos -> {
+                    if (gradeInfos != null && !gradeInfos.isEmpty()) {
+                        double sum = 0;
+                        int totalPeriods = 0;
+                        for (StudentGradeInfo info : gradeInfos) {
+                            if (info != null && info.enrollment != null) {
+                                totalPeriods += activePeriodsCount;
+                                if (activePeriodsCount >= 1 && info.enrollment.grade1 != null) sum += info.enrollment.grade1;
+                                if (activePeriodsCount >= 2 && info.enrollment.grade2 != null) sum += info.enrollment.grade2;
+                                if (activePeriodsCount >= 3 && info.enrollment.grade3 != null) sum += info.enrollment.grade3;
+                                if (activePeriodsCount >= 4 && info.enrollment.grade4 != null) sum += info.enrollment.grade4;
+                                if (activePeriodsCount >= 5 && info.enrollment.grade5 != null) sum += info.enrollment.grade5;
+                            }
+                        }
+                        double avg = totalPeriods > 0 ? (sum / totalPeriods) : 0;
+                        tvAveragePill.setText(String.format(Locale.getDefault(), "☆ Promedio: %.1f", avg));
+                    } else {
+                        tvAveragePill.setText("☆ Promedio: N/A");
+                    }
+                });
             });
 
             // Card Click & Chevron Right -> Open Student Management (Gestión del estudiante)

@@ -36,7 +36,7 @@
                 android:layout_height="22dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_open_book"
-                app:tint="?attr/colorPrimary"
+                app:tint="@color/accent_cyan"
                 android:contentDescription="Materia" />
         </FrameLayout>
 
@@ -63,7 +63,7 @@
                 android:id="@+id/tvSubjectSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?android:attr/textColorSecondary"
+                android:textColor="@color/accent_cyan"
                 android:textSize="12sp"
                 android:layout_marginTop="2dp"
                 android:maxLines="2"

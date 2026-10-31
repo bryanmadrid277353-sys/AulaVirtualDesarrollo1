@@ -3,7 +3,34 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+
+    <!-- Cabeza: semicírculo perfecto con ojos recortados (evenOdd) -->
     <path
         android:fillColor="?attr/colorPrimary"
-        android:pathData="M6,18C6,19.1 6.9,20 8,20H9V22H11V20H13V22H15V20H16C17.1,20 18,19.1 18,18V10H6V18ZM4,12C3.45,12 3,12.45 3,13V16C3,16.55 3.45,17 4,17C4.55,17 5,16.55 5,16V13C5,12.45 4.55,12 4,12ZM20,12C19.45,12 19,12.45 19,13V16C19,16.55 19.45,17 20,17C20.55,17 21,16.55 21,16V13C21,12.45 20.55,12 20,12ZM7.5,7.5L5.5,5.5C5.22,5.22 5.22,4.78 5.5,4.5C5.78,4.22 6.22,4.22 6.5,4.5L8.7,6.7C9.7,6.3 10.8,6 12,6C13.2,6 14.3,6.3 15.3,6.7L17.5,4.5C17.78,4.22 18.22,4.22 18.5,4.5C18.78,4.78 18.78,5.22 18.5,5.5L16.5,7.5C18.1,8.7 19,10.2 19,12H5C5,10.2 5.9,8.7 7.5,7.5Z" />
+        android:fillType="evenOdd"
+        android:pathData="M7,10a5,5 0,0 1,10 0Z
+                          M9.25,8a0.75,0.75 0,1 0,1.5 0a0.75,0.75 0,1 0,-1.5 0Z
+                          M13.25,8a0.75,0.75 0,1 0,1.5 0a0.75,0.75 0,1 0,-1.5 0Z" />
+
+    <!-- Antenas -->
+    <path
+        android:strokeColor="?attr/colorPrimary"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:pathData="M9.2,5.8L7.8,3.8M14.8,5.8L16.2,3.8" />
+
+    <!-- Cuerpo con piernas redondeadas (separado de la cabeza por 1dp) -->
+    <path
+        android:fillColor="?attr/colorPrimary"
+        android:pathData="M7,11h10v7.5c0,0.83 -0.67,1.5 -1.5,1.5H15v1c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1v-1h-2v1c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1v-1h-0.5C7.67,20 7,19.33 7,18.5Z" />
+
+    <!-- Brazo izquierdo -->
+    <path
+        android:fillColor="?attr/colorPrimary"
+        android:pathData="M4.5,12a1,1 0,0 1,2 0v4a1,1 0,0 1,-2 0Z" />
+
+    <!-- Brazo derecho -->
+    <path
+        android:fillColor="?attr/colorPrimary"
+        android:pathData="M17.5,12a1,1 0,0 1,2 0v4a1,1 0,0 1,-2 0Z" />
 </vector>

@@ -19,19 +19,19 @@
             android:textStyle="bold"
             android:layout_marginBottom="24dp"/>
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 1"/>
+        <TextView android:id="@+id/tvLabelP1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 1"/>
         <EditText android:id="@+id/etGrade1" style="@style/Widget.Bootstrap.EditText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" android:layout_marginBottom="12dp"/>
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 2"/>
+        <TextView android:id="@+id/tvLabelP2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 2"/>
         <EditText android:id="@+id/etGrade2" style="@style/Widget.Bootstrap.EditText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" android:layout_marginBottom="12dp"/>
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 3"/>
+        <TextView android:id="@+id/tvLabelP3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 3"/>
         <EditText android:id="@+id/etGrade3" style="@style/Widget.Bootstrap.EditText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" android:layout_marginBottom="12dp"/>
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 4"/>
+        <TextView android:id="@+id/tvLabelP4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 4"/>
         <EditText android:id="@+id/etGrade4" style="@style/Widget.Bootstrap.EditText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" android:layout_marginBottom="12dp"/>
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 5"/>
+        <TextView android:id="@+id/tvLabelP5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Periodo 5"/>
         <EditText android:id="@+id/etGrade5" style="@style/Widget.Bootstrap.EditText" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberDecimal" android:layout_marginBottom="24dp"/>
 
         <Button

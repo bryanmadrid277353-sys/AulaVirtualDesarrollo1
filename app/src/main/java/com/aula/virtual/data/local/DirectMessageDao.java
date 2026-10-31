@@ -9,6 +9,9 @@ import java.util.List;
 
 @Dao
 public interface DirectMessageDao {
+    @Query("SELECT * FROM direct_messages")
+    List<DirectMessage> getAllMessages();
+
     @Query("SELECT * FROM direct_messages WHERE senderId = :userId OR receiverId = :userId ORDER BY id DESC")
     List<DirectMessage> getMessagesForUser(int userId);
 

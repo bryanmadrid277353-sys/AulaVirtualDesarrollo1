@@ -43,8 +43,9 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         
         holder.tvName.setText(user.name != null ? user.name : "Sin nombre");
 
+        boolean isEncargado = "ENCARGADO".equals(user.role) || "GUARDIAN".equals(user.role);
         String carnetDisplay = user.carnet != null ? user.carnet : "-";
-        if ("ENCARGADO".equals(user.role) || "GUARDIAN".equals(user.role)) {
+        if (isEncargado) {
             if (!carnetDisplay.startsWith("ENC")) {
                 carnetDisplay = "ENC" + carnetDisplay;
             }
@@ -59,6 +60,20 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         }
 
         holder.tvCarnet.setText("Carnet: " + carnetDisplay);
+
+        if (isEncargado) {
+            holder.tvCarnet.setTextColor(holder.itemView.getContext().getColor(R.color.accent_orange));
+        } else if ("PROFESSOR".equals(user.role)) {
+            holder.tvCarnet.setTextColor(holder.itemView.getContext().getColor(R.color.accent_green));
+        } else {
+            android.util.TypedValue typedValue = new android.util.TypedValue();
+            holder.itemView.getContext().getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValue, true);
+            holder.tvCarnet.setTextColor(typedValue.data);
+        }
+
+        if (holder.layoutAvatarFrame != null) {
+            holder.layoutAvatarFrame.setBackgroundResource(R.drawable.bg_circle_primary);
+        }
 
         if (holder.tvAvatarInitials != null) {
             holder.tvAvatarInitials.setText(getInitials(user.name));
@@ -93,6 +108,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
         TextView tvName;
         TextView tvCarnet;
         TextView tvAvatarInitials;
+        View layoutAvatarFrame;
         View btnManage;
 
         ViewHolder(View itemView) {
@@ -100,6 +116,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
             tvName = itemView.findViewById(R.id.tvName);
             tvCarnet = itemView.findViewById(R.id.tvCarnet);
             tvAvatarInitials = itemView.findViewById(R.id.tvAvatarInitials);
+            layoutAvatarFrame = itemView.findViewById(R.id.layoutAvatarFrame);
             btnManage = itemView.findViewById(R.id.btnManage);
         }
     }

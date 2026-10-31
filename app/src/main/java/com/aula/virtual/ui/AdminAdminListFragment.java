@@ -53,7 +53,9 @@ public class AdminAdminListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
+        binding.tvHeaderTitle.setText("Administradores");
         binding.tvTitle.setText("Listado de Administradores");
+        binding.tvSubtitle.setText("Gestiona las cuentas con permisos de administración del sistema.");
         adapter = new StudentAdapter();
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);

@@ -83,9 +83,14 @@ public class AdminFacilityDetailFragment extends Fragment {
                     binding.btnCopyDesc.setOnClickListener(v -> 
                         ClipboardUtils.copyToClipboard(getContext(), "Descripción de instalación", binding.etDesc.getText().toString()));
 
-                    User currentUser = viewModel.getCurrentUser().getValue();
-                    String modUser = (currentUser != null && currentUser.name != null) ? currentUser.name : "Admin Maestro";
-                    binding.tvLastModifiedFooter.setText("Última modificación: Hoy por " + modUser);
+                    binding.tvDetailTitle.setText("Detalle de Instalación");
+                    binding.tvDetailSubtitle.setText("Gestión del aula e infraestructura");
+
+                    ModificationLogManager.loadLogTextAsync(requireContext(), "facility_" + facility.id, logText -> {
+                        if (binding != null && binding.tvLastModifiedFooter != null) {
+                            binding.tvLastModifiedFooter.setText(logText);
+                        }
+                    });
 
                     binding.btnSave.setEnabled(true);
                     binding.btnDelete.setEnabled(true);
@@ -124,6 +129,10 @@ public class AdminFacilityDetailFragment extends Fragment {
             facility.code = "INSTA" + codeDigits;
             facility.type = type;
             facility.description = binding.etDesc.getText().toString().trim();
+
+            User currentUser = viewModel.getCurrentUser().getValue();
+            String modUser = (currentUser != null && currentUser.name != null) ? currentUser.name : "Admin Maestro";
+            ModificationLogManager.saveLog(requireContext(), "facility_" + facility.id, modUser);
 
             viewModel.performOnlineAction(() -> {
                 viewModel.updateFacility(facility);

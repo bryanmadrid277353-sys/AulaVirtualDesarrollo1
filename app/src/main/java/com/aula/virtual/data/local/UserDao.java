@@ -9,19 +9,19 @@ import java.util.List;
 
 @Dao
 public interface UserDao {
-    @Query("SELECT * FROM users WHERE role = 'STUDENT' OR role = 'ENCARGADO'")
+    @Query("SELECT * FROM users WHERE UPPER(TRIM(role)) = 'STUDENT' OR UPPER(TRIM(role)) = 'ENCARGADO'")
     List<User> getStudents();
 
-    @Query("SELECT * FROM users WHERE role = 'ENCARGADO'")
+    @Query("SELECT * FROM users WHERE UPPER(TRIM(role)) = 'ENCARGADO'")
     List<User> getEncargadosOnly();
 
-    @Query("SELECT * FROM users WHERE role = 'ENCARGADO' OR role = 'STUDENT'")
+    @Query("SELECT * FROM users WHERE UPPER(TRIM(role)) = 'ENCARGADO' OR UPPER(TRIM(role)) = 'STUDENT'")
     List<User> getEncargados();
 
-    @Query("SELECT * FROM users WHERE role = 'ADMIN'")
+    @Query("SELECT * FROM users WHERE UPPER(TRIM(role)) = 'ADMIN'")
     List<User> getAdmins();
 
-    @Query("SELECT * FROM users WHERE role = 'PROFESSOR'")
+    @Query("SELECT * FROM users WHERE UPPER(TRIM(role)) = 'PROFESSOR'")
     List<User> getProfessors();
 
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")

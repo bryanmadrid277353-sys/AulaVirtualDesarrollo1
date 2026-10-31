@@ -26,6 +26,7 @@ import java.util.Map;
 
 public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> {
     private List<StudentGradeInfo> gradeInfos = new ArrayList<>();
+    private List<com.aula.virtual.data.entity.AcademicPeriod> activePeriods = null;
     private final boolean isAdmin;
     private boolean isStudentList = false;
     private OnGradeActionListener listener;
@@ -58,6 +59,11 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
 
     public void setGradeInfos(List<StudentGradeInfo> gradeInfos) {
         this.gradeInfos = gradeInfos;
+        notifyDataSetChanged();
+    }
+
+    public void setActivePeriods(List<com.aula.virtual.data.entity.AcademicPeriod> periods) {
+        this.activePeriods = periods;
         notifyDataSetChanged();
     }
 
@@ -161,7 +167,27 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
         holder.layoutPeriodsContainer.removeAllViews();
 
         Enrollment e = info.enrollment;
-        int periodsCount = (e != null && e.periodsCount > 0) ? e.periodsCount : 5;
+
+        // If Academic Calendar is not set up in DB, do NOT display grades by period!
+        if (activePeriods == null || activePeriods.isEmpty()) {
+            int density = (int) holder.itemView.getContext().getResources().getDisplayMetrics().density;
+            TextView tvWarning = new TextView(holder.itemView.getContext());
+            tvWarning.setText("⚠️ Calendario Académico no configurado (Obligatorio para mostrar notas)");
+            tvWarning.setTextSize(12);
+            tvWarning.setTypeface(null, Typeface.BOLD);
+            tvWarning.setTextColor(Color.parseColor("#F59E0B"));
+            tvWarning.setPadding(4 * density, 8 * density, 4 * density, 8 * density);
+            holder.layoutPeriodsContainer.addView(tvWarning);
+
+            if (holder.tvStatusTag != null) {
+                String cycleStr = (e != null && e.cycle != null) ? e.cycle : "Ciclo 2025";
+                holder.tvStatusTag.setText("⚠️ Sin Calendario • " + cycleStr);
+                holder.tvStatusTag.setTextColor(Color.parseColor("#F59E0B"));
+            }
+            return;
+        }
+
+        int periodsCount = activePeriods.size();
 
         double sum = 0;
         int filledCount = 0;
@@ -177,7 +203,7 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
             holder.layoutPeriodsContainer.addView(periodBox);
         }
 
-        // Real Average treating missing grades as 0
+        // Real Average calculated across active periods
         double avgReal = sum / periodsCount;
         String avgStr = String.format(Locale.getDefault(), "%.1f", avgReal);
         View avgBox = createAvgBox(holder.itemView.getContext(), "AVG", avgStr);

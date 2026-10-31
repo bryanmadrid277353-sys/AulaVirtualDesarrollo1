@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -219,6 +220,10 @@ public class AdminDetailFragment extends Fragment {
                         } else {
                             binding.etField2.setText(admin.carnet);
                         }
+
+                        int greenColor = ContextCompat.getColor(requireContext(), R.color.accent_green);
+                        binding.tvRolePrefix.setTextColor(greenColor);
+                        binding.tvDetailCarnetHeader.setTextColor(greenColor);
                     } else if ("ENCARGADO".equals(admin.role)) {
                         binding.tvRolePrefix.setText("ENC");
                         binding.etField2.setFilters(new InputFilter[]{new InputFilter.LengthFilter(7)});
@@ -227,6 +232,10 @@ public class AdminDetailFragment extends Fragment {
                         } else {
                             binding.etField2.setText(admin.carnet);
                         }
+
+                        int orangeColor = ContextCompat.getColor(requireContext(), R.color.accent_orange);
+                        binding.tvRolePrefix.setTextColor(orangeColor);
+                        binding.tvDetailCarnetHeader.setTextColor(orangeColor);
                     } else {
                         binding.tvRolePrefix.setText("ADMIN");
                         binding.etField2.setFilters(new InputFilter[]{new InputFilter.LengthFilter(5)});
@@ -262,6 +271,23 @@ public class AdminDetailFragment extends Fragment {
                 }
 
                 ImageUtils.setProfileImage(binding.ivProfileImageDetail, admin.profile_image, admin.name);
+
+                if ("PROFESSOR".equals(admin.role)) {
+                    binding.tvDetailTitle.setText("Detalle del Profesor");
+                    binding.tvDetailSubtitle.setText("Gestión de cuenta y permisos del docente");
+                } else if ("ADMIN".equals(admin.role)) {
+                    binding.tvDetailTitle.setText("Detalle del Administrador");
+                    binding.tvDetailSubtitle.setText("Gestión de cuenta y permisos de administración");
+                } else {
+                    binding.tvDetailTitle.setText("Detalle de Usuario");
+                    binding.tvDetailSubtitle.setText("Gestión de cuenta y permisos del sistema");
+                }
+
+                ModificationLogManager.loadLogTextAsync(requireContext(), "user_" + admin.id, logText -> {
+                    if (binding != null && binding.tvLastModifiedFooter != null) {
+                        binding.tvLastModifiedFooter.setText(logText);
+                    }
+                });
 
                 if ("ADMIN12345".equals(admin.carnet)) {
                     binding.btnDelete.setVisibility(View.GONE);
@@ -353,6 +379,10 @@ public class AdminDetailFragment extends Fragment {
                     admin.can_change_photo = isLocked ? 0 : 1;
                     if (isLocked) admin.profile_image = null;
                 }
+
+                User activeAuthor = viewModel.getCurrentUser().getValue();
+                String authorName = (activeAuthor != null && activeAuthor.name != null) ? activeAuthor.name : "Admin Maestro";
+                ModificationLogManager.saveLog(requireContext(), "user_" + admin.id, authorName);
 
                 viewModel.performOnlineAction(() -> {
                     viewModel.updateUser(admin);

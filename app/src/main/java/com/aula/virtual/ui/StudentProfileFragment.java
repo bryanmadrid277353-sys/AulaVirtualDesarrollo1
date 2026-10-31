@@ -155,13 +155,6 @@ public class StudentProfileFragment extends Fragment {
         binding.btnEditProfile.setOnClickListener(v -> showEditProfileDialog());
         binding.btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
 
-        boolean isBiometricEnabled = ThemeHelper.isBiometricAutofillEnabled(requireContext());
-        binding.switchBiometricAutofill.setChecked(isBiometricEnabled);
-        binding.switchBiometricAutofill.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            ThemeHelper.setBiometricAutofillEnabled(requireContext(), isChecked);
-            Toast.makeText(getContext(), isChecked ? "Datos biométricos activados" : "Datos biométricos desactivados", Toast.LENGTH_SHORT).show();
-        });
-
         binding.btnLogout.setOnClickListener(v -> {
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Cerrar sesión")
@@ -225,21 +218,54 @@ public class StudentProfileFragment extends Fragment {
 
     private void showImageSourceDialog() {
         if (currentUser != null && currentUser.can_change_photo == 0) {
-            new MaterialAlertDialogBuilder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog)
                     .setTitle("Acceso Restringido")
                     .setMessage("Tu función de cambio de foto ha sido deshabilitada por subir contenido inapropiado.")
                     .setPositiveButton("Entendido", null)
                     .show();
             return;
         }
-        String[] options = {"Cámara", "Galería", "Eliminar foto"};
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Cambiar avatar de perfil")
-                .setItems(options, (dialog, which) -> {
-                    if (which == 0) checkCameraPermission();
-                    else if (which == 1) galleryLauncher.launch("image/*");
-                    else removeProfilePicture();
-                }).show();
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_change_avatar, null);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        View btnCamera = dialogView.findViewById(R.id.btnOptionCamera);
+        View btnGallery = dialogView.findViewById(R.id.btnOptionGallery);
+        View btnDeletePhoto = dialogView.findViewById(R.id.btnOptionDeletePhoto);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelAvatarDialog);
+
+        boolean hasProfilePhoto = currentUser != null && currentUser.profile_image != null && !currentUser.profile_image.trim().isEmpty();
+        if (hasProfilePhoto) {
+            btnDeletePhoto.setVisibility(View.VISIBLE);
+        } else {
+            btnDeletePhoto.setVisibility(View.GONE);
+        }
+
+        btnCamera.setOnClickListener(v -> {
+            dialog.dismiss();
+            checkCameraPermission();
+        });
+
+        btnGallery.setOnClickListener(v -> {
+            dialog.dismiss();
+            galleryLauncher.launch("image/*");
+        });
+
+        btnDeletePhoto.setOnClickListener(v -> {
+            dialog.dismiss();
+            removeProfilePicture();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 
     private void showEditProfileDialog() {

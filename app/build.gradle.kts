@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.aula.virtual"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aula.virtual"

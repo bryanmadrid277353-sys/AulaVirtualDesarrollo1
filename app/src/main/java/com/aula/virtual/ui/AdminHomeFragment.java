@@ -52,9 +52,6 @@ public class AdminHomeFragment extends Fragment {
         binding.cardFacilities.setOnClickListener(v -> 
             Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminFacilityListFragment));
 
-        binding.cardAcademicCalendar.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_academicCalendarFragment));
-
 
 
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {

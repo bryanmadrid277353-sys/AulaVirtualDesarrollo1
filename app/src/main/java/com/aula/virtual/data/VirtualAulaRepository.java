@@ -3,12 +3,16 @@ package com.aula.virtual.data;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import com.aula.virtual.data.entity.AcademicPeriod;
+import com.aula.virtual.data.entity.AttendanceRecord;
 import com.aula.virtual.data.entity.BlogComment;
 import com.aula.virtual.data.entity.BlogEntry;
+import com.aula.virtual.data.entity.ConductRecord;
 import com.aula.virtual.data.entity.DirectMessage;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.FacilitySchedule;
 import com.aula.virtual.data.entity.Enrollment;
+import com.aula.virtual.data.entity.NonSchoolDay;
 import com.aula.virtual.data.entity.Notification;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
@@ -89,8 +93,11 @@ public class VirtualAulaRepository {
         if (list == null) return new ArrayList<>();
         Map<String, User> map = new LinkedHashMap<>();
         for (User u : list) {
-            if (u != null && u.carnet != null && !u.carnet.trim().isEmpty()) {
-                map.put(u.carnet.trim().toUpperCase(), u);
+            if (u != null) {
+                String key = (u.carnet != null && !u.carnet.trim().isEmpty())
+                        ? u.carnet.trim().toUpperCase()
+                        : ("USER_ID_" + u.id);
+                map.put(key, u);
             }
         }
         return new ArrayList<>(map.values());
@@ -246,11 +253,7 @@ public class VirtualAulaRepository {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 if (responded.compareAndSet(false, true)) {
-                    if (response.isSuccessful() && response.body() != null && db != null) {
-                        User user = response.body();
-                        executor.execute(() -> {
-                            try { db.userDao().insert(user); } catch (Exception e) { e.printStackTrace(); }
-                        });
+                    if (response.isSuccessful() && response.body() != null) {
                         callback.onResponse(call, response);
                     } else {
                         fallbackToLocalDb(carnet, password, call, callback, responded);
@@ -409,23 +412,7 @@ public class VirtualAulaRepository {
             }
             return;
         }
-        performCall(getApiService().createStudent(student), new Callback<Student>() {
-            @Override
-            public void onResponse(Call<Student> call, Response<Student> response) {
-                if (response.isSuccessful() && response.body() != null && db != null) {
-                    Student created = response.body();
-                    executor.execute(() -> {
-                        try { db.studentDao().insert(created); } catch (Exception e) { e.printStackTrace(); }
-                    });
-                }
-                callback.onResponse(call, response);
-            }
-
-            @Override
-            public void onFailure(Call<Student> call, Throwable t) {
-                callback.onFailure(call, t);
-            }
-        });
+        performCall(getApiService().createStudent(student), callback);
     }
 
     public void getStudentById(int id, Callback<Student> callback) {
@@ -457,23 +444,7 @@ public class VirtualAulaRepository {
             }
             return;
         }
-        performCall(getApiService().updateStudent(student.id, student), new Callback<Student>() {
-            @Override
-            public void onResponse(Call<Student> call, Response<Student> response) {
-                if (response.isSuccessful() && response.body() != null && db != null) {
-                    Student updated = response.body();
-                    executor.execute(() -> {
-                        try { db.studentDao().insert(updated); } catch (Exception e) { e.printStackTrace(); }
-                    });
-                }
-                callback.onResponse(call, response);
-            }
-
-            @Override
-            public void onFailure(Call<Student> call, Throwable t) {
-                callback.onFailure(call, t);
-            }
-        });
+        performCall(getApiService().updateStudent(student.id, student), callback);
     }
 
     public void deleteStudent(int id, Callback<Void> callback) {
@@ -482,6 +453,9 @@ public class VirtualAulaRepository {
                 try {
                     db.studentDao().deleteById(id);
                     db.enrollmentDao().deleteByStudentId(id);
+                    db.attendanceRecordDao().deleteByStudentId(id);
+                    db.conductRecordDao().deleteByStudentId(id);
+                    db.userSubjectColorDao().deleteByUserId(id);
                 } catch (Exception e) { e.printStackTrace(); }
             }
         };
@@ -589,8 +563,9 @@ public class VirtualAulaRepository {
                     List<Enrollment> enrollments = db.enrollmentDao().getByStudentId(studentId);
                     List<ScheduleInfo> infos = new ArrayList<>();
                     for (Enrollment en : enrollments) {
-                        List<FacilitySchedule> schedules = db.facilityScheduleDao().getBySubjectId(en.subjectId);
                         Subject sub = db.subjectDao().getSubjectById(en.subjectId);
+                        if (sub == null) continue;
+                        List<FacilitySchedule> schedules = db.facilityScheduleDao().getBySubjectId(en.subjectId);
                         UserSubjectColor usc = db.userSubjectColorDao().get(studentId, en.subjectId);
                         String chosenColor = (usc != null && usc.color != null) ? usc.color : ((en.color != null && !en.color.isEmpty()) ? en.color : (sub != null ? sub.color : "BLUE"));
                         for (FacilitySchedule sch : schedules) {
@@ -1073,63 +1048,30 @@ public class VirtualAulaRepository {
     }
 
     public void getGradeInfoForStudent(int studentId, Callback<List<StudentGradeInfo>> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                List<Enrollment> enrollments = db.enrollmentDao().getByStudentId(studentId);
-                List<StudentGradeInfo> infos = new ArrayList<>();
-                for (Enrollment en : enrollments) {
-                    Subject sub = db.subjectDao().getSubjectById(en.subjectId);
-                    User stu = db.userDao().getUserById(en.studentId);
-                    StudentGradeInfo info = new StudentGradeInfo();
-                    info.enrollment = en;
-                    info.subject = sub;
-                    info.student = stu;
-                    infos.add(info);
-                }
-                if (!infos.isEmpty()) {
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    List<Enrollment> enrollments = db.enrollmentDao().getByStudentId(studentId);
+                    List<StudentGradeInfo> infos = new ArrayList<>();
+                    for (Enrollment en : enrollments) {
+                        Subject sub = db.subjectDao().getSubjectById(en.subjectId);
+                        if (sub == null) continue;
+                        User stu = db.userDao().getUserById(en.studentId);
+                        StudentGradeInfo info = new StudentGradeInfo();
+                        info.enrollment = en;
+                        info.subject = sub;
+                        info.student = stu;
+                        infos.add(info);
+                    }
                     mainHandler.post(() -> callback.onResponse(null, Response.success(infos)));
-                }
-            });
+                });
+            } else {
+                callback.onResponse(null, Response.success(new ArrayList<>()));
+            }
+            return;
         }
-        if (isLocalMode()) return;
-        performCall(getApiService().getGradeInfoForStudent(studentId), new Callback<List<StudentGradeInfo>>() {
-            @Override
-            public void onResponse(Call<List<StudentGradeInfo>> call, Response<List<StudentGradeInfo>> response) {
-                if (response.isSuccessful() && response.body() != null && db != null) {
-                    List<StudentGradeInfo> infos = response.body();
-                    executor.execute(() -> {
-                        for (StudentGradeInfo info : infos) {
-                            if (info.enrollment != null) db.enrollmentDao().insert(info.enrollment);
-                            if (info.subject != null) db.subjectDao().insert(info.subject);
-                            if (info.student != null) db.userDao().insert(info.student);
-                        }
-                    });
-                }
-                callback.onResponse(call, response);
-            }
 
-            @Override
-            public void onFailure(Call<List<StudentGradeInfo>> call, Throwable t) {
-                if (db != null) {
-                    executor.execute(() -> {
-                        List<Enrollment> enrollments = db.enrollmentDao().getByStudentId(studentId);
-                        List<StudentGradeInfo> infos = new ArrayList<>();
-                        for (Enrollment en : enrollments) {
-                            Subject sub = db.subjectDao().getSubjectById(en.subjectId);
-                            User stu = db.userDao().getUserById(en.studentId);
-                            StudentGradeInfo info = new StudentGradeInfo();
-                            info.enrollment = en;
-                            info.subject = sub;
-                            info.student = stu;
-                            infos.add(info);
-                        }
-                        mainHandler.post(() -> callback.onResponse(call, Response.success(infos)));
-                    });
-                } else {
-                    callback.onFailure(call, t);
-                }
-            }
-        });
+        performCall(getApiService().getGradeInfoForStudent(studentId), callback);
     }
 
     public void getUserById(int id, Callback<User> callback) {
@@ -1205,35 +1147,41 @@ public class VirtualAulaRepository {
     }
 
     public void getSubjectEnrollments(int subjectId, Callback<List<StudentGradeInfo>> callback) {
-        if (db != null) {
-            executor.execute(() -> {
-                try {
-                    List<Enrollment> enrollments = db.enrollmentDao().getBySubjectId(subjectId);
-                    List<StudentGradeInfo> infos = new ArrayList<>();
-                    if (enrollments != null) {
-                        for (Enrollment en : enrollments) {
-                            Subject sub = db.subjectDao().getSubjectById(en.subjectId);
-                            User stu = db.userDao().getUserById(en.studentId);
-                            if (stu == null && db.studentDao() != null) {
-                                Student sRecord = db.studentDao().getStudentById(en.studentId);
-                                if (sRecord != null) {
-                                    stu = new User(sRecord.carnet, sRecord.name, "", "STUDENT");
-                                    stu.id = sRecord.id;
+        if (isLocalMode()) {
+            if (db != null) {
+                executor.execute(() -> {
+                    try {
+                        List<Enrollment> enrollments = db.enrollmentDao().getBySubjectId(subjectId);
+                        List<StudentGradeInfo> infos = new ArrayList<>();
+                        if (enrollments != null) {
+                            for (Enrollment en : enrollments) {
+                                Subject sub = db.subjectDao().getSubjectById(en.subjectId);
+                                if (sub == null) continue;
+                                User stu = db.userDao().getUserById(en.studentId);
+                                if (stu == null && db.studentDao() != null) {
+                                    Student sRecord = db.studentDao().getStudentById(en.studentId);
+                                    if (sRecord != null) {
+                                        stu = new User(sRecord.carnet, sRecord.name, "", "STUDENT");
+                                        stu.id = sRecord.id;
+                                    }
                                 }
+                                if (stu == null) continue;
+                                StudentGradeInfo info = new StudentGradeInfo();
+                                info.enrollment = en;
+                                info.subject = sub;
+                                info.student = stu;
+                                infos.add(info);
                             }
-                            StudentGradeInfo info = new StudentGradeInfo();
-                            info.enrollment = en;
-                            info.subject = sub;
-                            info.student = stu;
-                            infos.add(info);
                         }
+                        mainHandler.post(() -> callback.onResponse(null, Response.success(infos)));
+                    } catch (Exception e) {
+                        mainHandler.post(() -> callback.onFailure(null, e));
                     }
-                    mainHandler.post(() -> callback.onResponse(null, Response.success(infos)));
-                } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(null, e));
-                }
-            });
-            if (isLocalMode()) return;
+                });
+            } else {
+                if (callback != null) callback.onResponse(null, Response.success(new ArrayList<>()));
+            }
+            return;
         }
 
         performCall(getApiService().getSubjectEnrollments(subjectId), callback);
@@ -1248,6 +1196,7 @@ public class VirtualAulaRepository {
                         List<FacilitySchedule> schedules = db.facilityScheduleDao().getBySubjectId(subjectId);
                         List<User> participants = new ArrayList<>();
                         List<Integer> addedUserIds = new ArrayList<>();
+                        List<Integer> addedStudentIds = new ArrayList<>();
 
                         Subject sub = db.subjectDao().getSubjectById(subjectId);
                         if (sub != null && sub.professorId != null) {
@@ -1268,7 +1217,7 @@ public class VirtualAulaRepository {
                             }
                         }
                         for (Enrollment en : enrollments) {
-                            if (!addedUserIds.contains(en.studentId)) {
+                            if (!addedStudentIds.contains(en.studentId)) {
                                 Student stuRecord = db.studentDao().getStudentById(en.studentId);
                                 if (stuRecord != null) {
                                     User stuUser = new User();
@@ -1278,7 +1227,7 @@ public class VirtualAulaRepository {
                                     stuUser.profile_image = stuRecord.profile_image;
                                     stuUser.role = "STUDENT";
                                     participants.add(stuUser);
-                                    addedUserIds.add(stuRecord.id);
+                                    addedStudentIds.add(stuRecord.id);
                                 }
                             }
                         }
@@ -2094,172 +2043,255 @@ public class VirtualAulaRepository {
             return;
         }
 
-        performCall(getApiService().getEncargados(), new Callback<List<User>>() {
-            @Override
-            public void onResponse(Call<List<User>> call, Response<List<User>> respEnc) {
-                if (respEnc.isSuccessful() && respEnc.body() != null) {
-                    executor.execute(() -> db.userDao().insertAll(respEnc.body()));
+        executor.execute(() -> {
+            int countUsers = 0;
+            int countStudentRecords = 0;
+            int countSubjects = 0;
+            int countFacilities = 0;
+            int countPeriods = 0;
+
+            try {
+                // 1. Encargados
+                try {
+                    Response<List<User>> respEnc = getApiService().getEncargados().execute();
+                    if (respEnc.isSuccessful() && respEnc.body() != null) {
+                        List<User> list = respEnc.body();
+                        db.userDao().insertAll(list);
+                        countUsers += list.size();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading encargados: " + e.getMessage());
                 }
-                performCall(getApiService().getAllStudentRecords(), new Callback<List<Student>>() {
-                    @Override
-                    public void onResponse(Call<List<Student>> call, Response<List<Student>> respRecords) {
-                        if (respRecords.isSuccessful() && respRecords.body() != null) {
-                            executor.execute(() -> db.studentDao().insertAll(respRecords.body()));
+
+                // 2. Student Records
+                try {
+                    Response<List<Student>> respRecords = getApiService().getAllStudentRecords().execute();
+                    if (respRecords.isSuccessful() && respRecords.body() != null) {
+                        List<Student> list = respRecords.body();
+                        db.studentDao().insertAll(list);
+                        countStudentRecords += list.size();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading student records: " + e.getMessage());
+                }
+
+                // 3. Students (Accounts with non-STUDENT role if any)
+                try {
+                    Response<List<User>> respStudents = getApiService().getStudents().execute();
+                    if (respStudents.isSuccessful() && respStudents.body() != null) {
+                        List<User> list = respStudents.body();
+                        for (User u : list) {
+                            if (u != null && u.role != null && !"STUDENT".equalsIgnoreCase(u.role.trim())) {
+                                db.userDao().insert(u);
+                                countUsers++;
+                            }
                         }
-                        performCall(getApiService().getStudents(), new Callback<List<User>>() {
-                            @Override
-                            public void onResponse(Call<List<User>> call, Response<List<User>> respStudents) {
-                                if (respStudents.isSuccessful() && respStudents.body() != null) {
-                                    executor.execute(() -> db.userDao().insertAll(respStudents.body()));
-                                }
-                                performCall(getApiService().getAdmins(), new Callback<List<User>>() {
-                                    @Override
-                                    public void onResponse(Call<List<User>> call, Response<List<User>> respAdmins) {
-                                        if (respAdmins.isSuccessful() && respAdmins.body() != null) {
-                                            executor.execute(() -> db.userDao().insertAll(respAdmins.body()));
-                                        }
-                                        performCall(getApiService().getProfessors(), new Callback<List<User>>() {
-                                            @Override
-                                            public void onResponse(Call<List<User>> call, Response<List<User>> respProfs) {
-                                                if (respProfs.isSuccessful() && respProfs.body() != null) {
-                                                    executor.execute(() -> db.userDao().insertAll(respProfs.body()));
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading students: " + e.getMessage());
+                }
+
+                // 4. Admins
+                try {
+                    Response<List<User>> respAdmins = getApiService().getAdmins().execute();
+                    if (respAdmins.isSuccessful() && respAdmins.body() != null) {
+                        List<User> list = respAdmins.body();
+                        db.userDao().insertAll(list);
+                        countUsers += list.size();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading admins: " + e.getMessage());
+                }
+
+                // 5. Professors
+                try {
+                    Response<List<User>> respProfs = getApiService().getProfessors().execute();
+                    if (respProfs.isSuccessful() && respProfs.body() != null) {
+                        List<User> list = respProfs.body();
+                        db.userDao().insertAll(list);
+                        countUsers += list.size();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading professors: " + e.getMessage());
+                }
+
+                // 6. Subjects & related data
+                try {
+                    Response<List<Subject>> respSubs = getApiService().getSubjects().execute();
+                    if (respSubs.isSuccessful() && respSubs.body() != null) {
+                        List<Subject> subs = respSubs.body();
+                        db.subjectDao().insertAll(subs);
+                        countSubjects += subs.size();
+
+                        for (Subject s : subs) {
+                            try {
+                                Response<List<BlogEntry>> respBlog = getApiService().getSubjectBlog(s.id).execute();
+                                if (respBlog.isSuccessful() && respBlog.body() != null) {
+                                    List<BlogEntry> entries = respBlog.body();
+                                    db.blogDao().insertEntries(entries);
+                                    for (BlogEntry entry : entries) {
+                                        try {
+                                            Response<List<CommentInfo>> respComments = getApiService().getBlogComments(entry.id).execute();
+                                            if (respComments.isSuccessful() && respComments.body() != null) {
+                                                for (CommentInfo ci : respComments.body()) {
+                                                    if (ci.comment != null) db.blogDao().insertComment(ci.comment);
                                                 }
-                                                performCall(getApiService().getSubjects(), new Callback<List<Subject>>() {
-                                                    @Override
-                                                    public void onResponse(Call<List<Subject>> call, Response<List<Subject>> respSubs) {
-                                                        if (respSubs.isSuccessful() && respSubs.body() != null) {
-                                                            List<Subject> subs = respSubs.body();
-                                                            executor.execute(() -> db.subjectDao().insertAll(subs));
-
-                                                            for (Subject s : subs) {
-                                                                performCall(getApiService().getSubjectBlog(s.id), new Callback<List<BlogEntry>>() {
-                                                                    @Override
-                                                                    public void onResponse(Call<List<BlogEntry>> call, Response<List<BlogEntry>> respBlog) {
-                                                                        if (respBlog.isSuccessful() && respBlog.body() != null) {
-                                                                            List<BlogEntry> entries = respBlog.body();
-                                                                            executor.execute(() -> db.blogDao().insertEntries(entries));
-
-                                                                            for (BlogEntry entry : entries) {
-                                                                                performCall(getApiService().getBlogComments(entry.id), new Callback<List<CommentInfo>>() {
-                                                                                    @Override
-                                                                                    public void onResponse(Call<List<CommentInfo>> call, Response<List<CommentInfo>> respComments) {
-                                                                                        if (respComments.isSuccessful() && respComments.body() != null) {
-                                                                                            executor.execute(() -> {
-                                                                                                for (CommentInfo ci : respComments.body()) {
-                                                                                                    if (ci.comment != null) db.blogDao().insertComment(ci.comment);
-                                                                                                }
-                                                                                            });
-                                                                                        }
-                                                                                    }
-                                                                                    @Override public void onFailure(Call<List<CommentInfo>> call, Throwable t) {}
-                                                                                });
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    @Override public void onFailure(Call<List<BlogEntry>> call, Throwable t) {}
-                                                                });
-
-                                                                performCall(getApiService().getSubjectParticipants(s.id), new Callback<List<User>>() {
-                                                                    @Override
-                                                                    public void onResponse(Call<List<User>> call, Response<List<User>> respPart) {
-                                                                        if (respPart.isSuccessful() && respPart.body() != null) {
-                                                                            executor.execute(() -> db.userDao().insertAll(respPart.body()));
-                                                                        }
-                                                                    }
-                                                                    @Override public void onFailure(Call<List<User>> call, Throwable t) {}
-                                                                });
-
-                                                                performCall(getApiService().getSubjectEnrollments(s.id), new Callback<List<StudentGradeInfo>>() {
-                                                                    @Override
-                                                                    public void onResponse(Call<List<StudentGradeInfo>> call, Response<List<StudentGradeInfo>> respGrades) {
-                                                                        if (respGrades.isSuccessful() && respGrades.body() != null) {
-                                                                            executor.execute(() -> {
-                                                                                for (StudentGradeInfo info : respGrades.body()) {
-                                                                                    if (info.enrollment != null) db.enrollmentDao().insert(info.enrollment);
-                                                                                    if (info.student != null) db.userDao().insert(info.student);
-                                                                                    if (info.subject != null) db.subjectDao().insert(info.subject);
-                                                                                }
-                                                                            });
-                                                                        }
-                                                                    }
-                                                                    @Override public void onFailure(Call<List<StudentGradeInfo>> call, Throwable t) {}
-                                                                });
-                                                            }
-                                                        }
-                                                        performCall(getApiService().getFacilities(), new Callback<List<Facility>>() {
-                                                            @Override
-                                                            public void onResponse(Call<List<Facility>> call, Response<List<Facility>> respFacilities) {
-                                                                if (respFacilities.isSuccessful() && respFacilities.body() != null) {
-                                                                    List<Facility> facs = respFacilities.body();
-                                                                    executor.execute(() -> db.facilityDao().insertAll(facs));
-
-                                                                    for (Facility f : facs) {
-                                                                        performCall(getApiService().getFacilitySchedules(f.id), new Callback<List<ScheduleInfo>>() {
-                                                                            @Override
-                                                                            public void onResponse(Call<List<ScheduleInfo>> call, Response<List<ScheduleInfo>> respSch) {
-                                                                                if (respSch.isSuccessful() && respSch.body() != null) {
-                                                                                    executor.execute(() -> {
-                                                                                        for (ScheduleInfo info : respSch.body()) {
-                                                                                            if (info.schedule != null) {
-                                                                                                db.facilityScheduleDao().insert(info.schedule);
-                                                                                            }
-                                                                                        }
-                                                                                    });
-                                                                                }
-                                                                            }
-                                                                            @Override public void onFailure(Call<List<ScheduleInfo>> call, Throwable t) {}
-                                                                        });
-                                                                    }
-                                                                }
-
-                                                                if (callback != null) callback.onSuccess("¡Todos los datos del servidor han sido descargados para uso offline!");
-                                                            }
-
-                                                            @Override
-                                                            public void onFailure(Call<List<Facility>> call, Throwable t) {
-                                                                if (callback != null) callback.onSuccess("Datos guardados parcialmente.");
-                                                            }
-                                                        });
-                                                    }
-
-                                                    @Override
-                                                    public void onFailure(Call<List<Subject>> call, Throwable t) {
-                                                        if (callback != null) callback.onError("Error al descargar materias.");
-                                                    }
-                                                });
                                             }
-
-                                            @Override
-                                            public void onFailure(Call<List<User>> call, Throwable t) {
-                                                if (callback != null) callback.onError("Error al descargar profesores.");
-                                            }
-                                        });
+                                        } catch (Exception ignored) {}
                                     }
+                                }
+                            } catch (Exception ignored) {}
 
-                                    @Override
-                                    public void onFailure(Call<List<User>> call, Throwable t) {
-                                        if (callback != null) callback.onError("Error al descargar administradores.");
+                            try {
+                                Response<List<User>> respPart = getApiService().getSubjectParticipants(s.id).execute();
+                                if (respPart.isSuccessful() && respPart.body() != null) {
+                                    for (User u : respPart.body()) {
+                                        if (u != null && u.role != null && !"STUDENT".equalsIgnoreCase(u.role.trim())) {
+                                            db.userDao().insert(u);
+                                        }
                                     }
-                                });
-                            }
+                                }
+                            } catch (Exception ignored) {}
 
-                            @Override
-                            public void onFailure(Call<List<User>> call, Throwable t) {
-                                if (callback != null) callback.onError("Error al descargar estudiantes.");
-                            }
-                        });
-                    }
+                            try {
+                                Response<List<StudentGradeInfo>> respGrades = getApiService().getSubjectEnrollments(s.id).execute();
+                                if (respGrades.isSuccessful() && respGrades.body() != null) {
+                                    for (StudentGradeInfo info : respGrades.body()) {
+                                        if (info.enrollment != null) db.enrollmentDao().insert(info.enrollment);
+                                        if (info.subject != null) db.subjectDao().insert(info.subject);
+                                    }
+                                }
+                            } catch (Exception ignored) {}
 
-                    @Override
-                    public void onFailure(Call<List<Student>> call, Throwable t) {
-                        if (callback != null) callback.onError("Error al descargar registros de alumnos.");
+                            try {
+                                Response<List<ConductRecord>> respConduct = getApiService().getSubjectConductRecords(s.id).execute();
+                                if (respConduct.isSuccessful() && respConduct.body() != null) {
+                                    db.conductRecordDao().insertAll(respConduct.body());
+                                }
+                            } catch (Exception ignored) {}
+
+                            try {
+                                Response<List<AttendanceRecord>> respAtt = getApiService().getSubjectAttendanceRecords(s.id).execute();
+                                if (respAtt.isSuccessful() && respAtt.body() != null) {
+                                    db.attendanceRecordDao().insertAll(respAtt.body());
+                                }
+                            } catch (Exception ignored) {}
+                        }
                     }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading subjects: " + e.getMessage());
+                }
+
+                // 7. Facilities & Schedules
+                try {
+                    Response<List<Facility>> respFacilities = getApiService().getFacilities().execute();
+                    if (respFacilities.isSuccessful() && respFacilities.body() != null) {
+                        List<Facility> facs = respFacilities.body();
+                        db.facilityDao().insertAll(facs);
+                        countFacilities += facs.size();
+
+                        for (Facility f : facs) {
+                            try {
+                                Response<List<ScheduleInfo>> respSch = getApiService().getFacilitySchedules(f.id).execute();
+                                if (respSch.isSuccessful() && respSch.body() != null) {
+                                    for (ScheduleInfo info : respSch.body()) {
+                                        if (info.schedule != null) {
+                                            db.facilityScheduleDao().insert(info.schedule);
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading facilities: " + e.getMessage());
+                }
+
+                // 8. Academic Periods
+                try {
+                    Response<List<AcademicPeriod>> respPeriods = getApiService().getAcademicPeriods().execute();
+                    if (respPeriods.isSuccessful() && respPeriods.body() != null) {
+                        List<AcademicPeriod> periods = respPeriods.body();
+                        db.academicCalendarDao().insertPeriods(periods);
+                        countPeriods += periods.size();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading academic periods: " + e.getMessage());
+                }
+
+                // 9. Non-School Days
+                try {
+                    Response<List<NonSchoolDay>> respNsd = getApiService().getNonSchoolDays().execute();
+                    if (respNsd.isSuccessful() && respNsd.body() != null) {
+                        db.academicCalendarDao().deleteAllNonSchoolDays();
+                        for (NonSchoolDay nsd : respNsd.body()) {
+                            db.academicCalendarDao().insertNonSchoolDay(nsd);
+                        }
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading non school days: " + e.getMessage());
+                }
+
+                // 10. Notifications
+                try {
+                    Response<List<Notification>> respNotif = getApiService().getNotifications().execute();
+                    if (respNotif.isSuccessful() && respNotif.body() != null) {
+                        db.notificationDao().insertAll(respNotif.body());
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading notifications: " + e.getMessage());
+                }
+
+                // 11. Direct Messages (Chats)
+                try {
+                    List<User> allUsers = db.userDao().getAllUsers();
+                    if (allUsers != null) {
+                        for (User u : allUsers) {
+                            try {
+                                Response<List<ChatRoomInfo>> respRooms = getApiService().getUserChatRooms(u.id).execute();
+                                if (respRooms.isSuccessful() && respRooms.body() != null) {
+                                    for (ChatRoomInfo room : respRooms.body()) {
+                                        if (room != null && room.contactId > 0) {
+                                            try {
+                                                Response<List<DirectMessage>> respMsgs = getApiService().getDirectMessagesHistory(u.id, room.contactId).execute();
+                                                if (respMsgs.isSuccessful() && respMsgs.body() != null) {
+                                                    db.directMessageDao().insertAll(respMsgs.body());
+                                                }
+                                            } catch (Exception ignored) {}
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("DownloadOffline", "Error downloading direct messages: " + e.getMessage());
+                }
+
+                int totalDownloaded = countUsers + countStudentRecords + countSubjects + countFacilities + countPeriods;
+
+                if (totalDownloaded == 0) {
+                    mainHandler.post(() -> {
+                        if (callback != null) callback.onError("No se pudo descargar ningún registro desde el servidor. Verifique la conexión con el servidor.");
+                    });
+                    return;
+                }
+
+                final String msg = "¡Sincronización completada exitosamente!\n\nRegistros descargados del servidor:\n" +
+                        "• Cuentas de usuario: " + countUsers + "\n" +
+                        "• Alumnos registrados: " + countStudentRecords + "\n" +
+                        "• Materias asignadas: " + countSubjects + "\n" +
+                        "• Instalaciones: " + countFacilities + "\n" +
+                        "• Períodos académicos: " + countPeriods;
+
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onSuccess(msg);
                 });
-            }
 
-            @Override
-            public void onFailure(Call<List<User>> call, Throwable t) {
-                if (callback != null) callback.onError("Error de conexión: No se pudo contactar con el servidor SQL.");
+            } catch (Exception e) {
+                mainHandler.post(() -> {
+                    if (callback != null) callback.onError("Error al descargar datos del servidor: " + e.getMessage());
+                });
             }
         });
     }
@@ -2295,13 +2327,40 @@ public class VirtualAulaRepository {
         }
         executor.execute(() -> {
             try {
+                androidx.sqlite.db.SupportSQLiteDatabase sqliteDb = db.getOpenHelper().getWritableDatabase();
+                sqliteDb.execSQL("PRAGMA foreign_keys = OFF;");
+                sqliteDb.execSQL("DELETE FROM attendance_records;");
+                sqliteDb.execSQL("DELETE FROM conduct_records;");
+                sqliteDb.execSQL("DELETE FROM enrollments;");
+                sqliteDb.execSQL("DELETE FROM blog_comments;");
+                sqliteDb.execSQL("DELETE FROM blog_entries;");
+                sqliteDb.execSQL("DELETE FROM facility_schedules;");
+                sqliteDb.execSQL("DELETE FROM grade_import_log;");
+                sqliteDb.execSQL("DELETE FROM user_subject_colors;");
+                sqliteDb.execSQL("DELETE FROM notifications;");
+                sqliteDb.execSQL("DELETE FROM direct_messages;");
+                sqliteDb.execSQL("DELETE FROM non_school_days;");
+                sqliteDb.execSQL("DELETE FROM academic_periods;");
+                sqliteDb.execSQL("DELETE FROM facilities;");
+                sqliteDb.execSQL("DELETE FROM subjects;");
+                sqliteDb.execSQL("DELETE FROM students;");
+                sqliteDb.execSQL("DELETE FROM users;");
+                sqliteDb.execSQL("DELETE FROM conduct_levels;");
+                sqliteDb.execSQL("DELETE FROM attendance_states;");
+                sqliteDb.execSQL("DELETE FROM sqlite_sequence;");
+                sqliteDb.execSQL("PRAGMA foreign_keys = ON;");
+
                 db.clearAllTables();
 
                 // Re-seed Master Admin
                 db.userDao().insert(new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN"));
 
+                // Re-seed reference tables
+                sqliteDb.execSQL("INSERT OR IGNORE INTO conduct_levels (value, label) VALUES (1, 'Malo'), (2, 'Regular'), (3, 'Bueno'), (4, 'Muy bueno'), (5, 'Excelente');");
+                sqliteDb.execSQL("INSERT OR IGNORE INTO attendance_states (value, label) VALUES (0, 'Sin evaluar'), (1, 'Asistió'), (2, 'No asistió'), (3, 'Justificado');");
+
                 mainHandler.post(() -> {
-                    if (callback != null) callback.onSuccess("Se han eliminado todos los datos del servidor almacenados en el dispositivo.");
+                    if (callback != null) callback.onSuccess("Se han eliminado todos los datos y registros del dispositivo (notas, asistencias, conductas, materias, usuarios, etc.).");
                 });
             } catch (Exception e) {
                 mainHandler.post(() -> {
@@ -2400,6 +2459,59 @@ public class VirtualAulaRepository {
                         newN.id = 0;
                         try {
                             Response<Notification> resp = getApiService().createNotification(newN).execute();
+                            if (resp.isSuccessful()) uploadedCount[0]++;
+                        } catch (Exception ignored) {}
+                    }
+                }
+
+                // 7. Upload Academic Periods
+                List<AcademicPeriod> periods = db.academicCalendarDao().getAllPeriods();
+                if (periods != null && !periods.isEmpty()) {
+                    try {
+                        Response<List<AcademicPeriod>> resp = getApiService().saveAcademicPeriods(periods).execute();
+                        if (resp.isSuccessful()) uploadedCount[0]++;
+                    } catch (Exception ignored) {}
+                }
+
+                // 8. Upload Non-School Days
+                List<NonSchoolDay> nonSchoolDays = db.academicCalendarDao().getAllNonSchoolDays();
+                if (nonSchoolDays != null) {
+                    for (NonSchoolDay nsd : nonSchoolDays) {
+                        try {
+                            Response<NonSchoolDay> resp = getApiService().createNonSchoolDay(new NonSchoolDay(nsd.day, nsd.reason)).execute();
+                            if (resp.isSuccessful()) uploadedCount[0]++;
+                        } catch (Exception ignored) {}
+                    }
+                }
+
+                // 9. Upload Enrollments & Grades
+                List<Enrollment> enrollments = db.enrollmentDao().getAllEnrollments();
+                if (enrollments != null) {
+                    for (Enrollment en : enrollments) {
+                        try {
+                            Response<Enrollment> resp = getApiService().enrollStudent(en).execute();
+                            if (resp.isSuccessful()) uploadedCount[0]++;
+                        } catch (Exception ignored) {}
+                    }
+                }
+
+                // 10. Upload Conduct Records
+                List<ConductRecord> conductRecords = db.conductRecordDao().getAllRecords();
+                if (conductRecords != null) {
+                    for (ConductRecord cr : conductRecords) {
+                        try {
+                            Response<ConductRecord> resp = getApiService().upsertConductRecord(cr).execute();
+                            if (resp.isSuccessful()) uploadedCount[0]++;
+                        } catch (Exception ignored) {}
+                    }
+                }
+
+                // 11. Upload Attendance Records
+                List<AttendanceRecord> attendanceRecords = db.attendanceRecordDao().getAllRecords();
+                if (attendanceRecords != null) {
+                    for (AttendanceRecord ar : attendanceRecords) {
+                        try {
+                            Response<AttendanceRecord> resp = getApiService().saveAttendanceRecord(ar).execute();
                             if (resp.isSuccessful()) uploadedCount[0]++;
                         } catch (Exception ignored) {}
                     }
@@ -2529,10 +2641,6 @@ public class VirtualAulaRepository {
         performCall(getApiService().getDirectMessagesHistory(userId, contactId), new Callback<List<DirectMessage>>() {
             @Override
             public void onResponse(Call<List<DirectMessage>> call, Response<List<DirectMessage>> response) {
-                if (response.isSuccessful() && response.body() != null && db != null) {
-                    List<DirectMessage> msgs = response.body();
-                    executor.execute(() -> db.directMessageDao().insertAll(msgs));
-                }
                 callback.onResponse(call, response);
             }
 
@@ -2561,10 +2669,6 @@ public class VirtualAulaRepository {
         performCall(getApiService().sendDirectMessage(message), new Callback<DirectMessage>() {
             @Override
             public void onResponse(Call<DirectMessage> call, Response<DirectMessage> response) {
-                if (response.isSuccessful() && response.body() != null && db != null) {
-                    DirectMessage created = response.body();
-                    executor.execute(() -> db.directMessageDao().insert(created));
-                }
                 callback.onResponse(call, response);
             }
 

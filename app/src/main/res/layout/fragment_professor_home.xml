@@ -17,7 +17,7 @@
         android:paddingRight="20dp"
         android:paddingBottom="80dp">
 
-        <!-- Top Header: Logo + Title & Top Right Actions -->
+        <!-- Top Header Bar: Logo + Title -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -62,73 +62,20 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
             </LinearLayout>
-
-            <FrameLayout
-                android:id="@+id/btnSearchHeaderProf"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_input_field"
-                android:layout_marginEnd="10dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_search"
-                    app:tint="?android:attr/textColorPrimary"
-                    android:contentDescription="Buscar" />
-            </FrameLayout>
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/btnGoToProfileProf"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/input_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground">
-
-                <ImageView
-                    android:id="@+id/ivProfileImageProf"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_person"
-                    android:scaleType="centerCrop"
-                    android:contentDescription="Perfil" />
-            </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <!-- Welcome Section: Professor Info Banner -->
+        <!-- Welcome Section with Profile Avatar and Horario Button on Right -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp">
 
-            <TextView
-                android:id="@+id/tvProfessorCarnetBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentTop="true"
-                android:text="DOC9842101"
-                android:textColor="#38BDF8"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:background="@drawable/bg_input_field"
-                tools:text="DOC9842101" />
-
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/tvProfessorCarnetBadge"
+                android:layout_toStartOf="@+id/layoutProfileHeaderNavProf"
                 android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
                 android:layout_marginEnd="12dp"
                 android:orientation="vertical">
 
@@ -154,33 +101,158 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginTop="4dp">
 
                     <TextView
                         android:id="@+id/tvRoleTagProf"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="DOCENTE TITULAR"
+                        android:text="• Docente Titular"
                         android:textColor="#38BDF8"
-                        android:textSize="11sp"
+                        android:textSize="13sp"
                         android:textStyle="bold"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="4dp"
-                        android:background="@drawable/bg_badge_primary"
-                        android:layout_marginEnd="8dp" />
+                        android:layout_marginEnd="12dp"
+                        tools:text="• Docente Titular" />
 
                     <TextView
-                        android:id="@+id/tvProfessorSubtitle"
+                        android:id="@+id/tvProfessorCarnetBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Gestión académica de materias asignadas..."
+                        android:text="Carnet: DOC9842101"
                         android:textColor="?android:attr/textColorSecondary"
                         android:textSize="13sp"
-                        android:singleLine="true"
-                        android:ellipsize="end" />
+                        tools:text="Carnet: DOC9842101" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvProfessorSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gestión académica de materias asignadas"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutProfileHeaderNavProf"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/btnGoToProfileProf"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    app:cardCornerRadius="26dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
+
+                    <ImageView
+                        android:id="@+id/ivProfileImageProf"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_person"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Perfil" />
+                </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Perfil"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnProfessorSchedule"
+                    style="@style/Widget.Bootstrap.Button.Primary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Horario"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    android:paddingHorizontal="12dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:icon="@drawable/ic_timetable"
+                    app:iconGravity="textStart"
+                    app:iconSize="16dp"
+                    app:iconTint="@color/white"
+                    app:cornerRadius="10dp"
+                    app:elevation="0dp" />
             </LinearLayout>
         </RelativeLayout>
+
+        <!-- Return to Admin Card (When Impersonating) -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardReturnToAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#132540"
+            app:strokeWidth="1.5dp"
+            app:strokeColor="#2563EB"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="14dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_logout"
+                    app:tint="#38BDF8"
+                    android:layout_marginEnd="12dp"
+                    android:contentDescription="Volver" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Volver a Gestión Administrativa"
+                    android:textColor="#38BDF8"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Materias asignadas Section Header & Subtitle -->
+        <TextView
+            android:id="@+id/tvSubjectsSectionTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Materias a cargo"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvSubjectsSectionSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Consulta y gestiona las actividades, publicaciones y asistencia de tus materias."
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
 
         <!-- Search & Filter Controls -->
         <LinearLayout
@@ -188,7 +260,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="16dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -237,31 +309,31 @@
                 android:foreground="?android:attr/selectableItemBackground" />
         </LinearLayout>
 
-        <!-- Section Header: MATERIAS ASIGNADAS (3) | Ciclo Lectivo 2025 -->
+        <!-- Category Header Row: MIS MATERIAS (0 REGISTROS) | Año Escolar 2025 -->
         <RelativeLayout
+            android:id="@+id/layoutSubjectsCategoryHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="14dp">
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:id="@+id/tvAssignedSubjectsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MATERIAS ASIGNADAS (0)"
-                android:textColor="?android:attr/textColorSecondary"
+                android:layout_alignParentStart="true"
+                android:text="MIS MATERIAS (0 REGISTROS)"
+                android:textColor="?attr/colorPrimary"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.05"
-                android:layout_alignParentStart="true"
-                tools:text="MATERIAS ASIGNADAS (3)" />
+                tools:text="MIS MATERIAS (3 REGISTROS)" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ciclo Lectivo 2025"
+                android:layout_alignParentEnd="true"
+                android:text="Año Escolar 2025"
                 android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp"
-                android:layout_alignParentEnd="true" />
+                android:textSize="13sp" />
         </RelativeLayout>
 
         <!-- Subject Cards Container -->
@@ -270,50 +342,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
-
-        <!-- Return to Admin Card (When Impersonating) -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardReturnToAdmin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/input_bg"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/input_border"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackground"
-            android:visibility="gone">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="16dp">
-
-                <ImageView
-                    android:id="@+id/iconReturn"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_logout"
-                    app:tint="@color/bs_info"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:contentDescription="Volver" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@id/iconReturn"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="14dp"
-                    android:text="Volver a Gestión Administrativa"
-                    android:textStyle="bold"
-                    android:textColor="@color/bs_info"
-                    android:textSize="15sp" />
-            </RelativeLayout>
-        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 </ScrollView>

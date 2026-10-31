@@ -82,6 +82,9 @@ public class AdminEncargadoDetailFragment extends Fragment {
             viewModel.getSelectedUser().observe(getViewLifecycleOwner(), user -> {
                 if (user != null) {
                     encargado = user;
+                    if (binding.tvDetailTitle != null) {
+                        binding.tvDetailTitle.setText("Gestión del encargado");
+                    }
                     binding.tvEncargadoName.setText(user.name);
                     binding.tvEncargadoCarnet.setText(user.carnet != null ? user.carnet : "-");
                     binding.tvEncargadoInitials.setText(getInitials(user.name));

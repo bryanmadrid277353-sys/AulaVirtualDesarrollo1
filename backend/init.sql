@@ -269,6 +269,14 @@ CREATE TABLE IF NOT EXISTS direct_messages (
     FOREIGN KEY (receiverId) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Tabla de Registros de Modificación de Entidades: Almacena la última modificación por entidad
+CREATE TABLE IF NOT EXISTS modification_logs (
+    entity_key VARCHAR(100) PRIMARY KEY,        -- Clave única de entidad (Ej: 'subject_1', 'user_5')
+    log_text VARCHAR(255) NOT NULL,             -- Texto legible del registro
+    updated_at VARCHAR(100) NOT NULL,           -- Fecha y hora del cambio (Ej: '25/02/2025 14:30')
+    updated_by VARCHAR(150) NOT NULL            -- Nombre del usuario autor del cambio
+);
+
 -- Triggers de Validación de Límites y Traslape de Horarios para evitar colisiones
 DELIMITER //
 

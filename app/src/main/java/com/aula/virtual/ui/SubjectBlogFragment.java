@@ -43,64 +43,6 @@ public class SubjectBlogFragment extends Fragment {
     private ItemTouchHelper touchHelper;
     private Subject currentSubject = null;
 
-    private final ActivityResultLauncher<String> saveExcelTemplateLauncher =
-            registerForActivityResult(new ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"), uri -> {
-                if (uri != null && currentSubject != null) {
-                    final android.content.Context ctx = getContext();
-                    if (ctx == null) return;
-
-                    android.app.ProgressDialog pd = new android.app.ProgressDialog(ctx);
-                    pd.setMessage("Generando plantilla Excel...");
-                    pd.show();
-
-                    com.aula.virtual.data.local.AppDatabase db = com.aula.virtual.data.local.AppDatabase.getInstance(ctx);
-                    java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
-                        try {
-                            List<com.aula.virtual.data.entity.Enrollment> enrollments = db.enrollmentDao().getBySubjectId(currentSubject.id);
-                            List<com.aula.virtual.data.StudentGradeInfo> gradeInfos = new ArrayList<>();
-                            if (enrollments != null) {
-                                for (com.aula.virtual.data.entity.Enrollment en : enrollments) {
-                                    com.aula.virtual.data.entity.Student student = db.studentDao().getStudentById(en.studentId);
-                                    if (student != null) {
-                                        com.aula.virtual.data.StudentGradeInfo info = new com.aula.virtual.data.StudentGradeInfo();
-                                        com.aula.virtual.data.entity.User studentUser = new com.aula.virtual.data.entity.User();
-                                        studentUser.id = student.id;
-                                        studentUser.carnet = student.carnet;
-                                        studentUser.name = student.name;
-                                        studentUser.profile_image = student.profile_image;
-                                        studentUser.role = "STUDENT";
-                                        info.student = studentUser;
-                                        info.enrollment = en;
-                                        info.subject = currentSubject;
-                                        gradeInfos.add(info);
-                                    }
-                                }
-                            }
-
-                            try (java.io.OutputStream os = ctx.getContentResolver().openOutputStream(uri)) {
-                                if (os != null) {
-                                    com.aula.virtual.excel.ExcelTemplateGenerator.generateTemplate(ctx, currentSubject, gradeInfos, os);
-                                }
-                            }
-
-                            if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> {
-                                    pd.dismiss();
-                                    Toast.makeText(ctx, "¡Plantilla .xlsx generada exitosamente!", Toast.LENGTH_LONG).show();
-                                });
-                            }
-                        } catch (Exception e) {
-                            if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> {
-                                    pd.dismiss();
-                                    Toast.makeText(ctx, "Error al generar plantilla: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-
     private final ActivityResultLauncher<String[]> openExcelFileLauncher =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null && currentSubject != null) {
@@ -279,7 +221,95 @@ public class SubjectBlogFragment extends Fragment {
 
         if (btnGenerate != null) {
             btnGenerate.setOnClickListener(v -> {
-                saveExcelTemplateLauncher.launch("Plantilla_Notas_" + (subject.code != null ? subject.code : "Materia") + ".xlsx");
+                final android.content.Context ctx = getContext();
+                if (ctx == null) return;
+                java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                    boolean isLocal = com.aula.virtual.ui.ThemeHelper.isLocalMode(ctx);
+                    List<com.aula.virtual.data.entity.AcademicPeriod> periods = new java.util.ArrayList<>();
+                    if (!isLocal) {
+                        try {
+                            retrofit2.Response<List<com.aula.virtual.data.entity.AcademicPeriod>> resp =
+                                    com.aula.virtual.data.RetrofitClient.getApiService(ctx).getAcademicPeriods().execute();
+                            if (resp.isSuccessful() && resp.body() != null && !resp.body().isEmpty()) {
+                                periods = resp.body();
+                                try {
+                                    db.academicCalendarDao().deleteAllPeriods();
+                                    db.academicCalendarDao().insertPeriods(periods);
+                                } catch (Exception ignored) {}
+                            }
+                        } catch (Exception ignored) {}
+                    }
+
+                    if (periods == null || periods.isEmpty()) {
+                        periods = db.academicCalendarDao().getAllPeriods();
+                    }
+
+                    boolean isValid = periods != null && !periods.isEmpty();
+                    if (isValid) {
+                        for (com.aula.virtual.data.entity.AcademicPeriod p : periods) {
+                            if (p.startDate == null || p.startDate.trim().isEmpty() ||
+                                p.endDate == null || p.endDate.trim().isEmpty()) {
+                                isValid = false;
+                                break;
+                            }
+                        }
+                    }
+                    final boolean calendarValid = isValid;
+                    final int periodCount = (periods != null) ? periods.size() : 0;
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (!calendarValid) {
+                                String msg;
+                                if (periodCount == 0) {
+                                    msg = "No se ha configurado el Calendario Académico.\n\nUn Administrador debe ingresar al menú 'Calendario Académico' para definir las fechas del ciclo escolar antes de generar la plantilla Excel.";
+                                } else {
+                                    msg = "Los períodos establecidos en el Calendario Académico (" + periodCount + (periodCount == 1 ? " período" : " períodos") + ") no tienen seleccionadas sus fechas de inicio y fin completas.\n\nUn Administrador debe ingresar al menú 'Calendario Académico' para definir las fechas de todos los períodos antes de generar la plantilla Excel.";
+                                }
+                                new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog)
+                                        .setTitle("⚠️ Calendario Académico Requerido")
+                                        .setMessage(msg)
+                                        .setPositiveButton("Entendido", null)
+                                        .show();
+                            } else {
+                                android.app.ProgressDialog pd = new android.app.ProgressDialog(ctx);
+                                pd.setMessage("Generando plantilla Excel automáticamente...");
+                                pd.show();
+
+                                java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
+                                    try {
+                                        com.aula.virtual.excel.ExcelTemplateGenerator.AutoSaveResult result =
+                                                com.aula.virtual.excel.ExcelTemplateGenerator.generateAndAutoSaveTemplate(ctx, subject);
+
+                                        if (getActivity() != null) {
+                                            getActivity().runOnUiThread(() -> {
+                                                pd.dismiss();
+                                                if (tvLinkedFile != null) {
+                                                    tvLinkedFile.setText(result.fileName);
+                                                }
+                                                new MaterialAlertDialogBuilder(ctx, R.style.Theme_MyApplication_Dialog)
+                                                        .setTitle("¡Plantilla Generada Exitosamente!")
+                                                        .setMessage("Se ha generado y vinculado automáticamente el archivo Excel en:\n\n" + result.displayPath)
+                                                        .setPositiveButton("Entendido", null)
+                                                        .show();
+                                            });
+                                        }
+                                    } catch (Exception e) {
+                                        if (getActivity() != null) {
+                                            getActivity().runOnUiThread(() -> {
+                                                pd.dismiss();
+                                                new MaterialAlertDialogBuilder(ctx, R.style.Theme_MyApplication_Dialog)
+                                                        .setTitle("⚠️ Error al generar plantilla")
+                                                        .setMessage(e.getMessage() != null ? e.getMessage() : "Ocurrió un error inesperado.")
+                                                        .setPositiveButton("Entendido", null)
+                                                        .show();
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             });
         }
 

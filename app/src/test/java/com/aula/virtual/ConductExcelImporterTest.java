@@ -176,7 +176,7 @@ public class ConductExcelImporterTest {
         assertNotNull(readWorkbook.getSheet("Rubrica"));
 
         Sheet conductSheet = readWorkbook.getSheet("Conducta");
-        assertEquals(5, conductSheet.getLastRowNum()); // 1 header + 5 period rows for 1 student
+        assertEquals(3, conductSheet.getLastRowNum()); // 1 header + 3 period rows for 1 student
 
         readWorkbook.close();
     }
@@ -219,8 +219,8 @@ public class ConductExcelImporterTest {
         Workbook readWorkbook = new XSSFWorkbook(new ByteArrayInputStream(bos.toByteArray()));
         Sheet conductSheet = readWorkbook.getSheet("Conducta");
 
-        // 1 header row + 5 rows for Student 1 + 5 rows for Student 2 = 10 rows data (last row index 10)
-        assertEquals(10, conductSheet.getLastRowNum());
+        // 1 header row + 3 rows for Student 1 + 3 rows for Student 2 = 6 rows data (last row index 6)
+        assertEquals(6, conductSheet.getLastRowNum());
         readWorkbook.close();
     }
 }

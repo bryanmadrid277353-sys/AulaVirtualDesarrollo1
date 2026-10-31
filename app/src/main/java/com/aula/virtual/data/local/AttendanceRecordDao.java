@@ -14,6 +14,9 @@ public interface AttendanceRecordDao {
     @Query("SELECT * FROM attendance_records WHERE studentId = :studentId AND subjectId = :subjectId ORDER BY classDate ASC")
     List<AttendanceRecord> getRecordsByStudentAndSubject(int studentId, int subjectId);
 
+    @Query("SELECT * FROM attendance_records")
+    List<AttendanceRecord> getAllRecords();
+
     @Query("SELECT * FROM attendance_records WHERE studentId = :studentId AND subjectId = :subjectId AND classDate = :classDate LIMIT 1")
     AttendanceRecord getRecord(int studentId, int subjectId, String classDate);
 
@@ -31,4 +34,10 @@ public interface AttendanceRecordDao {
 
     @Query("DELETE FROM attendance_records WHERE subjectId = :subjectId")
     void deleteBySubject(int subjectId);
+
+    @Query("DELETE FROM attendance_records WHERE studentId = :studentId")
+    void deleteByStudentId(int studentId);
+
+    @Query("DELETE FROM attendance_records")
+    void deleteAll();
 }

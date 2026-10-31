@@ -139,12 +139,12 @@ INSERT INTO subjects (id, code, name, description, professorId, section, color) 
 -- ==============================================================================
 
 INSERT INTO enrollments (id, studentId, subjectId, grade1, grade2, grade3, grade4, grade5, color) VALUES
-(1, 1, 1, 8.5, 9.0, 8.0, 9.5, 9.0, 'BLUE'),
-(2, 1, 2, 9.0, 8.5, 9.5, 8.0, 9.0, 'GREEN'),
-(3, 1, 3, 8.0, 8.5, 9.0, 8.5, 9.5, 'YELLOW_DARK'),
-(4, 2, 1, 9.5, 10.0, 9.0, 9.5, 10.0, 'BLUE'),
-(5, 3, 1, 7.5, 8.0, 8.5, 8.0, 8.5, 'BLUE'),
-(6, 4, 4, 9.0, 9.2, 9.5, 9.0, 9.8, 'PURPLE');
+(1, 1, 1, 8.5, 9.0, 8.0, NULL, NULL, 'BLUE'),
+(2, 1, 2, 9.0, 8.5, 9.5, NULL, NULL, 'GREEN'),
+(3, 1, 3, 8.0, 8.5, 9.0, NULL, NULL, 'YELLOW_DARK'),
+(4, 2, 1, 9.5, 10.0, 9.0, NULL, NULL, 'BLUE'),
+(5, 3, 1, 7.5, 8.0, 8.5, NULL, NULL, 'BLUE'),
+(6, 4, 4, 9.0, 9.2, 9.5, NULL, NULL, 'PURPLE');
 
 -- ==============================================================================
 -- 6. TABLA: facility_schedules (Programación de Horarios Semanales)
@@ -211,11 +211,9 @@ INSERT INTO conduct_records (id, studentId, subjectId, period, attention_partici
 -- 11. TABLAS: academic_periods, non_school_days Y attendance_records
 -- ==============================================================================
 INSERT INTO academic_periods (period, startDate, endDate) VALUES
-(1, '2025-01-20', '2025-03-28'),
-(2, '2025-03-31', '2025-06-06'),
-(3, '2025-06-09', '2025-08-15'),
-(4, '2025-08-18', '2025-10-17'),
-(5, '2025-10-20', '2025-12-12');
+(1, '2025-01-16', '2025-05-08'),
+(2, '2025-05-09', '2025-08-29'),
+(3, '2025-08-30', '2025-12-20');
 
 INSERT INTO non_school_days (id, day, reason) VALUES
 (1, '2025-05-01', 'Día del Trabajo'),

@@ -9,6 +9,9 @@ import java.util.List;
 
 @Dao
 public interface FacilityScheduleDao {
+    @Query("SELECT * FROM facility_schedules")
+    List<FacilitySchedule> getAllSchedules();
+
     @Query("SELECT * FROM facility_schedules WHERE facilityId = :facId")
     List<FacilitySchedule> getByFacilityId(int facId);
 

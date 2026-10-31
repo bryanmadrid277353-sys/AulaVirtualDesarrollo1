@@ -11,9 +11,7 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
-import com.aula.virtual.data.entity.GradeImportLog;
 import com.aula.virtual.data.entity.Subject;
-import com.aula.virtual.data.local.AppDatabase;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -105,10 +103,11 @@ public class GradeSyncManager {
 
                 String currentHash = GradeExcelImporter.calculateSHA256(bytes);
 
-                AppDatabase db = AppDatabase.getInstance(context);
-                GradeImportLog lastLog = db.gradeImportLogDao().getLastLogForSubject(subject.id);
+                SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                String lastHashKey = "last_hash_subject_" + subject.id;
+                String lastHash = prefs.getString(lastHashKey, null);
 
-                if (lastLog != null && currentHash.equals(lastLog.fileHash) && lastLog.rowsError == 0) {
+                if (currentHash.equals(lastHash)) {
                     if (callback != null) {
                         debounceHandler.post(() -> callback.onSyncSkipped("El archivo no presenta cambios con respecto a la última importación exitosa."));
                     }
@@ -119,6 +118,9 @@ public class GradeSyncManager {
                 String fileName = getFileNameFromUri(context, fileUri);
 
                 ImportResult result = GradeExcelImporter.importGradesFromStream(context, importStream, fileName, subject);
+                if (result.isSuccess) {
+                    prefs.edit().putString(lastHashKey, currentHash).apply();
+                }
                 if (callback != null) {
                     debounceHandler.post(() -> callback.onSyncCompleted(result));
                 }

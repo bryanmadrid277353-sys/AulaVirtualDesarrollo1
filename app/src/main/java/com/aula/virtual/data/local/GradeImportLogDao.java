@@ -18,6 +18,15 @@ public interface GradeImportLogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(GradeImportLog log);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<GradeImportLog> logs);
+
+    @Query("SELECT * FROM grade_import_log")
+    List<GradeImportLog> getAllLogs();
+
     @Query("DELETE FROM grade_import_log WHERE subjectId = :subjectId")
     void deleteLogsForSubject(int subjectId);
+
+    @Query("DELETE FROM grade_import_log")
+    void deleteAll();
 }

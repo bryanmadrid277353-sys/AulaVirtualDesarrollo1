@@ -44,7 +44,9 @@ public class AdminFacilityListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
+        binding.tvHeaderTitle.setText("Instalaciones");
         binding.tvTitle.setText("Listado de Instalaciones");
+        binding.tvSubtitle.setText("Gestiona las aulas, laboratorios e instalaciones de la institución.");
         adapter = new FacilityAdapter();
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);

@@ -1,10 +1,13 @@
 package com.aula.virtual.ui;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -16,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import com.aula.virtual.R;
+import com.aula.virtual.data.RetrofitClient;
 import com.aula.virtual.data.entity.AcademicPeriod;
 import com.aula.virtual.data.entity.NonSchoolDay;
 import com.aula.virtual.data.local.AppDatabase;
@@ -34,6 +38,7 @@ public class AcademicCalendarFragment extends Fragment {
     private MainViewModel viewModel;
 
     private final EditText[][] periodInputs = new EditText[5][2];
+    private final LinearLayout[] periodLayouts = new LinearLayout[5];
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
     @Nullable
@@ -66,6 +71,26 @@ public class AcademicCalendarFragment extends Fragment {
         periodInputs[4][0] = binding.etP5Start;
         periodInputs[4][1] = binding.etP5End;
 
+        periodLayouts[0] = binding.layoutPeriod1;
+        periodLayouts[1] = binding.layoutPeriod2;
+        periodLayouts[2] = binding.layoutPeriod3;
+        periodLayouts[3] = binding.layoutPeriod4;
+        periodLayouts[4] = binding.layoutPeriod5;
+
+        String[] options = new String[]{"1 Período", "2 Períodos", "3 Períodos", "4 Períodos", "5 Períodos"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, options);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spPeriodCount.setAdapter(adapter);
+        binding.spPeriodCount.setSelection(3); // Por defecto 4 Períodos (índice 3)
+
+        binding.spPeriodCount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updatePeriodLayoutsVisibility(position + 1);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
         for (int p = 0; p < 5; p++) {
             final EditText etStart = periodInputs[p][0];
             final EditText etEnd = periodInputs[p][1];
@@ -78,6 +103,19 @@ public class AcademicCalendarFragment extends Fragment {
 
         binding.btnSavePeriods.setOnClickListener(v -> savePeriods());
         binding.btnAddNonSchoolDay.setOnClickListener(v -> addNonSchoolDay());
+    }
+
+    private void updatePeriodLayoutsVisibility(int activeCount) {
+        if (binding == null) return;
+        for (int p = 0; p < 5; p++) {
+            if (p < activeCount) {
+                if (periodLayouts[p] != null) periodLayouts[p].setVisibility(View.VISIBLE);
+            } else {
+                if (periodLayouts[p] != null) periodLayouts[p].setVisibility(View.GONE);
+                periodInputs[p][0].setText("");
+                periodInputs[p][1].setText("");
+            }
+        }
     }
 
     private void showDatePicker(EditText target) {
@@ -101,36 +139,137 @@ public class AcademicCalendarFragment extends Fragment {
                 cal.get(Calendar.MONTH),
                 cal.get(Calendar.DAY_OF_MONTH)
         );
+
+        if (binding != null && target == binding.etNonSchoolDate) {
+            Long minTime = null;
+            Long maxTime = null;
+            int activeCount = binding.spPeriodCount.getSelectedItemPosition() + 1;
+            for (int p = 0; p < activeCount; p++) {
+                String startStr = periodInputs[p][0].getText().toString().trim();
+                String endStr = periodInputs[p][1].getText().toString().trim();
+                try {
+                    if (!startStr.isEmpty()) {
+                        Date d = sdf.parse(startStr);
+                        if (d != null && (minTime == null || d.getTime() < minTime)) minTime = d.getTime();
+                    }
+                    if (!endStr.isEmpty()) {
+                        Date d = sdf.parse(endStr);
+                        if (d != null && (maxTime == null || d.getTime() > maxTime)) maxTime = d.getTime();
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (minTime != null) dialog.getDatePicker().setMinDate(minTime);
+            if (maxTime != null) dialog.getDatePicker().setMaxDate(maxTime);
+        }
+
         dialog.show();
     }
 
     private void loadData() {
-        if (getContext() == null) return;
-        DialogUtils.showLoadingOverlay(binding.getRoot(), requireContext());
+        Context ctx = getContext();
+        if (ctx == null) return;
+        boolean isLocal = ThemeHelper.isLocalMode(ctx);
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
-            List<AcademicPeriod> periods = db.academicCalendarDao().getAllPeriods();
-            List<NonSchoolDay> nonSchoolDays = db.academicCalendarDao().getAllNonSchoolDays();
+            AppDatabase db = AppDatabase.getInstance(ctx);
+            List<AcademicPeriod> localPeriods = db.academicCalendarDao().getAllPeriods();
+            List<NonSchoolDay> localNsd = db.academicCalendarDao().getAllNonSchoolDays();
 
+            // Cargar inmediatamente los datos locales en caché (0ms de espera)
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    DialogUtils.hideLoadingOverlay(binding.getRoot());
-
-                    if (periods != null) {
-                        for (AcademicPeriod ap : periods) {
-                            if (ap.period >= 1 && ap.period <= 5) {
-                                int idx = ap.period - 1;
-                                periodInputs[idx][0].setText(ap.startDate != null ? ap.startDate : "");
-                                periodInputs[idx][1].setText(ap.endDate != null ? ap.endDate : "");
-                            }
-                        }
+                    if (binding == null) return;
+                    if (localPeriods != null && !localPeriods.isEmpty()) {
+                        displayPeriods(localPeriods);
                     }
-
-                    renderNonSchoolDaysList(nonSchoolDays);
+                    if (localNsd != null && !localNsd.isEmpty()) {
+                        renderNonSchoolDaysList(localNsd);
+                    }
                 });
             }
+
+            // Si está en Modo Servidor, solicitar datos actualizados en PARALELO
+            if (!isLocal) {
+                boolean isCacheEmpty = (localPeriods == null || localPeriods.isEmpty()) && (localNsd == null || localNsd.isEmpty());
+                if (isCacheEmpty && getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (binding != null) DialogUtils.showLoadingOverlay(binding.getRoot(), ctx);
+                    });
+                }
+
+                java.util.concurrent.ExecutorService parallelExecutor = Executors.newFixedThreadPool(2);
+
+                java.util.concurrent.Future<List<AcademicPeriod>> periodsFuture = parallelExecutor.submit(() -> {
+                    try {
+                        retrofit2.Response<List<AcademicPeriod>> resp =
+                                RetrofitClient.getApiService(ctx).getAcademicPeriods().execute();
+                        if (resp.isSuccessful() && resp.body() != null && !resp.body().isEmpty()) {
+                            return resp.body();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                });
+
+                java.util.concurrent.Future<List<NonSchoolDay>> nsdFuture = parallelExecutor.submit(() -> {
+                    try {
+                        retrofit2.Response<List<NonSchoolDay>> resp =
+                                RetrofitClient.getApiService(ctx).getNonSchoolDays().execute();
+                        if (resp.isSuccessful() && resp.body() != null && !resp.body().isEmpty()) {
+                            return resp.body();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                });
+
+                try {
+                    List<AcademicPeriod> freshPeriods = periodsFuture.get();
+                    List<NonSchoolDay> freshNsd = nsdFuture.get();
+
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (binding == null) return;
+                            DialogUtils.hideLoadingOverlay(binding.getRoot());
+                            if (freshPeriods != null && !freshPeriods.isEmpty()) {
+                                displayPeriods(freshPeriods);
+                            }
+                            if (freshNsd != null) {
+                                renderNonSchoolDaysList(freshNsd);
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (binding != null) DialogUtils.hideLoadingOverlay(binding.getRoot());
+                        });
+                    }
+                } finally {
+                    parallelExecutor.shutdown();
+                }
+            }
         });
+    }
+
+    private void displayPeriods(List<AcademicPeriod> periods) {
+        if (binding == null || periods == null) return;
+        int activeCount = periods.size();
+        if (activeCount < 1) activeCount = 4;
+        if (activeCount > 5) activeCount = 5;
+
+        binding.spPeriodCount.setSelection(activeCount - 1);
+        updatePeriodLayoutsVisibility(activeCount);
+
+        for (AcademicPeriod ap : periods) {
+            if (ap.period >= 1 && ap.period <= activeCount) {
+                int idx = ap.period - 1;
+                periodInputs[idx][0].setText(ap.startDate != null ? ap.startDate : "");
+                periodInputs[idx][1].setText(ap.endDate != null ? ap.endDate : "");
+            }
+        }
     }
 
     private void renderNonSchoolDaysList(List<NonSchoolDay> days) {
@@ -172,12 +311,14 @@ public class AcademicCalendarFragment extends Fragment {
     }
 
     private void savePeriods() {
+        if (binding == null) return;
+        int activeCount = binding.spPeriodCount.getSelectedItemPosition() + 1;
         List<AcademicPeriod> list = new ArrayList<>();
 
         try {
             Date lastEndDate = null;
 
-            for (int p = 0; p < 5; p++) {
+            for (int p = 0; p < activeCount; p++) {
                 int periodNum = p + 1;
                 String startStr = periodInputs[p][0].getText().toString().trim();
                 String endStr = periodInputs[p][1].getText().toString().trim();
@@ -209,13 +350,48 @@ public class AcademicCalendarFragment extends Fragment {
                 list.add(new AcademicPeriod(periodNum, startStr, endStr));
             }
 
+            Context ctx = getContext();
+            if (ctx == null) return;
+            DialogUtils.showLoadingOverlay(binding.getRoot(), ctx);
+            boolean isLocal = ThemeHelper.isLocalMode(ctx);
+
             Executors.newSingleThreadExecutor().execute(() -> {
-                AppDatabase db = AppDatabase.getInstance(requireContext());
-                db.academicCalendarDao().insertPeriods(list);
+                boolean success = false;
+                String errorMsg = null;
+
+                if (!isLocal) {
+                    try {
+                        retrofit2.Response<List<AcademicPeriod>> resp =
+                                RetrofitClient.getApiService(ctx).saveAcademicPeriods(list).execute();
+                        if (resp.isSuccessful() && resp.body() != null) {
+                            success = true;
+                            try {
+                                AppDatabase.getInstance(ctx).academicCalendarDao().deleteAllPeriods();
+                                AppDatabase.getInstance(ctx).academicCalendarDao().insertPeriods(list);
+                            } catch (Exception ignored) {}
+                        } else {
+                            errorMsg = "Error en el servidor al guardar períodos (" + resp.code() + ")";
+                        }
+                    } catch (Exception e) {
+                        errorMsg = "Error de conexión al servidor: " + e.getMessage();
+                    }
+                } else {
+                    AppDatabase.getInstance(ctx).academicCalendarDao().deleteAllPeriods();
+                    AppDatabase.getInstance(ctx).academicCalendarDao().insertPeriods(list);
+                    success = true;
+                }
+
+                final boolean finalSuccess = success;
+                final String finalMsg = errorMsg;
 
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Calendario académico (Períodos 1-5) guardado exitosamente.", Toast.LENGTH_SHORT).show();
+                        DialogUtils.hideLoadingOverlay(binding.getRoot());
+                        if (finalSuccess) {
+                            Toast.makeText(getContext(), isLocal ? "Calendario académico guardado localmente." : "Calendario académico guardado en el servidor.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), finalMsg != null ? finalMsg : "Error al guardar períodos.", Toast.LENGTH_LONG).show();
+                        }
                     });
                 }
             });
@@ -234,15 +410,92 @@ public class AcademicCalendarFragment extends Fragment {
             return;
         }
 
+        try {
+            Date targetDate = sdf.parse(dateStr);
+            if (targetDate == null) {
+                Toast.makeText(getContext(), "Formato de fecha inválido.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            boolean isWithinCalendar = false;
+            boolean hasAnyPeriod = false;
+
+            int activeCount = binding.spPeriodCount.getSelectedItemPosition() + 1;
+
+            for (int p = 0; p < activeCount; p++) {
+                String startStr = periodInputs[p][0].getText().toString().trim();
+                String endStr = periodInputs[p][1].getText().toString().trim();
+                if (!startStr.isEmpty() && !endStr.isEmpty()) {
+                    hasAnyPeriod = true;
+                    try {
+                        Date startDate = sdf.parse(startStr);
+                        Date endDate = sdf.parse(endStr);
+                        if (startDate != null && endDate != null) {
+                            if (!targetDate.before(startDate) && !targetDate.after(endDate)) {
+                                isWithinCalendar = true;
+                                break;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            if (!hasAnyPeriod) {
+                Toast.makeText(getContext(), "No hay Períodos Lectivos configurados. Establezca y guarde las fechas del Calendario Académico primero.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if (!isWithinCalendar) {
+                Toast.makeText(getContext(), "La fecha (" + dateStr + ") no pertenece a ningún Período Lectivo establecido en el Calendario Académico.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error al validar la fecha del asueto: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Context ctx = getContext();
+        if (ctx == null) return;
+        DialogUtils.showLoadingOverlay(binding.getRoot(), ctx);
+        boolean isLocal = ThemeHelper.isLocalMode(ctx);
+
+        NonSchoolDay nsdNew = new NonSchoolDay(dateStr, reasonStr);
+
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
-            db.academicCalendarDao().insertNonSchoolDay(new NonSchoolDay(dateStr, reasonStr));
+            boolean success = false;
+            String errorMsg = null;
+
+            if (!isLocal) {
+                try {
+                    retrofit2.Response<NonSchoolDay> resp =
+                            RetrofitClient.getApiService(ctx).createNonSchoolDay(nsdNew).execute();
+                    if (resp.isSuccessful() && resp.body() != null) {
+                        success = true;
+                    } else {
+                        errorMsg = "Error en el servidor (" + resp.code() + ")";
+                    }
+                } catch (Exception e) {
+                    errorMsg = "Error de red: " + e.getMessage();
+                }
+            } else {
+                AppDatabase.getInstance(ctx).academicCalendarDao().insertNonSchoolDay(nsdNew);
+                success = true;
+            }
+
+            final boolean finalSuccess = success;
+            final String finalMsg = errorMsg;
 
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    binding.etNonSchoolDate.setText("");
-                    binding.etNonSchoolReason.setText("");
-                    Toast.makeText(getContext(), "Día no lectivo agregado.", Toast.LENGTH_SHORT).show();
+                    DialogUtils.hideLoadingOverlay(binding.getRoot());
+                    if (finalSuccess) {
+                        binding.etNonSchoolDate.setText("");
+                        binding.etNonSchoolReason.setText("");
+                        Toast.makeText(getContext(), isLocal ? "Día no lectivo agregado localmente." : "Día no lectivo agregado en el servidor.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), finalMsg != null ? finalMsg : "Error al guardar en el servidor.", Toast.LENGTH_LONG).show();
+                    }
                     loadData();
                 });
             }
@@ -250,13 +503,38 @@ public class AcademicCalendarFragment extends Fragment {
     }
 
     private void deleteNonSchoolDay(int id) {
+        Context ctx = getContext();
+        if (ctx == null) return;
+        DialogUtils.showLoadingOverlay(binding.getRoot(), ctx);
+        boolean isLocal = ThemeHelper.isLocalMode(ctx);
+
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
-            db.academicCalendarDao().deleteNonSchoolDay(id);
+            boolean success = false;
+
+            if (!isLocal) {
+                try {
+                    retrofit2.Response<Void> resp = RetrofitClient.getApiService(ctx).deleteNonSchoolDay(id).execute();
+                    if (resp.isSuccessful()) {
+                        success = true;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                AppDatabase.getInstance(ctx).academicCalendarDao().deleteNonSchoolDay(id);
+                success = true;
+            }
+
+            final boolean finalSuccess = success;
 
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "Día no lectivo eliminado.", Toast.LENGTH_SHORT).show();
+                    DialogUtils.hideLoadingOverlay(binding.getRoot());
+                    if (finalSuccess) {
+                        Toast.makeText(getContext(), isLocal ? "Día no lectivo eliminado localmente." : "Día no lectivo eliminado en el servidor.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Error al eliminar en el servidor.", Toast.LENGTH_SHORT).show();
+                    }
                     loadData();
                 });
             }

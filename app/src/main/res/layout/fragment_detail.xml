@@ -35,14 +35,30 @@
                 android:layout_marginEnd="12dp"
                 android:contentDescription="Atrás" />
 
-            <TextView
-                android:id="@+id/tvDetailTitle"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Detalle"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvDetailTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Detalle"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvDetailSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gestión de registro del sistema"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- 1. Top Avatar / User Header Card (Outside Cards) -->
@@ -57,6 +73,7 @@
             tools:visibility="visible">
 
             <FrameLayout
+                android:id="@+id/layoutDetailAvatarFrame"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:background="@drawable/bg_circle_primary"
@@ -710,6 +727,19 @@
                     app:elevation="0dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <!-- Footer modification timestamp -->
+        <TextView
+            android:id="@+id/tvLastModifiedFooter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Última modificación: Sin registros recientes"
+            tools:text="Última modificación: 25/02/2025 14:30 por Admin Maestro"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp" />
 
     </LinearLayout>
 </ScrollView>

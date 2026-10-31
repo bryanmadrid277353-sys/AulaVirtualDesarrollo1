@@ -37,17 +37,15 @@ public class ImageUtils {
 
         cropImageView.setImageBitmap(rawBitmap);
 
-        AlertDialog dialog = new MaterialAlertDialogBuilder(context)
-                .setView(dialogView)
-                .create();
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context, R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
-        if (btnRotate instanceof MaterialButton) {
-            MaterialButton mb = (MaterialButton) btnRotate;
-            int accentColor = ThemeHelper.getSubjectColor(context, ThemeHelper.getAccentColorName(context));
-            mb.setStrokeColor(ColorStateList.valueOf(accentColor));
-            mb.setStrokeWidth((int) (2 * context.getResources().getDisplayMetrics().density));
-            mb.setOnClickListener(v -> cropImageView.rotate90Degrees());
-        } else if (btnRotate != null) {
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        if (btnRotate != null) {
             btnRotate.setOnClickListener(v -> cropImageView.rotate90Degrees());
         }
 

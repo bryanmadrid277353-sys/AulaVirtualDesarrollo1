@@ -18,6 +18,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Context;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -25,9 +28,16 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
+import com.aula.virtual.MainActivity;
 import com.aula.virtual.R;
 import com.aula.virtual.data.RetrofitClient;
 import com.aula.virtual.data.VirtualAulaRepository;
+import com.aula.virtual.data.local.LocalDatabaseBackupManager;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import com.aula.virtual.data.entity.Notification;
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentSettingsAdvancedBinding;
@@ -36,6 +46,65 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 public class SettingsAdvancedFragment extends Fragment {
     private FragmentSettingsAdvancedBinding binding;
     private MainViewModel viewModel;
+
+    private final ActivityResultLauncher<String[]> importJsonLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri != null) {
+                    Context ctx = getContext();
+                    if (ctx == null) return;
+
+                    new MaterialAlertDialogBuilder(ctx, R.style.Theme_MyApplication_Dialog)
+                            .setTitle("⚠️ Confirmar Restauración Local")
+                            .setMessage("¿Estás seguro de que deseas restaurar los datos locales desde este archivo de copia de seguridad (.json)?\n\nATENCIÓN: Se reemplazarán los registros locales actuales de la base de datos.")
+                            .setNegativeButton("Cancelar", null)
+                            .setPositiveButton("Restaurar Ahora", (dialog, which) -> {
+                                ProgressDialog pd = new ProgressDialog(ctx);
+                                pd.setMessage("Restaurando datos locales...");
+                                pd.show();
+
+                                try {
+                                    InputStream is = ctx.getContentResolver().openInputStream(uri);
+                                    LocalDatabaseBackupManager.importBackupFromJsonStream(ctx, is, new LocalDatabaseBackupManager.BackupCallback() {
+                                        @Override
+                                        public void onSuccess(String message, String filePath) {
+                                            if (getActivity() != null) {
+                                                getActivity().runOnUiThread(() -> {
+                                                    pd.dismiss();
+                                                    new MaterialAlertDialogBuilder(ctx, R.style.Theme_MyApplication_Dialog)
+                                                            .setTitle("¡Restauración Completada!")
+                                                            .setMessage(message)
+                                                            .setPositiveButton("Entendido", (d, w) -> {
+                                                                if (getActivity() instanceof MainActivity) {
+                                                                    ((MainActivity) getActivity()).navigateToHome();
+                                                                }
+                                                            })
+                                                            .show();
+                                                });
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onError(String error) {
+                                            if (getActivity() != null) {
+                                                getActivity().runOnUiThread(() -> {
+                                                    pd.dismiss();
+                                                    new MaterialAlertDialogBuilder(ctx, R.style.Theme_MyApplication_Dialog)
+                                                            .setTitle("⚠️ Error al Restaurar")
+                                                            .setMessage(error)
+                                                            .setPositiveButton("Entendido", null)
+                                                            .show();
+                                                });
+                                            }
+                                        }
+                                    });
+                                } catch (Exception e) {
+                                    pd.dismiss();
+                                    Toast.makeText(ctx, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .show();
+                }
+            });
 
     @Nullable
     @Override
@@ -54,11 +123,59 @@ public class SettingsAdvancedFragment extends Fragment {
 
         setupDataModeSelector();
         setupBiometricAutofillSwitch();
+        binding.btnAcademicCalendar.setOnClickListener(v -> 
+            Navigation.findNavController(v).navigate(R.id.action_settingsAdvancedFragment_to_academicCalendarFragment));
         binding.btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
         binding.btnDownloadOfflineData.setOnClickListener(v -> downloadOfflineData());
         binding.btnUploadOfflineData.setOnClickListener(v -> confirmUploadOfflineData());
         binding.btnClearOfflineData.setOnClickListener(v -> confirmClearOfflineData());
         binding.btnConfigureServerUrl.setOnClickListener(v -> showServerUrlDialog());
+
+        if (binding.btnExportJsonLocal != null) {
+            binding.btnExportJsonLocal.setOnClickListener(v -> {
+                Context ctx = getContext();
+                if (ctx == null) return;
+                ProgressDialog pd = new ProgressDialog(ctx);
+                pd.setMessage("Exportando copia de seguridad local en JSON...");
+                pd.show();
+
+                LocalDatabaseBackupManager.generateAndAutoSaveBackupJson(ctx, new LocalDatabaseBackupManager.BackupCallback() {
+                    @Override
+                    public void onSuccess(String message, String filePath) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                pd.dismiss();
+                                new MaterialAlertDialogBuilder(ctx, R.style.Theme_MyApplication_Dialog)
+                                        .setTitle("¡Exportación Exitosa!")
+                                        .setMessage(message + "\n\nUbicación:\n" + filePath)
+                                        .setPositiveButton("Entendido", null)
+                                        .show();
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                pd.dismiss();
+                                new MaterialAlertDialogBuilder(ctx, R.style.Theme_MyApplication_Dialog)
+                                        .setTitle("⚠️ Error en Exportación")
+                                        .setMessage(error)
+                                        .setPositiveButton("Entendido", null)
+                                        .show();
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        if (binding.btnImportJsonLocal != null) {
+            binding.btnImportJsonLocal.setOnClickListener(v -> {
+                importJsonLauncher.launch(new String[]{"application/json", "text/plain", "*/*"});
+            });
+        }
 
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             updateVisibilityForMode();
@@ -77,6 +194,11 @@ public class SettingsAdvancedFragment extends Fragment {
         String currentMode = ThemeHelper.getDataMode(requireContext());
         boolean isLocal = ThemeHelper.MODE_LOCAL.equals(currentMode);
 
+        // 0. Organización: Visible SIEMPRE
+        if (binding.layoutOrganizationCategory != null) {
+            binding.layoutOrganizationCategory.setVisibility(View.VISIBLE);
+        }
+
         // 1. Servidor y Conexión: Visible SOLO en Modo Servidor
         int serverConfigVisibility = isLocal ? View.GONE : View.VISIBLE;
         if (binding.layoutServerConfigCategory != null) {
@@ -93,6 +215,11 @@ public class SettingsAdvancedFragment extends Fragment {
         // 3. Datos Descargados: Visible SOLO en Modo Local
         if (binding.layoutClearCategory != null) {
             binding.layoutClearCategory.setVisibility(isLocal ? View.VISIBLE : View.GONE);
+        }
+
+        // 4. Copia de Seguridad Local (JSON): Visible SOLO en Modo Local
+        if (binding.layoutLocalBackupCategory != null) {
+            binding.layoutLocalBackupCategory.setVisibility(isLocal ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -444,7 +571,6 @@ public class SettingsAdvancedFragment extends Fragment {
             Toast.makeText(getContext(), "Acción no permitida: Los Profesores y Estudiantes no pueden descargar datos del servidor en Modo Local.", Toast.LENGTH_LONG).show();
             return;
         }
-        if (!viewModel.performOnlineAction(() -> {})) return;
 
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_confirm_sync, null);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
@@ -488,7 +614,11 @@ public class SettingsAdvancedFragment extends Fragment {
                         if (getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
                                 progressDialog.dismiss();
-                                Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+                                new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog)
+                                        .setTitle("¡Descarga Exitosa!")
+                                        .setMessage(message)
+                                        .setPositiveButton("Entendido", null)
+                                        .show();
                                 viewModel.refreshData();
                             });
                         }
@@ -499,7 +629,11 @@ public class SettingsAdvancedFragment extends Fragment {
                         if (getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
                                 progressDialog.dismiss();
-                                Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+                                new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog)
+                                        .setTitle("⚠️ Error en Descarga")
+                                        .setMessage(error)
+                                        .setPositiveButton("Entendido", null)
+                                        .show();
                             });
                         }
                     }

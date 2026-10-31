@@ -7,12 +7,12 @@ import com.aula.virtual.data.entity.AttendanceState;
 import com.aula.virtual.data.entity.ConductLevel;
 import com.aula.virtual.data.entity.ConductRecord;
 import com.aula.virtual.data.entity.Enrollment;
-import com.aula.virtual.data.entity.FacilitySchedule;
 import com.aula.virtual.data.entity.GradeImportLog;
-import com.aula.virtual.data.entity.NonSchoolDay;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
+import com.aula.virtual.data.entity.User;
 import com.aula.virtual.data.local.AppDatabase;
+import com.aula.virtual.ui.ThemeHelper;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -30,12 +30,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class GradeExcelImporter {
 
@@ -43,7 +40,8 @@ public class GradeExcelImporter {
         byte[] fileBytes = readAllBytes(inputStream);
         String fileHash = calculateSHA256(fileBytes);
 
-        AppDatabase db = AppDatabase.getInstance(context);
+        boolean isLocal = context != null && ThemeHelper.isLocalMode(context);
+        AppDatabase db = context != null ? AppDatabase.getInstance(context) : null;
 
         Workbook workbook;
         try (InputStream is = new ByteArrayInputStream(fileBytes)) {
@@ -92,10 +90,119 @@ public class GradeExcelImporter {
         String currentTimestamp = sdfTimestamp.format(new Date());
         String todayYmd = sdfYmd.format(new Date());
 
+        // Pre-fetch server data in Server Mode
+        Map<String, Integer> serverStudentIdMap = new HashMap<>();
+        Map<Integer, Enrollment> serverEnrollmentMap = new HashMap<>();
+        Map<String, ConductRecord> serverConductMap = new HashMap<>();
+        Map<String, AttendanceRecord> serverAttendanceMap = new HashMap<>();
+
+        if (!isLocal && context != null) {
+            try {
+                com.aula.virtual.data.ApiService api = com.aula.virtual.data.RetrofitClient.getApiService(context);
+                try {
+                    retrofit2.Response<List<com.aula.virtual.data.StudentGradeInfo>> enResp = api.getSubjectEnrollments(subjectId).execute();
+                    if (enResp.isSuccessful() && enResp.body() != null) {
+                        for (com.aula.virtual.data.StudentGradeInfo info : enResp.body()) {
+                            if (info.student != null && info.student.carnet != null) {
+                                String c = info.student.carnet.trim().toUpperCase(Locale.ROOT);
+                                serverStudentIdMap.put(c, info.student.id);
+                                if (c.startsWith("EST")) {
+                                    serverStudentIdMap.put(c.substring(3), info.student.id);
+                                } else {
+                                    serverStudentIdMap.put("EST" + c, info.student.id);
+                                }
+                            }
+                            if (info.student != null && info.enrollment != null) {
+                                serverEnrollmentMap.put(info.student.id, info.enrollment);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                try {
+                    retrofit2.Response<List<Student>> stResp = api.getAllStudentRecords().execute();
+                    if (stResp.isSuccessful() && stResp.body() != null) {
+                        for (Student st : stResp.body()) {
+                            if (st.carnet != null) {
+                                String c = st.carnet.trim().toUpperCase(Locale.ROOT);
+                                serverStudentIdMap.put(c, st.id);
+                                if (c.startsWith("EST")) {
+                                    serverStudentIdMap.put(c.substring(3), st.id);
+                                } else {
+                                    serverStudentIdMap.put("EST" + c, st.id);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                try {
+                    retrofit2.Response<List<User>> usrResp = api.getStudents().execute();
+                    if (usrResp.isSuccessful() && usrResp.body() != null) {
+                        for (User u : usrResp.body()) {
+                            if (u.carnet != null) {
+                                String c = u.carnet.trim().toUpperCase(Locale.ROOT);
+                                serverStudentIdMap.put(c, u.id);
+                                if (c.startsWith("EST")) {
+                                    serverStudentIdMap.put(c.substring(3), u.id);
+                                } else {
+                                    serverStudentIdMap.put("EST" + c, u.id);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                try {
+                    retrofit2.Response<List<ConductRecord>> condResp = api.getSubjectConductRecords(subjectId).execute();
+                    if (condResp.isSuccessful() && condResp.body() != null) {
+                        for (ConductRecord cr : condResp.body()) {
+                            serverConductMap.put(cr.studentId + "_" + cr.period, cr);
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                try {
+                    retrofit2.Response<List<AttendanceRecord>> attResp = api.getSubjectAttendanceRecords(subjectId).execute();
+                    if (attResp.isSuccessful() && attResp.body() != null) {
+                        for (AttendanceRecord ar : attResp.body()) {
+                            serverAttendanceMap.put(ar.studentId + "_" + ar.classDate, ar);
+                        }
+                    }
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+
         // 2. Read Sheet "Notas"
         Sheet mainSheet = workbook.getSheet("Notas");
         if (mainSheet == null) {
             mainSheet = workbook.getSheetAt(0);
+        }
+
+        int activePeriodsCount = 5;
+        if (isLocal && db != null) {
+            try {
+                List<AcademicPeriod> activeList = db.academicCalendarDao().getAllPeriods();
+                if (activeList != null && !activeList.isEmpty()) {
+                    activePeriodsCount = Math.min(activeList.size(), 5);
+                }
+            } catch (Exception ignored) {}
+        }
+
+        Row mainHeaderRow = mainSheet.getRow(0);
+        if (mainHeaderRow != null) {
+            int countInHeader = 0;
+            for (int c = 2; c < mainHeaderRow.getLastCellNum(); c++) {
+                String hVal = getCellValueAsString(mainHeaderRow, c);
+                if (hVal != null && hVal.toLowerCase().contains("nota")) {
+                    countInHeader++;
+                } else if (hVal != null && hVal.toLowerCase().contains("promedio")) {
+                    break;
+                }
+            }
+            if (countInHeader > 0) {
+                activePeriodsCount = Math.min(countInHeader, 5);
+            }
         }
 
         List<Enrollment> enrollmentsToUpdate = new ArrayList<>();
@@ -114,24 +221,52 @@ public class GradeExcelImporter {
             }
             carnet = carnet.trim();
 
-            Student student = db.studentDao().getStudentByCarnet(carnet);
-            if (student == null) {
+            Integer targetStudentId = null;
+            if (isLocal && db != null) {
+                Student student = findStudentByCarnet(db, carnet);
+                if (student != null) {
+                    targetStudentId = student.id;
+                }
+            } else {
+                targetStudentId = findServerStudentId(serverStudentIdMap, carnet);
+            }
+
+            if (targetStudentId == null) {
                 rowsError++;
                 errorDetailBuilder.append("Notas - Fila ").append(r + 1).append(": Carnet '").append(carnet).append("' no existe en el sistema.\n");
                 continue;
             }
 
-            Enrollment enrollment = db.enrollmentDao().getByStudentAndSubject(student.id, subjectId);
+            Enrollment enrollment;
+            if (isLocal && db != null) {
+                enrollment = db.enrollmentDao().getByStudentAndSubject(targetStudentId, subjectId);
+                if (enrollment == null) {
+                    enrollment = new Enrollment();
+                    enrollment.studentId = targetStudentId;
+                    enrollment.subjectId = subjectId;
+                    db.enrollmentDao().insert(enrollment);
+                    enrollment = db.enrollmentDao().getByStudentAndSubject(targetStudentId, subjectId);
+                }
+            } else {
+                enrollment = serverEnrollmentMap.get(targetStudentId);
+                if (enrollment == null) {
+                    enrollment = new Enrollment();
+                    enrollment.studentId = targetStudentId;
+                    enrollment.subjectId = subjectId;
+                    enrollment.id = 0;
+                }
+            }
+
             if (enrollment == null) {
                 rowsError++;
-                errorDetailBuilder.append("Notas - Fila ").append(r + 1).append(": Estudiante '").append(student.name).append("' (").append(carnet).append(") no está inscrito en esta materia.\n");
+                errorDetailBuilder.append("Notas - Fila ").append(r + 1).append(": No se pudo resolver la inscripción de '").append(carnet).append("'.\n");
                 continue;
             }
 
             Double[] parsedGrades = new Double[5];
             boolean rowHasFormatError = false;
 
-            for (int g = 0; g < 5; g++) {
+            for (int g = 0; g < activePeriodsCount; g++) {
                 Cell gradeCell = row.getCell(2 + g);
                 if (gradeCell == null || gradeCell.getCellType() == CellType.BLANK) {
                     parsedGrades[g] = null;
@@ -183,24 +318,24 @@ public class GradeExcelImporter {
                 }
                 carnet = carnet.trim();
 
-                Student student = db.studentDao().getStudentByCarnet(carnet);
-                if (student == null) {
+                Integer targetStudentId = null;
+                if (isLocal && db != null) {
+                    Student student = findStudentByCarnet(db, carnet);
+                    if (student != null) targetStudentId = student.id;
+                } else {
+                    targetStudentId = findServerStudentId(serverStudentIdMap, carnet);
+                }
+
+                if (targetStudentId == null) {
                     conductRowsError++;
                     conductErrorDetailBuilder.append("Conducta - Fila ").append(r + 1).append(": Carnet '").append(carnet).append("' no existe en el sistema.\n");
                     continue;
                 }
 
-                Enrollment enrollment = db.enrollmentDao().getByStudentAndSubject(student.id, subjectId);
-                if (enrollment == null) {
-                    conductRowsError++;
-                    conductErrorDetailBuilder.append("Conducta - Fila ").append(r + 1).append(": Estudiante '").append(student.name).append("' (").append(carnet).append(") no está inscrito en esta materia.\n");
-                    continue;
-                }
-
                 int period = parsePeriodCellValue(row.getCell(2));
-                if (period < 1 || period > 5) {
+                if (period < 1 || period > activePeriodsCount) {
                     conductRowsError++;
-                    conductErrorDetailBuilder.append("Conducta - Fila ").append(r + 1).append(": Período inválido '").append(getCellValueAsString(row, 2)).append("' para '").append(carnet).append("'. Debe ser de 1 a 5.\n");
+                    conductErrorDetailBuilder.append("Conducta - Fila ").append(r + 1).append(": Período inválido '").append(getCellValueAsString(row, 2)).append("' para '").append(carnet).append("'. Debe estar entre 1 y ").append(activePeriodsCount).append(".\n");
                     continue;
                 }
 
@@ -230,10 +365,16 @@ public class GradeExcelImporter {
                     observations = null;
                 }
 
-                ConductRecord record = db.conductRecordDao().getRecord(student.id, subjectId, period);
+                ConductRecord record;
+                if (isLocal && db != null) {
+                    record = db.conductRecordDao().getRecord(targetStudentId, subjectId, period);
+                } else {
+                    record = serverConductMap.get(targetStudentId + "_" + period);
+                }
+
                 if (record == null) {
                     record = new ConductRecord();
-                    record.studentId = student.id;
+                    record.studentId = targetStudentId;
                     record.subjectId = subjectId;
                     record.period = period;
                 }
@@ -268,8 +409,9 @@ public class GradeExcelImporter {
 
                 if (carnet != null && !carnet.trim().isEmpty() && rawDateStr != null && !rawDateStr.trim().isEmpty()) {
                     String cleanDate = normalizeDateString(rawDateStr.trim(), sdfYmd);
-                    if (cleanDate != null && reason != null && !reason.trim().isEmpty()) {
-                        justificationMap.put(carnet.trim() + "_" + cleanDate, reason.trim());
+                    if (cleanDate != null) {
+                        String finalReason = (reason != null && !reason.trim().isEmpty()) ? reason.trim() : "Ausencia Justificada";
+                        justificationMap.put(carnet.trim() + "_" + cleanDate, finalReason);
                     }
                 }
             }
@@ -290,7 +432,6 @@ public class GradeExcelImporter {
                 int lastCellNum = attHeaderRow.getLastCellNum();
                 Map<Integer, String> colToDateMap = new HashMap<>();
 
-                // Match date columns starting from index 7
                 for (int c = 7; c < lastCellNum; c++) {
                     Cell headerCell = attHeaderRow.getCell(c);
                     if (headerCell == null) continue;
@@ -311,17 +452,17 @@ public class GradeExcelImporter {
                     }
                     carnet = carnet.trim();
 
-                    Student student = db.studentDao().getStudentByCarnet(carnet);
-                    if (student == null) {
-                        attendanceRowsError++;
-                        attendanceErrorDetailBuilder.append("Asistencia - Fila ").append(r + 1).append(": Carnet '").append(carnet).append("' no existe en el sistema.\n");
-                        continue;
+                    Integer targetStudentId = null;
+                    if (isLocal && db != null) {
+                        Student student = findStudentByCarnet(db, carnet);
+                        if (student != null) targetStudentId = student.id;
+                    } else {
+                        targetStudentId = findServerStudentId(serverStudentIdMap, carnet);
                     }
 
-                    Enrollment enrollment = db.enrollmentDao().getByStudentAndSubject(student.id, subjectId);
-                    if (enrollment == null) {
+                    if (targetStudentId == null) {
                         attendanceRowsError++;
-                        attendanceErrorDetailBuilder.append("Asistencia - Fila ").append(r + 1).append(": Estudiante '").append(student.name).append("' (").append(carnet).append(") no está inscrito en esta materia.\n");
+                        attendanceErrorDetailBuilder.append("Asistencia - Fila ").append(r + 1).append(": Carnet '").append(carnet).append("' no existe en el sistema.\n");
                         continue;
                     }
 
@@ -332,21 +473,22 @@ public class GradeExcelImporter {
                         Cell statusCell = row.getCell(colIdx);
                         Integer statusVal = AttendanceState.getValueForLabel(getCellValueAsString(row, colIdx));
 
-                        AttendanceRecord existingRecord = db.attendanceRecordDao().getRecord(student.id, subjectId, classDate);
+                        AttendanceRecord existingRecord;
+                        if (isLocal && db != null) {
+                            existingRecord = db.attendanceRecordDao().getRecord(targetStudentId, subjectId, classDate);
+                        } else {
+                            existingRecord = serverAttendanceMap.get(targetStudentId + "_" + classDate);
+                        }
 
-                        // If status is "Sin evaluar" (0) and NO existing record in DB -> skip inserting
                         if (statusVal == 0 && existingRecord == null) {
                             continue;
                         }
 
-                        // Check warning: Justificado without reason
                         String justification = justificationMap.get(carnet + "_" + classDate);
-                        if (statusVal == 3 && (justification == null || justification.isEmpty())) {
-                            attendanceErrorDetailBuilder.append("Advertencia - Asistencia Fila ").append(r + 1)
-                                    .append(": '").append(carnet).append("' registrado como 'Justificado' el ").append(classDate).append(" sin motivo registrado en hoja Justificaciones.\n");
+                        if (statusVal == 3 && (justification == null || justification.trim().isEmpty())) {
+                            justification = "Ausencia Justificada";
                         }
 
-                        // Check warning: Status marked on future date
                         if (statusVal != 0 && classDate.compareTo(todayYmd) > 0) {
                             attendanceErrorDetailBuilder.append("Advertencia - Asistencia Fila ").append(r + 1)
                                     .append(": '").append(carnet).append("' tiene asistencia registrada en fecha futura (").append(classDate).append(").\n");
@@ -354,7 +496,7 @@ public class GradeExcelImporter {
 
                         if (existingRecord == null) {
                             existingRecord = new AttendanceRecord();
-                            existingRecord.studentId = student.id;
+                            existingRecord.studentId = targetStudentId;
                             existingRecord.subjectId = subjectId;
                             existingRecord.classDate = classDate;
                         }
@@ -372,37 +514,90 @@ public class GradeExcelImporter {
 
         workbook.close();
 
-        // 6. Execute Database Updates in Single Transaction
-        db.runInTransaction(() -> {
-            for (Enrollment en : enrollmentsToUpdate) {
-                db.enrollmentDao().update(en);
-            }
-            for (ConductRecord cr : conductRecordsToUpsert) {
-                db.conductRecordDao().insert(cr);
-            }
-            for (AttendanceRecord ar : attendanceRecordsToUpsert) {
-                db.attendanceRecordDao().insert(ar);
-            }
-        });
+        // 6. Execute Updates
+        if (isLocal) {
+            if (db != null) {
+                db.runInTransaction(() -> {
+                    for (Enrollment en : enrollmentsToUpdate) {
+                        db.enrollmentDao().update(en);
+                    }
+                    for (ConductRecord cr : conductRecordsToUpsert) {
+                        db.conductRecordDao().insert(cr);
+                    }
+                    for (AttendanceRecord ar : attendanceRecordsToUpsert) {
+                        db.attendanceRecordDao().insert(ar);
+                    }
+                });
 
-        // 7. Record Import Logs
+                String errorDetailNotas = errorDetailBuilder.toString().trim();
+                String errorDetailConducta = conductErrorDetailBuilder.toString().trim();
+                String errorDetailAsistencia = attendanceErrorDetailBuilder.toString().trim();
+
+                GradeImportLog logNotas = new GradeImportLog(subjectId, "Notas", fileName, fileHash, currentTimestamp, rowsOk, rowsError, errorDetailNotas);
+                GradeImportLog logConducta = hasConductSheet
+                        ? new GradeImportLog(subjectId, "Conducta", fileName, fileHash, currentTimestamp, conductRowsOk, conductRowsError, errorDetailConducta)
+                        : null;
+                GradeImportLog logAsistencia = hasAttendanceSheet
+                        ? new GradeImportLog(subjectId, "Asistencia", fileName, fileHash, currentTimestamp, attendanceRowsOk, attendanceRowsError, errorDetailAsistencia)
+                        : null;
+
+                db.runInTransaction(() -> {
+                    db.gradeImportLogDao().insert(logNotas);
+                    if (logConducta != null) db.gradeImportLogDao().insert(logConducta);
+                    if (logAsistencia != null) db.gradeImportLogDao().insert(logAsistencia);
+                });
+            }
+        } else if (context != null) {
+            com.aula.virtual.data.ApiService api = com.aula.virtual.data.RetrofitClient.getApiService(context);
+
+            for (Enrollment en : enrollmentsToUpdate) {
+                try {
+                    retrofit2.Response<Enrollment> resp;
+                    if (en.id != 0) {
+                        resp = api.updateEnrollment(en.id, en).execute();
+                    } else {
+                        resp = api.enrollStudent(en).execute();
+                    }
+                    if (!resp.isSuccessful()) {
+                        rowsError++;
+                        errorDetailBuilder.append("Error servidor al actualizar nota de estudiante ").append(en.studentId).append(" (Código ").append(resp.code()).append(").\n");
+                    }
+                } catch (Exception e) {
+                    rowsError++;
+                    errorDetailBuilder.append("Error de conexión al actualizar notas: ").append(e.getMessage()).append("\n");
+                }
+            }
+
+            for (ConductRecord cr : conductRecordsToUpsert) {
+                try {
+                    retrofit2.Response<ConductRecord> resp = api.upsertConductRecord(cr).execute();
+                    if (!resp.isSuccessful()) {
+                        conductRowsError++;
+                        conductErrorDetailBuilder.append("Error servidor al actualizar conducta para estudiante ").append(cr.studentId).append(".\n");
+                    }
+                } catch (Exception e) {
+                    conductRowsError++;
+                    conductErrorDetailBuilder.append("Error de conexión al actualizar conducta: ").append(e.getMessage()).append("\n");
+                }
+            }
+
+            for (AttendanceRecord ar : attendanceRecordsToUpsert) {
+                try {
+                    retrofit2.Response<AttendanceRecord> resp = api.saveAttendanceRecord(ar).execute();
+                    if (!resp.isSuccessful()) {
+                        attendanceRowsError++;
+                        attendanceErrorDetailBuilder.append("Error servidor al actualizar asistencia del ").append(ar.classDate).append(".\n");
+                    }
+                } catch (Exception e) {
+                    attendanceRowsError++;
+                    attendanceErrorDetailBuilder.append("Error de conexión al actualizar asistencia: ").append(e.getMessage()).append("\n");
+                }
+            }
+        }
+
         String errorDetailNotas = errorDetailBuilder.toString().trim();
         String errorDetailConducta = conductErrorDetailBuilder.toString().trim();
         String errorDetailAsistencia = attendanceErrorDetailBuilder.toString().trim();
-
-        GradeImportLog logNotas = new GradeImportLog(subjectId, "Notas", fileName, fileHash, currentTimestamp, rowsOk, rowsError, errorDetailNotas);
-        GradeImportLog logConducta = hasConductSheet
-                ? new GradeImportLog(subjectId, "Conducta", fileName, fileHash, currentTimestamp, conductRowsOk, conductRowsError, errorDetailConducta)
-                : null;
-        GradeImportLog logAsistencia = hasAttendanceSheet
-                ? new GradeImportLog(subjectId, "Asistencia", fileName, fileHash, currentTimestamp, attendanceRowsOk, attendanceRowsError, errorDetailAsistencia)
-                : null;
-
-        db.runInTransaction(() -> {
-            db.gradeImportLogDao().insert(logNotas);
-            if (logConducta != null) db.gradeImportLogDao().insert(logConducta);
-            if (logAsistencia != null) db.gradeImportLogDao().insert(logAsistencia);
-        });
 
         boolean isSuccess = (rowsOk > 0 || rowsError == 0)
                 && (!hasConductSheet || conductRowsOk > 0 || conductRowsError == 0)
@@ -433,23 +628,52 @@ public class GradeExcelImporter {
         return new ImportResult(isSuccess, metaSubjectCode, metaSection, fileHash, fileName, totalOk, totalErr, combinedErrorDetail.toString().trim(), messageBuilder.toString());
     }
 
+    private static Integer findServerStudentId(Map<String, Integer> serverStudentIdMap, String rawCarnet) {
+        if (rawCarnet == null || rawCarnet.trim().isEmpty()) return null;
+        String clean = rawCarnet.trim().toUpperCase(Locale.ROOT);
+        Integer id = serverStudentIdMap.get(clean);
+        if (id != null) return id;
+        if (clean.startsWith("EST")) {
+            id = serverStudentIdMap.get(clean.substring(3));
+        } else {
+            id = serverStudentIdMap.get("EST" + clean);
+        }
+        return id;
+    }
+
     private static String parseHeaderClassDate(Cell cell, SimpleDateFormat sdfYmd) {
         if (cell == null) return null;
 
-        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-            Date d = cell.getDateCellValue();
-            if (d != null) return sdfYmd.format(d);
-        }
+        try {
+            if (cell.getCellComment() != null && cell.getCellComment().getString() != null) {
+                String commentText = cell.getCellComment().getString().getString().trim();
+                String isoDate = normalizeDateString(commentText, sdfYmd);
+                if (isoDate != null) return isoDate;
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                Date d = cell.getDateCellValue();
+                if (d != null) return sdfYmd.format(d);
+            }
+        } catch (Exception ignored) {}
 
         String raw = cell.toString().trim();
         return normalizeDateString(raw, sdfYmd);
     }
 
     private static String normalizeDateString(String raw, SimpleDateFormat sdfYmd) {
-        if (raw == null || raw.isEmpty()) return null;
+        if (raw == null || raw.trim().isEmpty()) return null;
+        raw = raw.trim();
 
         if (raw.matches("\\d{4}-\\d{2}-\\d{2}")) {
             return raw;
+        }
+
+        java.util.regex.Matcher mIso = java.util.regex.Pattern.compile("(\\d{4}-\\d{2}-\\d{2})").matcher(raw);
+        if (mIso.find()) {
+            return mIso.group(1);
         }
 
         try {
@@ -457,43 +681,136 @@ public class GradeExcelImporter {
             if (d != null) return sdfYmd.format(d);
         } catch (Exception ignored) {}
 
-        // Try extracting yyyy-MM-dd pattern from string
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d{4}-\\d{2}-\\d{2})").matcher(raw);
-        if (m.find()) {
-            return m.group(1);
+        java.util.regex.Matcher mFullDate = java.util.regex.Pattern.compile("(\\d{1,2})[/\\-](\\d{1,2})[/\\-](\\d{2,4})").matcher(raw);
+        if (mFullDate.find()) {
+            try {
+                int day = Integer.parseInt(mFullDate.group(1));
+                int month = Integer.parseInt(mFullDate.group(2));
+                int year = Integer.parseInt(mFullDate.group(3));
+                if (year < 100) year += 2000;
+                return String.format(Locale.US, "%04d-%02d-%02d", year, month, day);
+            } catch (Exception ignored) {}
+        }
+
+        java.util.regex.Matcher mShortDate = java.util.regex.Pattern.compile("(\\d{1,2})[/\\-](\\d{1,2})").matcher(raw);
+        if (mShortDate.find()) {
+            try {
+                int day = Integer.parseInt(mShortDate.group(1));
+                int month = Integer.parseInt(mShortDate.group(2));
+                int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+                return String.format(Locale.US, "%04d-%02d-%02d", currentYear, month, day);
+            } catch (Exception ignored) {}
+        }
+
+        return null;
+    }
+
+    private static Student findStudentByCarnet(AppDatabase db, String rawCarnet) {
+        if (db == null || rawCarnet == null || rawCarnet.trim().isEmpty()) return null;
+        String clean = rawCarnet.trim();
+        String carnetFormatted = clean.toUpperCase(Locale.ROOT);
+        if (!carnetFormatted.startsWith("EST") && carnetFormatted.matches("\\d+")) {
+            carnetFormatted = "EST" + carnetFormatted;
+        }
+
+        // 1. Search in studentDao
+        Student student = db.studentDao().getStudentByCarnet(clean);
+        if (student != null) return student;
+
+        student = db.studentDao().getStudentByCarnet(carnetFormatted);
+        if (student != null) return student;
+
+        List<Student> all = db.studentDao().getAllStudents();
+        if (all != null) {
+            for (Student s : all) {
+                if (s.carnet != null && (s.carnet.equalsIgnoreCase(clean) || s.carnet.equalsIgnoreCase(carnetFormatted))) {
+                    return s;
+                }
+            }
+        }
+
+        // 2. Search in userDao (Users table)
+        User u = db.userDao().getUserByCarnetOrName(clean);
+        if (u == null) u = db.userDao().getUserByCarnetOrName(carnetFormatted);
+        if (u == null) {
+            List<User> allUsers = db.userDao().getAllUsers();
+            if (allUsers != null) {
+                for (User user : allUsers) {
+                    if (user.carnet != null && (user.carnet.equalsIgnoreCase(clean) || user.carnet.equalsIgnoreCase(carnetFormatted))) {
+                        u = user;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (u != null) {
+            Student s = new Student(u.carnet, u.name, "5º Primaria", null);
+            s.id = u.id;
+            try {
+                db.studentDao().insert(s);
+            } catch (Exception ignored) {}
+            Student inserted = db.studentDao().getStudentById(u.id);
+            if (inserted != null) return inserted;
+            return s;
         }
 
         return null;
     }
 
     public static Integer parseConductLevelCellValue(Cell cell) {
-        if (cell == null || cell.getCellType() == CellType.BLANK) {
-            return null;
+        if (cell == null) return null;
+        CellType type = cell.getCellType();
+        if (type == CellType.BLANK) return null;
+
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
         }
-        if (cell.getCellType() == CellType.NUMERIC) {
+
+        if (type == CellType.NUMERIC) {
             int val = (int) cell.getNumericCellValue();
             if (val >= 1 && val <= 5) return val;
             return -1;
         }
-        if (cell.getCellType() == CellType.STRING) {
-            String str = cell.getStringCellValue();
-            if (str == null || str.trim().isEmpty()) return null;
-            Integer val = ConductLevel.getValueForLabel(str);
-            if (val != null) return val;
-            try {
-                int num = Integer.parseInt(str.trim());
-                if (num >= 1 && num <= 5) return num;
-            } catch (NumberFormatException ignored) {}
-            return -1;
-        }
+
+        String str = getCellStringValue(cell);
+        if (str == null || str.trim().isEmpty()) return null;
+
+        Integer val = ConductLevel.getValueForLabel(str);
+        if (val != null) return val;
+
+        try {
+            int num = Integer.parseInt(str.trim());
+            if (num >= 1 && num <= 5) return num;
+        } catch (NumberFormatException ignored) {}
+
         return -1;
+    }
+
+    private static String getCellStringValue(Cell cell) {
+        if (cell == null) return "";
+        CellType type = cell.getCellType();
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+        if (type == CellType.STRING) {
+            return cell.getStringCellValue() != null ? cell.getStringCellValue().trim() : "";
+        }
+        if (type == CellType.NUMERIC) {
+            return String.valueOf((long) cell.getNumericCellValue());
+        }
+        return cell.toString().trim();
     }
 
     private static int parsePeriodCellValue(Cell cell) {
         if (cell == null) return -1;
-        if (cell.getCellType() == CellType.NUMERIC) {
+        CellType type = cell.getCellType();
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+        if (type == CellType.NUMERIC) {
             return (int) cell.getNumericCellValue();
-        } else if (cell.getCellType() == CellType.STRING) {
+        } else if (type == CellType.STRING) {
             try {
                 return Integer.parseInt(cell.getStringCellValue().trim());
             } catch (NumberFormatException e) {
@@ -505,9 +822,13 @@ public class GradeExcelImporter {
 
     private static Double parseGradeCellValue(Cell cell) {
         if (cell == null) return null;
-        if (cell.getCellType() == CellType.NUMERIC) {
+        CellType type = cell.getCellType();
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+        if (type == CellType.NUMERIC) {
             return cell.getNumericCellValue();
-        } else if (cell.getCellType() == CellType.STRING) {
+        } else if (type == CellType.STRING) {
             try {
                 String str = cell.getStringCellValue().trim();
                 if (str.isEmpty()) return null;
@@ -523,12 +844,18 @@ public class GradeExcelImporter {
         if (row == null) return "";
         Cell cell = row.getCell(cellIndex);
         if (cell == null) return "";
-        if (cell.getCellType() == CellType.STRING) {
-            return cell.getStringCellValue();
-        } else if (cell.getCellType() == CellType.NUMERIC) {
-            return String.valueOf((long) cell.getNumericCellValue());
+        CellType type = cell.getCellType();
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
         }
-        return cell.toString();
+        if (type == CellType.STRING) {
+            return cell.getStringCellValue() != null ? cell.getStringCellValue().trim() : "";
+        } else if (type == CellType.NUMERIC) {
+            return String.valueOf((long) cell.getNumericCellValue());
+        } else if (type == CellType.BOOLEAN) {
+            return String.valueOf(cell.getBooleanCellValue());
+        }
+        return cell.toString().trim();
     }
 
     public static String calculateSHA256(byte[] data) throws Exception {

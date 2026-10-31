@@ -52,6 +52,9 @@
         <action
             android:id="@+id/action_professorHomeFragment_to_subjectBlogFragment"
             app:destination="@id/subjectBlogFragment" />
+        <action
+            android:id="@+id/action_professorHomeFragment_to_adminFacilityTimetableFragment"
+            app:destination="@id/adminFacilityTimetableFragment" />
     </fragment>
 
     <fragment
@@ -262,7 +265,11 @@
         android:id="@+id/settingsAdvancedFragment"
         android:name="com.aula.virtual.ui.SettingsAdvancedFragment"
         android:label="Ajustes Avanzados"
-        tools:layout="@layout/fragment_settings_advanced" />
+        tools:layout="@layout/fragment_settings_advanced">
+        <action
+            android:id="@+id/action_settingsAdvancedFragment_to_academicCalendarFragment"
+            app:destination="@id/academicCalendarFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/studentDetailFragment"

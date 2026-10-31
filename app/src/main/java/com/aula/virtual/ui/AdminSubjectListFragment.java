@@ -48,7 +48,9 @@ public class AdminSubjectListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
+        binding.tvHeaderTitle.setText("Materias");
         binding.tvTitle.setText("Listado de Materias");
+        binding.tvSubtitle.setText("Gestiona el catálogo de materias y asignaturas del ciclo lectivo.");
         adapter = new SubjectAdapter();
         adapter.setManageButtonText("Gestionar");
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));

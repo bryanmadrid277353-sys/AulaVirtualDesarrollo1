@@ -10,12 +10,14 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import com.aula.virtual.data.RetrofitClient;
 import com.aula.virtual.data.entity.ConductRecord;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.local.AppDatabase;
 import com.aula.virtual.databinding.FragmentStudentConductBinding;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -58,42 +60,71 @@ public class StudentConductFragment extends Fragment {
     }
 
     private void loadData() {
-        if (getContext() == null || studentId == -1 || subjectId == -1) {
+        android.content.Context ctx = getContext();
+        if (ctx == null || studentId == -1 || subjectId == -1) {
             binding.tvEmptyConduct.setVisibility(View.VISIBLE);
             return;
         }
 
-        DialogUtils.showLoadingOverlay(binding.getRoot(), requireContext());
+        DialogUtils.showLoadingOverlay(binding.getRoot(), ctx);
+        boolean isLocal = ThemeHelper.isLocalMode(ctx);
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
+            List<ConductRecord> records = new ArrayList<>();
+            String subtitle = null;
 
-            Student student = db.studentDao().getStudentById(studentId);
-            Subject subject = db.subjectDao().getSubjectById(subjectId);
-            List<ConductRecord> records = db.conductRecordDao().getRecordsByStudentAndSubject(studentId, subjectId);
+            if (!isLocal) {
+                try {
+                    retrofit2.Response<List<ConductRecord>> resp =
+                            RetrofitClient.getApiService(ctx).getStudentConductRecords(studentId, subjectId).execute();
+                    if (resp.isSuccessful() && resp.body() != null && !resp.body().isEmpty()) {
+                        records = resp.body();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (records.isEmpty()) {
+                    try {
+                        records = AppDatabase.getInstance(ctx).conductRecordDao().getRecordsByStudentAndSubject(studentId, subjectId);
+                    } catch (Exception ignored) {}
+                }
+            } else {
+                AppDatabase db = AppDatabase.getInstance(ctx);
+                Student student = db.studentDao().getStudentById(studentId);
+                Subject subject = db.subjectDao().getSubjectById(subjectId);
+                records = db.conductRecordDao().getRecordsByStudentAndSubject(studentId, subjectId);
+
+                if (student != null && subject != null) {
+                    subtitle = student.name + " • " + subject.name;
+                } else if (student != null) {
+                    subtitle = student.name;
+                } else if (subject != null) {
+                    subtitle = subject.name;
+                }
+            }
+
+            final List<ConductRecord> finalRecords = records;
+            final String finalSubtitle = subtitle;
 
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     DialogUtils.hideLoadingOverlay(binding.getRoot());
 
-                    if (student != null && subject != null) {
-                        binding.tvStudentSubjectSubtitle.setText(student.name + " • " + subject.name);
-                    } else if (student != null) {
-                        binding.tvStudentSubjectSubtitle.setText(student.name);
-                    } else if (subject != null) {
-                        binding.tvStudentSubjectSubtitle.setText(subject.name);
+                    if (finalSubtitle != null) {
+                        binding.tvStudentSubjectSubtitle.setText(finalSubtitle);
                     }
 
-                    if (records == null || records.isEmpty()) {
+                    if (finalRecords == null || finalRecords.isEmpty()) {
                         binding.rvConductPeriods.setVisibility(View.GONE);
                         binding.tvEmptyConduct.setVisibility(View.VISIBLE);
                         binding.tvOverallAverage.setText("Promedio: Sin evaluar");
                     } else {
                         binding.tvEmptyConduct.setVisibility(View.GONE);
                         binding.rvConductPeriods.setVisibility(View.VISIBLE);
-                        adapter.setRecords(records);
+                        adapter.setRecords(finalRecords);
 
-                        updateSummary(records);
+                        updateSummary(finalRecords);
                     }
                 });
             }

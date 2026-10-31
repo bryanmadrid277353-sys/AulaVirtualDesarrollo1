@@ -46,6 +46,7 @@ public class StudentRecordAdapter extends RecyclerView.Adapter<StudentRecordAdap
             carnetStr += " • " + student.grade;
         }
         holder.tvCarnet.setText(carnetStr);
+        holder.tvCarnet.setTextColor(holder.itemView.getContext().getColor(R.color.accent_blue));
 
         if (holder.tvAvatarInitials != null) {
             holder.tvAvatarInitials.setText(getInitials(student.name));

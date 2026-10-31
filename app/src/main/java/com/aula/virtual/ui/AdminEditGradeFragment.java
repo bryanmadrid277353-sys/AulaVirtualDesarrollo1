@@ -20,6 +20,7 @@ public class AdminEditGradeFragment extends Fragment {
     private FragmentEditGradesBinding binding;
     private MainViewModel viewModel;
     private Enrollment enrollment;
+    private int activePeriodsCount = 0;
 
     @Nullable
     @Override
@@ -52,6 +53,19 @@ public class AdminEditGradeFragment extends Fragment {
     }
 
     private void observeViewModel() {
+        viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
+            if (binding == null) return;
+            if (periods == null || periods.isEmpty()) {
+                activePeriodsCount = 0;
+                binding.btnSave.setEnabled(false);
+                Toast.makeText(getContext(), "Calendario Académico no configurado. Configure los períodos en Ajustes antes de ingresar notas.", Toast.LENGTH_LONG).show();
+            } else {
+                activePeriodsCount = periods.size();
+                binding.btnSave.setEnabled(true);
+            }
+            updateFieldsVisibility();
+        });
+
         viewModel.getSelectedEnrollment().observe(getViewLifecycleOwner(), en -> {
             if (en != null && binding != null) {
                 enrollment = en;
@@ -73,19 +87,40 @@ public class AdminEditGradeFragment extends Fragment {
         });
     }
 
+    private void updateFieldsVisibility() {
+        if (binding == null) return;
+        android.widget.TextView[] labels = new android.widget.TextView[]{
+            binding.tvLabelP1, binding.tvLabelP2, binding.tvLabelP3, binding.tvLabelP4, binding.tvLabelP5
+        };
+        EditText[] editTexts = new EditText[]{
+            binding.etGrade1, binding.etGrade2, binding.etGrade3, binding.etGrade4, binding.etGrade5
+        };
+
+        for (int i = 0; i < 5; i++) {
+            boolean active = (i < activePeriodsCount);
+            labels[i].setVisibility(active ? View.VISIBLE : View.GONE);
+            editTexts[i].setVisibility(active ? View.VISIBLE : View.GONE);
+        }
+    }
+
     private void saveChanges() {
         if (enrollment != null) {
-            Double g1 = parseGrade(binding.etGrade1);
-            Double g2 = parseGrade(binding.etGrade2);
-            Double g3 = parseGrade(binding.etGrade3);
-            Double g4 = parseGrade(binding.etGrade4);
-            Double g5 = parseGrade(binding.etGrade5);
+            if (activePeriodsCount <= 0) {
+                Toast.makeText(getContext(), "Es obligatorio definir el Calendario Académico antes de guardar calificaciones.", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            if (!isValidRange(g1, binding.etGrade1) || 
-                !isValidRange(g2, binding.etGrade2) ||
-                !isValidRange(g3, binding.etGrade3) ||
-                !isValidRange(g4, binding.etGrade4) ||
-                !isValidRange(g5, binding.etGrade5)) {
+            Double g1 = activePeriodsCount >= 1 ? parseGrade(binding.etGrade1) : null;
+            Double g2 = activePeriodsCount >= 2 ? parseGrade(binding.etGrade2) : null;
+            Double g3 = activePeriodsCount >= 3 ? parseGrade(binding.etGrade3) : null;
+            Double g4 = activePeriodsCount >= 4 ? parseGrade(binding.etGrade4) : null;
+            Double g5 = activePeriodsCount >= 5 ? parseGrade(binding.etGrade5) : null;
+
+            if ((activePeriodsCount >= 1 && !isValidRange(g1, binding.etGrade1)) || 
+                (activePeriodsCount >= 2 && !isValidRange(g2, binding.etGrade2)) ||
+                (activePeriodsCount >= 3 && !isValidRange(g3, binding.etGrade3)) ||
+                (activePeriodsCount >= 4 && !isValidRange(g4, binding.etGrade4)) ||
+                (activePeriodsCount >= 5 && !isValidRange(g5, binding.etGrade5))) {
                 return;
             }
 

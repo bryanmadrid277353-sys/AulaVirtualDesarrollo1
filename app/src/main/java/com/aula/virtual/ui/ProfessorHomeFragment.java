@@ -49,7 +49,14 @@ public class ProfessorHomeFragment extends Fragment {
         binding.btnGoToProfileProf.setOnClickListener(v -> 
             Navigation.findNavController(view).navigate(R.id.action_professorHomeFragment_to_studentProfileFragment));
 
-        binding.btnSearchHeaderProf.setOnClickListener(v -> binding.etSearchSubjectProf.requestFocus());
+        binding.btnProfessorSchedule.setOnClickListener(v -> {
+            com.aula.virtual.data.entity.User currentUser = viewModel.getCurrentUser().getValue();
+            if (currentUser != null) {
+                Bundle args = new Bundle();
+                args.putInt("professorId", currentUser.id);
+                Navigation.findNavController(requireView()).navigate(R.id.action_professorHomeFragment_to_adminFacilityTimetableFragment, args);
+            }
+        });
 
         if (viewModel.isImpersonating()) {
             binding.cardReturnToAdmin.setVisibility(View.VISIBLE);
@@ -69,7 +76,7 @@ public class ProfessorHomeFragment extends Fragment {
                 }
 
                 String carnetStr = user.carnet != null ? user.carnet : "DOC9842101";
-                binding.tvProfessorCarnetBadge.setText(carnetStr);
+                binding.tvProfessorCarnetBadge.setText("Carnet: " + carnetStr);
 
                 ImageUtils.setProfileImage(binding.ivProfileImageProf, user.profile_image, user.name);
 
@@ -126,7 +133,7 @@ public class ProfessorHomeFragment extends Fragment {
         }).collect(Collectors.toList());
 
         int count = filtered.size();
-        binding.tvAssignedSubjectsHeader.setText("MATERIAS ASIGNADAS (" + count + ")");
+        binding.tvAssignedSubjectsHeader.setText("MIS MATERIAS (" + count + " REGISTROS)");
 
         if (filtered.isEmpty()) {
             if (getContext() == null) return;

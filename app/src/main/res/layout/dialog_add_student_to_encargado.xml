@@ -64,7 +64,7 @@
                         android:layout_width="14dp"
                         android:layout_height="14dp"
                         android:src="@drawable/ic_lock"
-                        app:tint="?attr/colorPrimary"
+                        app:tint="@color/accent_orange"
                         android:contentDescription="Lock"
                         android:layout_marginEnd="6dp" />
 
@@ -72,7 +72,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Encargado obligatorio"
-                        android:textColor="?attr/colorPrimary"
+                        android:textColor="@color/accent_orange"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -288,6 +288,7 @@
                 android:textStyle="bold"
                 android:textAllCaps="false"
                 app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorPrimary"
                 app:elevation="0dp" />
         </LinearLayout>
 

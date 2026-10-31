@@ -12,6 +12,9 @@ public interface EnrollmentDao {
     @Query("SELECT * FROM enrollments WHERE studentId = :studentId")
     List<Enrollment> getByStudentId(int studentId);
 
+    @Query("SELECT * FROM enrollments")
+    List<Enrollment> getAllEnrollments();
+
     @Query("SELECT * FROM enrollments WHERE subjectId = :subjectId")
     List<Enrollment> getBySubjectId(int subjectId);
 

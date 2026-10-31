@@ -112,6 +112,17 @@ public class AdminEnrollmentListFragment extends Fragment {
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);
 
+        viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
+            if (adapter != null) {
+                adapter.setActivePeriods(periods);
+            }
+        });
+        viewModel.fetchAcademicPeriods(periods -> {
+            if (adapter != null && periods != null && getActivity() != null) {
+                getActivity().runOnUiThread(() -> adapter.setActivePeriods(periods));
+            }
+        });
+
         setupSearch();
 
         viewModel.fetchSubjectFacilityMap(map -> {

@@ -244,6 +244,34 @@ public class MainViewModel extends AndroidViewModel {
     public LiveData<Boolean> isServerConnected() { return isServerConnected; }
     public LiveData<String> getModificationError() { return modificationError; }
 
+    public LiveData<List<com.aula.virtual.data.entity.AcademicPeriod>> getAcademicPeriods() {
+        return com.aula.virtual.data.local.AppDatabase.getInstance(getApplication()).academicCalendarDao().getAllPeriodsLiveData();
+    }
+
+    public void fetchAcademicPeriods(DataCallback<List<com.aula.virtual.data.entity.AcademicPeriod>> callback) {
+        com.aula.virtual.data.RetrofitClient.getApiService(getApplication()).getAcademicPeriods().enqueue(new Callback<List<com.aula.virtual.data.entity.AcademicPeriod>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<com.aula.virtual.data.entity.AcademicPeriod>> call, @NonNull Response<List<com.aula.virtual.data.entity.AcademicPeriod>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    if (callback != null) callback.onResult(response.body());
+                } else {
+                    new Thread(() -> {
+                        List<com.aula.virtual.data.entity.AcademicPeriod> local = com.aula.virtual.data.local.AppDatabase.getInstance(getApplication()).academicCalendarDao().getAllPeriods();
+                        if (callback != null) callback.onResult(local);
+                    }).start();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<com.aula.virtual.data.entity.AcademicPeriod>> call, @NonNull Throwable t) {
+                new Thread(() -> {
+                    List<com.aula.virtual.data.entity.AcademicPeriod> local = com.aula.virtual.data.local.AppDatabase.getInstance(getApplication()).academicCalendarDao().getAllPeriods();
+                    if (callback != null) callback.onResult(local);
+                }).start();
+            }
+        });
+    }
+
     public LiveData<List<ChatRoomInfo>> getUserChatRooms() { return userChatRooms; }
     public LiveData<List<DirectMessage>> getChatHistory() { return chatHistory; }
 

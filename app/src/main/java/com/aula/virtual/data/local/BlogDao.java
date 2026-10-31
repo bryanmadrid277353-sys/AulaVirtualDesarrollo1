@@ -19,6 +19,9 @@ public interface BlogDao {
     @Query("SELECT * FROM blog_comments WHERE blogEntryId = :entryId ORDER BY id ASC")
     List<BlogComment> getCommentsByEntry(int entryId);
 
+    @Query("SELECT * FROM blog_comments")
+    List<BlogComment> getAllComments();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertEntry(BlogEntry entry);
 
@@ -42,4 +45,10 @@ public interface BlogDao {
 
     @Query("DELETE FROM blog_entries WHERE subjectId = :subjectId")
     void deleteEntriesBySubject(int subjectId);
+
+    @Query("DELETE FROM blog_entries")
+    void deleteAllEntries();
+
+    @Query("DELETE FROM blog_comments")
+    void deleteAllComments();
 }

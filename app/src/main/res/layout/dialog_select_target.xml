@@ -236,7 +236,7 @@
                             android:layout_width="22dp"
                             android:layout_height="22dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_person_badge"
+                            android:src="@drawable/ic_professor"
                             app:tint="#10B981"
                             android:contentDescription="Profesores" />
                     </FrameLayout>

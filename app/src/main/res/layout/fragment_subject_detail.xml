@@ -47,6 +47,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvDetailSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Gestión de asignatura y aula"
@@ -144,7 +145,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="ASIGN "
-                            android:textColor="?attr/colorPrimary"
+                            android:textColor="@color/accent_cyan"
                             android:textSize="15sp"
                             android:textStyle="bold"
                             android:layout_marginEnd="4dp" />

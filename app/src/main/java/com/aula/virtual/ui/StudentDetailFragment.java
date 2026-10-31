@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -146,11 +147,23 @@ public class StudentDetailFragment extends Fragment {
             if (student != null && binding != null) {
                 studentRecord = student;
 
-                binding.tvDetailTitle.setText("Detalle del estudiante");
+                binding.tvDetailTitle.setText("Detalle del Alumno");
+                binding.tvDetailSubtitle.setText("Información académica y perfil del estudiante");
                 binding.tvDetailRoleHeader.setText(student.name != null ? student.name : "Estudiante");
                 binding.tvDetailCarnetHeader.setText(student.carnet != null ? student.carnet : "-");
                 binding.tvDetailInitials.setText(getInitials(student.name));
+
+                int blueColor = ContextCompat.getColor(requireContext(), R.color.accent_blue);
+                binding.tvRolePrefix.setTextColor(blueColor);
+                binding.tvDetailCarnetHeader.setTextColor(blueColor);
+
                 binding.layoutProfileHeaderContainer.setVisibility(View.VISIBLE);
+
+                ModificationLogManager.loadLogTextAsync(requireContext(), "student_" + student.id, logText -> {
+                    if (binding != null && binding.tvLastModifiedFooter != null) {
+                        binding.tvLastModifiedFooter.setText(logText);
+                    }
+                });
 
                 binding.etField1.setText(student.name != null ? student.name : "");
 
@@ -211,6 +224,10 @@ public class StudentDetailFragment extends Fragment {
                 studentRecord.name = name;
                 studentRecord.carnet = "EST" + carnetDigits;
                 studentRecord.grade = grade;
+
+                String authorName = (viewModel.getCurrentUser().getValue() != null && viewModel.getCurrentUser().getValue().name != null)
+                        ? viewModel.getCurrentUser().getValue().name : "Admin Maestro";
+                ModificationLogManager.saveLog(requireContext(), "student_" + studentRecord.id, authorName);
 
                 viewModel.performOnlineAction(() -> {
                     viewModel.updateStudentRecord(studentRecord, new retrofit2.Callback<Student>() {

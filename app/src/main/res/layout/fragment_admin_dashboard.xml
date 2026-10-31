@@ -39,7 +39,7 @@
                 android:id="@+id/tvHeaderTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Encargados"
+                android:text="Gestión"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -50,7 +50,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Listado de encargados"
+            android:text="Listado"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -59,7 +59,7 @@
             android:id="@+id/tvSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gestiona los registros de familias y tutores de tus estudiantes."
+            android:text="Gestiona los registros de la institución."
             android:textColor="?android:attr/textColorSecondary"
             android:textSize="14sp"
             android:layout_marginBottom="16dp" />

@@ -3,11 +3,11 @@ import sys
 import threading
 import time
 from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy import create_engine, Column, Integer, String, Double, ForeignKey, Text, UniqueConstraint, func
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from pydantic import BaseModel
-from typing import List, Optional
+from sqlalchemy import create_engine, Column, Integer, BigInteger, String, Double, ForeignKey, Text, UniqueConstraint, func
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from pydantic import BaseModel, field_validator, ConfigDict
+from typing import List, Optional, Any, Union
+from datetime import date, datetime
 
 def to_dict(model):
     if hasattr(model, "model_dump"):
@@ -195,6 +195,13 @@ class DirectMessageDB(Base):
     isRead = Column(Integer, default=0)
     initiatorId = Column(Integer, nullable=False)
 
+class ModificationLogDB(Base):
+    __tablename__ = "modification_logs"
+    entity_key = Column(String(100), primary_key=True)
+    log_text = Column(String(255), nullable=False)
+    updated_at = Column(String(100), nullable=False)
+    updated_by = Column(String(150), nullable=False)
+
 # Crear tablas si no existen
 Base.metadata.create_all(bind=engine)
 
@@ -229,8 +236,7 @@ class UserBase(BaseModel):
 
 class User(UserBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StudentBase(BaseModel):
     encargadoId: Optional[int] = None
@@ -241,8 +247,7 @@ class StudentBase(BaseModel):
 
 class StudentSchema(StudentBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SubjectBase(BaseModel):
     code: Optional[str] = None
@@ -254,9 +259,7 @@ class SubjectBase(BaseModel):
 
 class Subject(SubjectBase):
     id: int
-    class Config:
-        from_attributes = True
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class EnrollmentBase(BaseModel):
     studentId: int
@@ -281,14 +284,12 @@ class GradeImportLogBase(BaseModel):
 
 class GradeImportLogSchema(GradeImportLogBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ConductLevelSchema(BaseModel):
     value: int
     label: str
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ConductRecordBase(BaseModel):
     studentId: int
@@ -305,42 +306,59 @@ class ConductRecordBase(BaseModel):
 
 class ConductRecordSchema(ConductRecordBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AcademicPeriodSchema(BaseModel):
     period: int
-    startDate: str
-    endDate: str
-    class Config:
-        from_attributes = True
+    startDate: Any
+    endDate: Any
+
+    @field_validator("startDate", "endDate", mode="before")
+    @classmethod
+    def format_period_dates(cls, v):
+        if isinstance(v, (date, datetime)):
+            return v.strftime("%Y-%m-%d")
+        return str(v) if v is not None else ""
+
+    model_config = ConfigDict(from_attributes=True)
 
 class NonSchoolDayBase(BaseModel):
-    day: str
+    day: Any
     reason: str
+
+    @field_validator("day", mode="before")
+    @classmethod
+    def format_non_school_day(cls, v):
+        if isinstance(v, (date, datetime)):
+            return v.strftime("%Y-%m-%d")
+        return str(v) if v is not None else ""
 
 class NonSchoolDaySchema(NonSchoolDayBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class AttendanceRecordBase(BaseModel):
     studentId: int
     subjectId: int
-    classDate: str
+    classDate: Any
     status: int = 0
     justification: Optional[str] = None
     updatedAt: Optional[str] = None
 
+    @field_validator("classDate", mode="before")
+    @classmethod
+    def format_class_date(cls, v):
+        if isinstance(v, (date, datetime)):
+            return v.strftime("%Y-%m-%d")
+        return str(v) if v is not None else ""
+
 class AttendanceRecordSchema(AttendanceRecordBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Enrollment(EnrollmentBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserSubjectColorBase(BaseModel):
     userId: int
@@ -349,8 +367,7 @@ class UserSubjectColorBase(BaseModel):
 
 class UserSubjectColor(UserSubjectColorBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BlogEntryBase(BaseModel):
     subjectId: int
@@ -361,8 +378,7 @@ class BlogEntryBase(BaseModel):
 
 class BlogEntry(BlogEntryBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class FacilityBase(BaseModel):
     code: Optional[str] = None
@@ -372,8 +388,7 @@ class FacilityBase(BaseModel):
 
 class Facility(FacilityBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class FacilityScheduleBase(BaseModel):
     facilityId: int
@@ -386,8 +401,7 @@ class FacilityScheduleBase(BaseModel):
 
 class FacilitySchedule(FacilityScheduleBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ScheduleInfo(BaseModel):
     schedule: FacilitySchedule
@@ -404,8 +418,7 @@ class BlogCommentBase(BaseModel):
 
 class BlogComment(BlogCommentBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CommentInfo(BaseModel):
     comment: BlogComment
@@ -423,8 +436,7 @@ class NotificationBase(BaseModel):
 
 class NotificationSchema(NotificationBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DirectMessageBase(BaseModel):
     chatRoomId: str
@@ -437,8 +449,16 @@ class DirectMessageBase(BaseModel):
 
 class DirectMessageSchema(DirectMessageBase):
     id: int
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+class ModificationLogBase(BaseModel):
+    entity_key: str
+    log_text: str
+    updated_at: str
+    updated_by: str
+
+class ModificationLogSchema(ModificationLogBase):
+    model_config = ConfigDict(from_attributes=True)
 
 class ChatRoomInfoSchema(BaseModel):
     chatRoomId: str
@@ -699,8 +719,21 @@ class StudentInSubjectInfo(BaseModel):
 
 @app.get("/subjects/{sub_id}/enrollments", response_model=List[StudentInSubjectInfo])
 def get_subject_enrollments(sub_id: int, db: Session = Depends(get_db)):
-    results = db.query(EnrollmentDB, UserDB).join(UserDB, EnrollmentDB.studentId == UserDB.id).filter(EnrollmentDB.subjectId == sub_id).all()
-    return [{"enrollment": e, "student": s} for e, s in results]
+    enrollments = db.query(EnrollmentDB).filter(EnrollmentDB.subjectId == sub_id).all()
+    output = []
+    for en in enrollments:
+        student = db.query(StudentDB).filter(StudentDB.id == en.studentId).first()
+        if student:
+            stu_user = UserDB(
+                id=student.id,
+                carnet=student.carnet,
+                name=student.name,
+                password="ASD###",
+                role="STUDENT",
+                profile_image=student.profile_image
+            )
+            output.append({"enrollment": en, "student": stu_user})
+    return output
 
 @app.get("/enrollments/student/{student_id}", response_model=List[StudentGradeInfo])
 def get_student_grades(student_id: int, db: Session = Depends(get_db)):
@@ -961,6 +994,10 @@ def get_schedule_by_id(sch_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Horario no encontrado")
     return sch
 
+@app.get("/facilities/schedules/subject/{sub_id}", response_model=List[FacilitySchedule])
+def get_facility_schedules_by_subject(sub_id: int, db: Session = Depends(get_db)):
+    return db.query(FacilityScheduleDB).filter(FacilityScheduleDB.subjectId == sub_id).all()
+
 # --- User specific schedules & subject colors ---
 @app.put("/users/{user_id}/subjects/{subject_id}/color")
 def update_user_subject_color(user_id: int, subject_id: int, color: str, db: Session = Depends(get_db)):
@@ -1189,14 +1226,15 @@ def get_subject_participants(sub_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Materia no encontrada")
 
     participants = []
-    added_ids = set()
+    added_user_ids = set()
+    added_student_ids = set()
 
     # 1. Add Professor assigned via subject.professorId
     if subject.professorId:
         prof = db.query(UserDB).filter(UserDB.id == subject.professorId, UserDB.role != "ADMIN").first()
-        if prof and prof.id not in added_ids:
+        if prof and prof.id not in added_user_ids:
             participants.append(prof)
-            added_ids.add(prof.id)
+            added_user_ids.add(prof.id)
 
     # 2. Add Professors assigned via facility_schedules
     professors = db.query(UserDB).join(FacilityScheduleDB, UserDB.id == FacilityScheduleDB.professorId).filter(
@@ -1204,15 +1242,15 @@ def get_subject_participants(sub_id: int, db: Session = Depends(get_db)):
         UserDB.role != "ADMIN"
     ).distinct().all()
     for p in professors:
-        if p.id not in added_ids:
+        if p.id not in added_user_ids:
             participants.append(p)
-            added_ids.add(p.id)
+            added_user_ids.add(p.id)
 
     # 3. Add Enrolled Students
     enrollments = db.query(EnrollmentDB).filter(EnrollmentDB.subjectId == sub_id).all()
     for en in enrollments:
         student = db.query(StudentDB).filter(StudentDB.id == en.studentId).first()
-        if student and student.id not in added_ids:
+        if student and student.id not in added_student_ids:
             stu_user = UserDB(
                 id=student.id,
                 carnet=student.carnet,
@@ -1222,7 +1260,7 @@ def get_subject_participants(sub_id: int, db: Session = Depends(get_db)):
                 profile_image=student.profile_image
             )
             participants.append(stu_user)
-            added_ids.add(student.id)
+            added_student_ids.add(student.id)
 
     return participants
 
@@ -1283,26 +1321,60 @@ def upsert_conduct_record(rec: ConductRecordBase, db: Session = Depends(get_db))
 
 @app.get("/academic-periods", response_model=List[AcademicPeriodSchema])
 def get_academic_periods(db: Session = Depends(get_db)):
-    return db.query(AcademicPeriodDB).order_by(AcademicPeriodDB.period.asc()).all()
+    periods = db.query(AcademicPeriodDB).order_by(AcademicPeriodDB.period.asc()).all()
+    for p in periods:
+        if isinstance(p.startDate, (date, datetime)):
+            p.startDate = p.startDate.strftime("%Y-%m-%d")
+        else:
+            p.startDate = str(p.startDate) if p.startDate is not None else ""
+        if isinstance(p.endDate, (date, datetime)):
+            p.endDate = p.endDate.strftime("%Y-%m-%d")
+        else:
+            p.endDate = str(p.endDate) if p.endDate is not None else ""
+    return periods
 
 @app.post("/academic-periods", response_model=List[AcademicPeriodSchema])
 def save_academic_periods(periods: List[AcademicPeriodSchema], db: Session = Depends(get_db)):
     db.query(AcademicPeriodDB).delete()
     for p in periods:
-        db.add(AcademicPeriodDB(**to_dict(p)))
+        p_dict = to_dict(p)
+        if isinstance(p_dict.get("startDate"), (date, datetime)):
+            p_dict["startDate"] = p_dict["startDate"].strftime("%Y-%m-%d")
+        else:
+            p_dict["startDate"] = str(p_dict.get("startDate", ""))
+        if isinstance(p_dict.get("endDate"), (date, datetime)):
+            p_dict["endDate"] = p_dict["endDate"].strftime("%Y-%m-%d")
+        else:
+            p_dict["endDate"] = str(p_dict.get("endDate", ""))
+        db.add(AcademicPeriodDB(**p_dict))
     db.commit()
-    return db.query(AcademicPeriodDB).order_by(AcademicPeriodDB.period.asc()).all()
+    return get_academic_periods(db)
 
 @app.get("/non-school-days", response_model=List[NonSchoolDaySchema])
 def get_non_school_days(db: Session = Depends(get_db)):
-    return db.query(NonSchoolDayDB).order_by(NonSchoolDayDB.day.asc()).all()
+    days = db.query(NonSchoolDayDB).order_by(NonSchoolDayDB.day.asc()).all()
+    for d in days:
+        if isinstance(d.day, (date, datetime)):
+            d.day = d.day.strftime("%Y-%m-%d")
+        else:
+            d.day = str(d.day) if d.day is not None else ""
+    return days
 
 @app.post("/non-school-days", response_model=NonSchoolDaySchema)
 def add_non_school_day(day: NonSchoolDayBase, db: Session = Depends(get_db)):
-    db_day = NonSchoolDayDB(**to_dict(day))
+    d_dict = to_dict(day)
+    if isinstance(d_dict.get("day"), (date, datetime)):
+        d_dict["day"] = d_dict["day"].strftime("%Y-%m-%d")
+    else:
+        d_dict["day"] = str(d_dict.get("day", ""))
+    db_day = NonSchoolDayDB(**d_dict)
     db.add(db_day)
     db.commit()
     db.refresh(db_day)
+    if isinstance(db_day.day, (date, datetime)):
+        db_day.day = db_day.day.strftime("%Y-%m-%d")
+    else:
+        db_day.day = str(db_day.day) if db_day.day is not None else ""
     return db_day
 
 @app.delete("/non-school-days/{day_id}")
@@ -1346,6 +1418,37 @@ def upsert_attendance_record(rec: AttendanceRecordBase, db: Session = Depends(ge
         db.refresh(new_rec)
         return new_rec
 
+@app.get("/modification-logs/{entity_key:path}", response_model=ModificationLogSchema)
+def get_modification_log(entity_key: str, db: Session = Depends(get_db)):
+    log = db.query(ModificationLogDB).filter(ModificationLogDB.entity_key == entity_key).first()
+    if not log:
+        return ModificationLogSchema(
+            entity_key=entity_key,
+            log_text="Última modificación: Sin registros recientes",
+            updated_at="",
+            updated_by=""
+        )
+    return log
+
+@app.post("/modification-logs", response_model=ModificationLogSchema)
+def save_modification_log(log_in: ModificationLogBase, db: Session = Depends(get_db)):
+    log = db.query(ModificationLogDB).filter(ModificationLogDB.entity_key == log_in.entity_key).first()
+    if not log:
+        log = ModificationLogDB(
+            entity_key=log_in.entity_key,
+            log_text=log_in.log_text,
+            updated_at=log_in.updated_at,
+            updated_by=log_in.updated_by
+        )
+        db.add(log)
+    else:
+        log.log_text = log_in.log_text
+        log.updated_at = log_in.updated_at
+        log.updated_by = log_in.updated_by
+    db.commit()
+    db.refresh(log)
+    return log
+
 def get_local_ip():
     try:
         import socket
@@ -1359,6 +1462,8 @@ def get_local_ip():
 
 if __name__ == "__main__":
     import uvicorn
+    import copy
+    from uvicorn.config import LOGGING_CONFIG
 
     def start_tunnel():
         import os
@@ -1385,4 +1490,18 @@ if __name__ == "__main__":
     print(f"  • Red Local Wi-Fi:         http://{local_ip}:8000/")
     print("===================================================\n")
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Configurar uvicorn para enviar logs informativos a sys.stdout (evita texto rojo en la consola del IDE)
+    log_config = copy.deepcopy(LOGGING_CONFIG)
+    if "handlers" in log_config:
+        if "default" in log_config["handlers"]:
+            log_config["handlers"]["default"]["stream"] = "ext://sys.stdout"
+        if "access" in log_config["handlers"]:
+            log_config["handlers"]["access"]["stream"] = "ext://sys.stdout"
+
+    if "formatters" in log_config:
+        if "default" in log_config["formatters"]:
+            log_config["formatters"]["default"]["use_colors"] = True
+        if "access" in log_config["formatters"]:
+            log_config["formatters"]["access"]["use_colors"] = True
+
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_config=log_config)
