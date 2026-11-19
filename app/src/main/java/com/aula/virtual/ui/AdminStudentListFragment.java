@@ -120,15 +120,17 @@ public class AdminStudentListFragment extends Fragment {
         viewModel.refreshData(); // Force refresh when entering list
 
         adapter.setOnItemClickListener(userItem -> {
+            if (userItem == null) return;
             Bundle args = new Bundle();
             args.putInt("encargadoId", userItem.id);
-            Navigation.findNavController(view).navigate(R.id.action_adminStudentListFragment_to_adminEncargadoDetailFragment, args);
+            Navigation.findNavController(requireView()).navigate(R.id.action_adminStudentListFragment_to_adminEncargadoDetailFragment, args);
         });
 
         studentRecordAdapter.setOnItemClickListener(studentItem -> {
+            if (studentItem == null) return;
             Bundle args = new Bundle();
             args.putInt("studentId", studentItem.id);
-            Navigation.findNavController(view).navigate(R.id.action_adminStudentListFragment_to_adminEnrollmentListFragment, args);
+            Navigation.findNavController(requireView()).navigate(R.id.action_adminStudentListFragment_to_adminEnrollmentListFragment, args);
         });
 
         binding.btnAdd.setOnClickListener(v -> {
@@ -296,8 +298,8 @@ public class AdminStudentListFragment extends Fragment {
                 if (tvCarnetError != null) tvCarnetError.setVisibility(View.GONE);
             }
 
-            if (isEncargado && (pass.isEmpty() || ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK)) {
-                if (tvPassError != null) { tvPassError.setText("Obligatorio"); tvPassError.setVisibility(View.VISIBLE); }
+            if (isEncargado && !ValidationUtils.isValidPasswordPolicy(pass)) {
+                if (tvPassError != null) { tvPassError.setText("Mín. 8 caracteres, letra y número"); tvPassError.setVisibility(View.VISIBLE); }
                 isValid = false;
             } else {
                 if (tvPassError != null) tvPassError.setVisibility(View.GONE);
@@ -373,14 +375,19 @@ public class AdminStudentListFragment extends Fragment {
         final String[] selectedGrade = {null};
 
         btnSelectGrade.setOnClickListener(v -> {
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Seleccionar Grado y Nivel")
-                    .setItems(gradeOptions, (d, which) -> {
+            DialogUtils.showCustomChoiceDialog(
+                    requireContext(),
+                    "Seleccionar Grado y Nivel",
+                    "Elige la sección o grado del estudiante.",
+                    gradeOptions,
+                    -1,
+                    (which, optionText) -> {
                         selectedGrade[0] = gradeOptions[which];
                         tvSelectedGrade.setText(selectedGrade[0]);
                         tvSelectedGrade.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
                         if (tvGradeError != null) tvGradeError.setVisibility(View.GONE);
-                    }).show();
+                    }
+            );
         });
 
         final Integer[] selectedEncargadoId = {null};
@@ -396,15 +403,20 @@ public class AdminStudentListFragment extends Fragment {
                 encNames[i] = enc.name + " (" + carnet + ")";
             }
 
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Seleccionar Encargado Asignado")
-                    .setItems(encNames, (d, which) -> {
+            DialogUtils.showCustomChoiceDialog(
+                    requireContext(),
+                    "Seleccionar Encargado Asignado",
+                    "Elige al tutor o familiar responsable del alumno.",
+                    encNames,
+                    -1,
+                    (which, optionText) -> {
                         User chosen = allEncargados.get(which);
                         selectedEncargadoId[0] = chosen.id;
                         tvSelectedEncargado.setText(chosen.name);
                         tvSelectedEncargado.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
                         if (tvEncargadoError != null) tvEncargadoError.setVisibility(View.GONE);
-                    }).show();
+                    }
+            );
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());

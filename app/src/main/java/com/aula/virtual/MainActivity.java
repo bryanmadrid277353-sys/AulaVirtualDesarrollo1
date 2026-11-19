@@ -1,6 +1,8 @@
 package com.aula.virtual;
 
 import android.Manifest;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.os.Build;
@@ -26,6 +28,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.service.VirtualFirebaseMessagingService;
+import com.aula.virtual.ui.DialogUtils;
 import com.aula.virtual.ui.MainViewModel;
 import com.aula.virtual.ui.ThemeHelper;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -115,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 isBannerDismissedManually = false;
                 Toast.makeText(this, "Comprobando conexión...", Toast.LENGTH_SHORT).show();
                 if (viewModel != null) {
+                    viewModel.resetConnectionFailures();
                     viewModel.refreshData();
                     viewModel.startKeepAlive();
                 }
@@ -211,6 +215,49 @@ public class MainActivity extends AppCompatActivity {
         });
 
         setupNotificationsAndPermissions();
+        checkForceLogoutReason();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        checkForceLogoutReason();
+    }
+
+    private void checkForceLogoutReason() {
+        String reason = null;
+        if (getIntent() != null && getIntent().hasExtra("force_logout_reason")) {
+            reason = getIntent().getStringExtra("force_logout_reason");
+            getIntent().removeExtra("force_logout_reason");
+        }
+        if (reason == null) {
+            SharedPreferences prefs = getSharedPreferences("fcm_prefs", MODE_PRIVATE);
+            reason = prefs.getString("force_logout_reason", null);
+            if (reason != null) {
+                prefs.edit().remove("force_logout_reason").apply();
+            }
+        }
+        if (reason != null && !reason.trim().isEmpty()) {
+            final String finalReason = reason;
+            if (viewModel != null) {
+                viewModel.logout();
+            }
+            if (navController != null && navController.getCurrentDestination() != null 
+                && navController.getCurrentDestination().getId() != R.id.loginFragment) {
+                try {
+                    navController.navigate(R.id.loginFragment);
+                } catch (Exception ignored) {}
+            }
+            DialogUtils.showCustomConfirmDialog(
+                this,
+                "🔒 Sesión Finalizada",
+                finalReason,
+                "Aceptar",
+                null,
+                null
+            );
+        }
     }
 
     private void updateOfflineBannerVisibility(Boolean isConnected) {
@@ -308,6 +355,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        checkForceLogoutReason();
         if (viewModel != null) {
             viewModel.startKeepAlive();
             isBannerDismissedManually = false;
@@ -329,12 +377,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showExitConfirmationDialog() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Salir")
-                .setMessage("¿Estás seguro de que deseas salir de la aplicación?")
-                .setPositiveButton("Sí", (dialog, which) -> finish())
-                .setNegativeButton("No", null)
-                .show();
+        DialogUtils.showCustomConfirmDialog(
+                this,
+                "Salir de la aplicación",
+                "¿Estás seguro de que deseas salir de la aplicación?",
+                "Sí, Salir",
+                "Cancelar",
+                this::finish
+        );
     }
 
     private void hideKeyboard(View view) {

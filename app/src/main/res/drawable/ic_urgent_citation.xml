@@ -1,0 +1,46 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Hoja del documento con esquina doblada -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M13,21H6a2,2 0 0 1 -2,-2V5a2,2 0 0 1 2,-2h7l5,5v3" />
+
+    <!-- Esquina doblada -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M13,3v5h5" />
+
+    <!-- Líneas de texto de la citación -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M8,12h3M8,16h3" />
+
+    <!-- Círculo de alerta -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M15.5,18.5a3.5,3.5 0 1 0 7,0a3.5,3.5 0 1 0 -7,0" />
+
+    <!-- Signo de exclamación -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M19,17v1.8M19,20.6v0.01" />
+</vector>

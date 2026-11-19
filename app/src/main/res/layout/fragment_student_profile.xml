@@ -510,7 +510,48 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Botón Cerrار Sesión -->
+        <!-- Botón Regresar a Sesión Administrador (Solo cuando se impersona) -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardReturnToAdmin"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#132540"
+            app:strokeWidth="1.5dp"
+            app:strokeColor="#2563EB"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_logout"
+                    app:tint="#38BDF8"
+                    android:layout_marginEnd="10dp"
+                    android:contentDescription="Volver" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Regresar a Sesión Administrador"
+                    android:textColor="#38BDF8"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Botón Cerrar Sesión -->
         <androidx.cardview.widget.CardView
             android:id="@+id/btnLogout"
             android:layout_width="match_parent"

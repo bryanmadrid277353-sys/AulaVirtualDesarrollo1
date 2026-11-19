@@ -107,7 +107,7 @@ public class LoginFragment extends Fragment {
             public void onError(String message) {
                 if (getActivity() == null) return;
                 getActivity().runOnUiThread(() -> {
-                    if (getContext() != null) Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                    if (getContext() != null) Toast.makeText(getContext(), "Carnet o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                 });
             }
         });

@@ -187,17 +187,6 @@ SELECT
 FROM attendance_records
 GROUP BY studentId, subjectId;
 
--- Tabla de Colores Personalizados: Preferencias estéticas de horario por usuario
-CREATE TABLE IF NOT EXISTS user_subject_colors (
-    id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno
-    userId INT NOT NULL,                        -- ID del usuario (Alumno o Profesor)
-    subjectId INT NOT NULL,                     -- ID de la materia
-    color VARCHAR(50) DEFAULT 'BLUE',           -- Color CSS o nombre de color (Ej: 'YELLOW_DARK')
-    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE,
-    UNIQUE (userId, subjectId)
-);
-
 -- Tabla de Blog de Materias: Publicaciones de tareas, avisos o exámenes
 CREATE TABLE IF NOT EXISTS blog_entries (
     id INT AUTO_INCREMENT PRIMARY KEY,          -- Identificador único interno
@@ -252,7 +241,8 @@ CREATE TABLE IF NOT EXISTS notifications (
     targetType VARCHAR(50) NOT NULL,            -- Destinatario: 'ALL', 'ROLE_STUDENTS', 'ROLE_PROFESSORS', 'ROLE_ADMINS', 'SUBJECT', 'FACILITY'
     targetValue VARCHAR(255) NULL,              -- Valor específico (Nombre de materia o instalación)
     senderName VARCHAR(255) NOT NULL,           -- Nombre del usuario emisor
-    timestamp VARCHAR(100) NOT NULL             -- Fecha y hora de envío
+    timestamp VARCHAR(100) NOT NULL,            -- Fecha y hora de envío
+    iconType VARCHAR(50) DEFAULT 'GENERAL'      -- Tipo de icono: 'GENERAL', 'ACADEMIC', 'ALERT', 'SYSTEM', 'SUBJECT'
 );
 
 -- Tabla de Mensajes Directos: Conversaciones privadas 1 a 1 entre dos usuarios

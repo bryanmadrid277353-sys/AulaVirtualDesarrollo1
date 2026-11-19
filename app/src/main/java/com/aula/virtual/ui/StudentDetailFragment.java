@@ -6,7 +6,6 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import com.aula.virtual.R;
 import com.aula.virtual.data.entity.Student;
+import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentDetailBinding;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -187,8 +187,25 @@ public class StudentDetailFragment extends Fragment {
                     binding.etPersonalEmail.setText("Sin encargado asignado");
                 }
 
-                binding.btnSave.setEnabled(true);
-                binding.btnDelete.setEnabled(true);
+                User activeUser = viewModel.getCurrentUser().getValue();
+                boolean isCurrentAdmin = activeUser != null && "ADMIN".equalsIgnoreCase(activeUser.role);
+
+                if (!isCurrentAdmin) {
+                    binding.etField1.setEnabled(false);
+                    binding.etField2.setEnabled(false);
+                    binding.etAddress.setEnabled(false);
+                    binding.etAddress.setFocusable(false);
+                    binding.etAddress.setClickable(false);
+                    binding.etAddress.setOnClickListener(null);
+
+                    binding.btnSave.setVisibility(View.GONE);
+                    binding.btnDelete.setVisibility(View.GONE);
+                } else {
+                    binding.btnSave.setEnabled(true);
+                    binding.btnDelete.setEnabled(true);
+                    binding.btnSave.setVisibility(View.VISIBLE);
+                    binding.btnDelete.setVisibility(View.VISIBLE);
+                }
                 binding.btnManageGrades.setEnabled(true);
 
                 DialogUtils.arrangeGridButtons(binding.layoutActionButtons);

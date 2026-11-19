@@ -17,6 +17,24 @@ public class ThemeHelper {
     private static final String KEY_DATA_MODE = "data_mode";
     private static final String KEY_BIOMETRIC_AUTOFILL = "biometric_autofill";
     private static final String KEY_HAPTIC_FEEDBACK = "haptic_feedback";
+    private static final String KEY_HOME_LAYOUT_STYLE = "home_layout_style";
+
+    public static final String HOME_LAYOUT_LIST = "LIST";
+    public static final String HOME_LAYOUT_GRID = "GRID";
+
+    public static String getHomeLayoutStyle(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(KEY_HOME_LAYOUT_STYLE, HOME_LAYOUT_LIST);
+    }
+
+    public static void setHomeLayoutStyle(Context context, String style) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putString(KEY_HOME_LAYOUT_STYLE, style).apply();
+    }
+
+    public static boolean isGridHomeLayout(Context context) {
+        return HOME_LAYOUT_GRID.equalsIgnoreCase(getHomeLayoutStyle(context));
+    }
 
     public static boolean isHapticFeedbackEnabled(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);

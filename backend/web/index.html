@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aula Virtual - Panel de Gestión Web</title>
+  <!-- Favicon que coincide con ic_launcher_foreground -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M12,6.25V19.25M12,6.25C10.83,5.48 9.25,5 7.5,5C5.75,5 4.17,5.48 3,6.25V19.25C4.17,18.48 5.75,18 7.5,18C9.25,18 10.83,18.48 12,19.25M12,6.25C13.17,5.48 14.75,5 16.5,5C18.25,5 19.83,5.48 21,6.25V19.25C19.83,18.48 18.25,18 16.5,18C14.75,18 13.17,18.48 12,19.25'/></svg>">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- Pantalla de Login -->
+<div id="login-screen" class="login-container">
+  <div class="login-card">
+    <div class="login-logo" title="Aula Virtual App Logo">
+      <!-- SVG Idéntico al icono vectorial ic_launcher_foreground de la app Android -->
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12,6.25V19.25M12,6.25C10.83,5.48 9.25,5 7.5,5C5.75,5 4.17,5.48 3,6.25V19.25C4.17,18.48 5.75,18 7.5,18C9.25,18 10.83,18.48 12,19.25M12,6.25C13.17,5.48 14.75,5 16.5,5C18.25,5 19.83,5.48 21,6.25V19.25C19.83,18.48 18.25,18 16.5,18C14.75,18 13.17,18.48 12,19.25"/>
+      </svg>
+    </div>
+    <h2 class="login-title">Aula Virtual</h2>
+    <p class="login-subtitle">Ingresa tus credenciales para acceder a la gestión del sistema</p>
+
+    <form id="login-form" action="javascript:void(0);" onsubmit="handleLogin(event); return false;">
+      <div class="form-group">
+        <label class="form-label" for="login-carnet">Carnet de Usuario</label>
+        <input type="text" id="login-carnet" name="username" class="form-input" placeholder="Ej: ADM001, DOC001, EST001" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Contraseña</label>
+        <div class="password-wrapper" style="position: relative; display: flex; align-items: center; width: 100%;">
+          <input type="password" id="login-password" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password" style="padding-right: 3rem;">
+          <button type="button" id="toggle-password-btn" onclick="togglePasswordVisibility()" class="password-toggle-btn" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; width: 2.2rem; height: 2.2rem; display: flex; align-items: center; justify-content: center; z-index: 10; border-radius: 50%; pointer-events: auto;" title="Mostrar u ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
+            <i class="fa-solid fa-eye" id="toggle-password-icon" style="pointer-events: none;"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" id="login-submit-btn" class="btn btn-primary btn-full">
+        <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+      </button>
+    </form>
+    <div id="login-error" style="color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none;"></div>
+  </div>
+</div>
+
+<!-- App Layout Principal -->
+<div id="app-layout" style="display: none;">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand" id="brand-logo" style="cursor: pointer;" title="Ir al Dashboard General">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12,6.25V19.25M12,6.25C10.83,5.48 9.25,5 7.5,5C5.75,5 4.17,5.48 3,6.25V19.25C4.17,18.48 5.75,18 7.5,18C9.25,18 10.83,18.48 12,19.25M12,6.25C13.17,5.48 14.75,5 16.5,5C18.25,5 19.83,5.48 21,6.25V19.25C19.83,18.48 18.25,18 16.5,18C14.75,18 13.17,18.48 12,19.25"/>
+      </svg>
+      <span>Aula Virtual</span>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="menu-item">
+        <a class="menu-link active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="admins">
+          <i class="fa-solid fa-user-shield"></i> Administradores
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="professors">
+          <i class="fa-solid fa-chalkboard-user"></i> Profesores
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="encargados">
+          <i class="fa-solid fa-user-group"></i> Encargados
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="students">
+          <i class="fa-solid fa-user-graduate"></i> Estudiantes
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="subjects">
+          <i class="fa-solid fa-book-open"></i> Asignaturas
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="enrollments">
+          <i class="fa-solid fa-file-signature"></i> Inscripciones
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="attendance">
+          <i class="fa-solid fa-clipboard-user"></i> Asistencia
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="conduct">
+          <i class="fa-solid fa-shield-halved"></i> Conducta
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="facilities">
+          <i class="fa-solid fa-building-columns"></i> Instalaciones
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="calendar">
+          <i class="fa-solid fa-calendar-days"></i> Calendario
+        </a>
+      </li>
+      <li class="menu-item">
+        <a class="menu-link" data-tab="notifications">
+          <i class="fa-solid fa-bell"></i> Notificaciones
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-user">
+      <div class="user-avatar" id="current-user-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="current-user-name">Administrador</div>
+        <div class="user-role" id="current-user-role">ADMIN</div>
+      </div>
+      <button class="logout-btn" id="btn-logout" title="Cerrar Sesión">
+        <i class="fa-solid fa-power-off"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-wrapper">
+    <header class="topbar">
+      <h1 class="topbar-title" id="tab-title">Dashboard General</h1>
+      <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <!-- Botón de Notificaciones -->
+        <button class="btn btn-secondary btn-sm" onclick="switchTab('notifications')" title="Gestión de Notificaciones">
+          <i class="fa-solid fa-bell"></i> Notificaciones
+        </button>
+        <!-- Botón de cambio de tema (Oscuro / Claro) -->
+        <button id="theme-toggle-btn" class="btn btn-secondary btn-sm" title="Cambiar tema (Oscuro/Claro)">
+          <i class="fa-solid fa-moon" id="theme-toggle-icon"></i>
+          <span id="theme-toggle-text">Oscuro</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content-container" id="main-content">
+      <!-- El contenido dinámico de cada sección se inyecta desde app.js -->
+    </main>
+  </div>
+</div>
+
+<!-- Modal Genérico para Creación/Edición -->
+<div id="app-modal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">Título del Modal</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <!-- Formulario Inyectado -->
+    </div>
+    <div class="modal-footer" id="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="modal-submit-btn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- App JS Scripts -->
+<script src="/static/app.js"></script>
+</body>
+</html>

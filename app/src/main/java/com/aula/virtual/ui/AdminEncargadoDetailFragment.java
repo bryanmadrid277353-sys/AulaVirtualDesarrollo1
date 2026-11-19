@@ -2,7 +2,6 @@ package com.aula.virtual.ui;
 
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -77,9 +76,16 @@ public class AdminEncargadoDetailFragment extends Fragment {
             });
         }
 
+        viewModel.getMyStudents().observe(getViewLifecycleOwner(), students -> {
+            if (binding == null || !isAdded()) return;
+            encargadoStudents = students != null ? students : new ArrayList<>();
+            applyFilter();
+        });
+
         if (encargadoId != -1) {
             viewModel.fetchUserById(encargadoId);
             viewModel.getSelectedUser().observe(getViewLifecycleOwner(), user -> {
+                if (binding == null || !isAdded()) return;
                 if (user != null) {
                     encargado = user;
                     if (binding.tvDetailTitle != null) {
@@ -99,6 +105,14 @@ public class AdminEncargadoDetailFragment extends Fragment {
             });
         }
 
+        User activeUser = viewModel.getCurrentUser().getValue();
+        boolean isCurrentAdmin = activeUser != null && "ADMIN".equalsIgnoreCase(activeUser.role);
+        if (!isCurrentAdmin) {
+            binding.btnAddStudentToEncargado.setVisibility(View.GONE);
+        } else {
+            binding.btnAddStudentToEncargado.setVisibility(View.VISIBLE);
+        }
+
         binding.btnAddStudentToEncargado.setOnClickListener(v -> {
             if (encargado != null) {
                 showAddStudentDialog(encargado);
@@ -106,9 +120,10 @@ public class AdminEncargadoDetailFragment extends Fragment {
         });
 
         adapter.setOnItemClickListener(student -> {
+            if (student == null) return;
             Bundle args = new Bundle();
             args.putInt("studentId", student.id);
-            Navigation.findNavController(view).navigate(R.id.action_adminEncargadoDetailFragment_to_adminEnrollmentListFragment, args);
+            Navigation.findNavController(requireView()).navigate(R.id.action_adminEncargadoDetailFragment_to_adminEnrollmentListFragment, args);
         });
     }
 
@@ -142,13 +157,10 @@ public class AdminEncargadoDetailFragment extends Fragment {
 
     private void loadEncargadoStudents(int encargadoId) {
         viewModel.fetchStudentsForEncargado(encargadoId);
-        viewModel.getMyStudents().observe(getViewLifecycleOwner(), students -> {
-            encargadoStudents = students != null ? students : new ArrayList<>();
-            applyFilter();
-        });
     }
 
     private void applyFilter() {
+        if (binding == null || !isAdded()) return;
         String query = binding.etSearch.getText().toString().toLowerCase().trim();
         String filterType = binding.spinnerFilter.getSelectedItem() != null ? binding.spinnerFilter.getSelectedItem().toString() : "Todo";
 
@@ -212,14 +224,19 @@ public class AdminEncargadoDetailFragment extends Fragment {
         final String[] selectedGrade = {null};
 
         btnSelectGrade.setOnClickListener(v -> {
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Seleccionar Grado y Nivel")
-                    .setItems(gradeOptions, (d, which) -> {
+            DialogUtils.showCustomChoiceDialog(
+                    requireContext(),
+                    "Seleccionar Grado y Nivel",
+                    "Elige la sección o grado académico.",
+                    gradeOptions,
+                    -1,
+                    (which, optionText) -> {
                         selectedGrade[0] = gradeOptions[which];
                         tvSelectedGrade.setText(selectedGrade[0]);
                         tvSelectedGrade.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
                         if (tvGradeError != null) tvGradeError.setVisibility(View.GONE);
-                    }).show();
+                    }
+            );
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());

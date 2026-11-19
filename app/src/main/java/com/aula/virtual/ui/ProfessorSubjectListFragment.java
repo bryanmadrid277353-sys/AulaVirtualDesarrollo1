@@ -438,20 +438,27 @@ public class ProfessorSubjectListFragment extends Fragment {
                     names[i] = s.name + " (Sección: " + sec + ")";
                 }
 
-                new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Inscribir Materia a Profesor")
-                    .setItems(names, (dialog, which) -> {
+                DialogUtils.showCustomChoiceDialog(
+                    requireContext(),
+                    "Inscribir Materia a Profesor",
+                    "Elige la materia para asignar al profesor.",
+                    names,
+                    -1,
+                    (which, optionText) -> {
                         Subject selected = availableSubjects.get(which);
                         if (selected.professorId != null && selected.professorId != 0 && selected.professorId != profId) {
                             viewModel.getUserById(selected.professorId, existingProf -> {
                                 String profName = existingProf != null ? existingProf.name : "otro profesor";
                                 if (getActivity() != null) {
                                     getActivity().runOnUiThread(() -> 
-                                        new MaterialAlertDialogBuilder(requireContext())
-                                            .setTitle("⚠️ Asignación Restringida")
-                                            .setMessage("La materia \"" + selected.name + "\" ya está asignada al profesor " + profName + ".\n\nSolo se permite UN Profesor por Materia.")
-                                            .setPositiveButton("Entendido", null)
-                                            .show()
+                                        DialogUtils.showCustomConfirmDialog(
+                                            requireContext(),
+                                            "⚠️ Asignación Restringida",
+                                            "La materia \"" + selected.name + "\" ya está asignada al profesor " + profName + ".\n\nSolo se permite UN Profesor por Materia.",
+                                            "Entendido",
+                                            null,
+                                            null
+                                        )
                                     );
                                 }
                             });
@@ -466,8 +473,8 @@ public class ProfessorSubjectListFragment extends Fragment {
                             viewModel.getSubjectsByProfessor(profId);
                             viewModel.refreshData();
                         });
-                    })
-                    .show();
+                    }
+                );
             });
         });
     }

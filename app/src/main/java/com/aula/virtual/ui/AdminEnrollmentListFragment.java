@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import com.aula.virtual.data.entity.User;
 
 import com.aula.virtual.MainActivity;
 import com.aula.virtual.R;
@@ -194,22 +195,31 @@ public class AdminEnrollmentListFragment extends Fragment {
             public void onDeleteEnrollment(StudentGradeInfo info) {
                 if (info == null || info.enrollment == null) return;
                 String subjName = (info.subject != null ? info.subject.name : "esta materia");
-                new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Desinscribir Materia")
-                    .setMessage("¿Estás seguro de desinscribir a este alumno de la materia \"" + subjName + "\"? Se eliminará su inscripción y sus calificaciones.")
-                    .setPositiveButton("Desinscribir", (dialog, which) -> {
+                DialogUtils.showCustomConfirmDialog(
+                    requireContext(),
+                    "Desinscribir Materia",
+                    "¿Estás seguro de desinscribir a este alumno de la materia \"" + subjName + "\"? Se eliminará su inscripción y sus calificaciones.",
+                    "Desinscribir",
+                    "Cancelar",
+                    () -> {
                         viewModel.performOnlineAction(() -> {
                             viewModel.deleteEnrollment(info.enrollment);
                             Toast.makeText(getContext(), "Inscripción eliminada", Toast.LENGTH_SHORT).show();
                         });
-                    })
-                    .setNegativeButton("Cancelar", null)
-                    .show();
+                    }
+                );
             }
         });
 
-        binding.btnAdd.setText("+ Añadir inscripción");
-        binding.btnAdd.setOnClickListener(v -> showEnrollDialog());
+        User activeUser = viewModel.getCurrentUser().getValue();
+        boolean isCurrentAdmin = activeUser != null && "ADMIN".equalsIgnoreCase(activeUser.role);
+        if (!isCurrentAdmin) {
+            binding.btnAdd.setVisibility(View.GONE);
+        } else {
+            binding.btnAdd.setVisibility(View.VISIBLE);
+            binding.btnAdd.setText("+ Añadir inscripción");
+            binding.btnAdd.setOnClickListener(v -> showEnrollDialog());
+        }
     }
 
     private String getInitials(String name) {
@@ -310,14 +320,22 @@ public class AdminEnrollmentListFragment extends Fragment {
             final String[] cycles = {"Ciclo 2025 (Actual)", "Ciclo 2024 (Pasado)", "Ciclo 2023 (Pasado)", "Ciclo 2022 (Pasado)"};
             final String[] cycleKeys = {"Ciclo 2025", "Ciclo 2024", "Ciclo 2023", "Ciclo 2022"};
 
-            new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Seleccionar Materia")
-                .setItems(names, (dialog1, whichSubject) -> {
+            DialogUtils.showCustomChoiceDialog(
+                requireContext(),
+                "Seleccionar Materia",
+                "Elige la materia a inscribir para este alumno.",
+                names,
+                -1,
+                (whichSubject, optionText) -> {
                     Subject chosenSub = availableSubjects.get(whichSubject);
 
-                    new MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Seleccionar Ciclo de Inscripción")
-                        .setItems(cycles, (dialog2, whichCycle) -> {
+                    DialogUtils.showCustomChoiceDialog(
+                        requireContext(),
+                        "Seleccionar Ciclo de Inscripción",
+                        "Elige el ciclo lectivo de inscripción.",
+                        cycles,
+                        -1,
+                        (whichCycle, optionTextCycle) -> {
                             String chosenCycle = cycleKeys[whichCycle];
                             viewModel.performOnlineAction(() -> {
                                 viewModel.enrollStudentWithCycle(studentId, chosenSub.id, chosenCycle, error -> {
@@ -333,12 +351,10 @@ public class AdminEnrollmentListFragment extends Fragment {
                                     }
                                 });
                             });
-                        })
-                        .setNegativeButton("Cancelar", null)
-                        .show();
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+                        }
+                    );
+                }
+            );
         });
     }
 

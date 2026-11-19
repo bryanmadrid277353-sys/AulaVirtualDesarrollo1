@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/input_bg"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/input_border">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Top Header Row with Icon and Badge -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <FrameLayout
+                    android:id="@+id/iconHeaderBox"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_badge_semester"
+                    android:backgroundTint="#132540"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true">
+
+                    <ImageView
+                        android:id="@+id/ivHeaderIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_timetable"
+                        app:tint="#38BDF8"
+                        android:contentDescription="Horario" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvSectionBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:textColor="#38BDF8"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="5dp"
+                    android:background="@drawable/bg_badge_semester"
+                    android:backgroundTint="#132540"
+                    tools:text="Sección 01" />
+            </RelativeLayout>
+
+            <!-- Dialog Title & Subtitle -->
+            <TextView
+                android:id="@+id/tvDialogTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Detalle de la Clase"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvDialogSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Información del bloque de horario seleccionado."
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="18dp" />
+
+            <!-- Details Card Summary Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input_field"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_marginBottom="20dp">
+
+                <!-- Row 1: Materia -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="wrap_content"
+                        android:text="📚"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Materia: "
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSubjectName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="Matemáticas 5º Grado" />
+                </LinearLayout>
+
+                <!-- Row 2: Instalación / Aula -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="wrap_content"
+                        android:text="🏢"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Instalación: "
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvFacilityName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        tools:text="Aula Magna A-1" />
+                </LinearLayout>
+
+                <!-- Row 3: Descripción (Opcional) -->
+                <LinearLayout
+                    android:id="@+id/layoutDescRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="top"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="wrap_content"
+                        android:text="📝"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Descripción: "
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSubjectDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        tools:text="Aritmética, geometría básica..." />
+                </LinearLayout>
+
+                <!-- Row 4: Profesor -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="wrap_content"
+                        android:text="👨‍🏫"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Profesor: "
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvProfessorName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        tools:text="Prof. Ricardo Valenzuela" />
+                </LinearLayout>
+
+                <!-- Row 5: Días -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="wrap_content"
+                        android:text="📅"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Días: "
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDays"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        tools:text="Lunes, Miércoles" />
+                </LinearLayout>
+
+                <!-- Row 6: Horario -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="wrap_content"
+                        android:text="⏰"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hora: "
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        tools:text="07:30 AM - 09:00 AM" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Color Picker Palette Section -->
+            <LinearLayout
+                android:id="@+id/layoutColorPickerSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎨 Color de la Clase en el Horario"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Selecciona un color de la paleta para personalizar el bloque"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Palette Buttons Grid / Row -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:overScrollMode="never">
+
+                    <LinearLayout
+                        android:id="@+id/layoutColorPalette"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="4dp">
+
+                        <!-- Color 1: BLUE -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnColorBlue"
+                            style="@style/Widget.Material3.Button.IconButton.Filled"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            app:backgroundTint="#2563EB"
+                            app:cornerRadius="21dp"
+                            app:elevation="0dp"
+                            android:contentDescription="Azul" />
+
+                        <!-- Color 2: GREEN -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnColorGreen"
+                            style="@style/Widget.Material3.Button.IconButton.Filled"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            app:backgroundTint="#10B981"
+                            app:cornerRadius="21dp"
+                            app:elevation="0dp"
+                            android:contentDescription="Verde" />
+
+                        <!-- Color 3: YELLOW_DARK -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnColorYellow"
+                            style="@style/Widget.Material3.Button.IconButton.Filled"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            app:backgroundTint="#F59E0B"
+                            app:cornerRadius="21dp"
+                            app:elevation="0dp"
+                            android:contentDescription="Amarillo" />
+
+                        <!-- Color 4: PURPLE -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnColorPurple"
+                            style="@style/Widget.Material3.Button.IconButton.Filled"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            app:backgroundTint="#8B5CF6"
+                            app:cornerRadius="21dp"
+                            app:elevation="0dp"
+                            android:contentDescription="Mora" />
+
+                        <!-- Color 5: RED -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnColorRed"
+                            style="@style/Widget.Material3.Button.IconButton.Filled"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            app:backgroundTint="#EF4444"
+                            app:cornerRadius="21dp"
+                            app:elevation="0dp"
+                            android:contentDescription="Rojo" />
+
+                        <!-- Color 6: CYAN -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnColorCyan"
+                            style="@style/Widget.Material3.Button.IconButton.Filled"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            app:backgroundTint="#06B6D4"
+                            app:cornerRadius="21dp"
+                            app:elevation="0dp"
+                            android:contentDescription="Cian" />
+
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+            </LinearLayout>
+
+            <!-- Action Buttons: Cerrar / Guardar Color -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCancelDialog"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="Cerrar"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/input_border"
+                    app:strokeWidth="1dp"
+                    android:backgroundTint="@color/input_bg" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveColorDialog"
+                    style="@style/Widget.Bootstrap.Button.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Guardar Color"
+                    android:textColor="@color/white"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    app:cornerRadius="12dp"
+                    app:backgroundTint="?attr/colorPrimary"
+                    app:elevation="0dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</ScrollView>

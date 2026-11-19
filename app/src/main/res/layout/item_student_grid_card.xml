@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardStudentGridItem"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/input_bg"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/input_border"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="14dp">
+
+        <!-- Top Row: Avatar Initials on Left, Chevron on Right -->
+        <FrameLayout
+            android:id="@+id/avatarBoxGrid"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_circle_primary"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true">
+
+            <TextView
+                android:id="@+id/tvStudentInitials"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                tools:text="DS"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <ImageView
+            android:id="@+id/btnChevronRight"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_chevron_right"
+            app:tint="?android:attr/textColorSecondary"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:contentDescription="Gestionar" />
+
+        <!-- Info Column: Name, Carnet/Grade, Pills & Horario Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/avatarBoxGrid"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvStudentName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="Diego Salvador Madrid Cortez" />
+
+            <TextView
+                android:id="@+id/tvStudentCarnetGrade"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="Carnet: EST6197088\n5º Primaria" />
+
+            <TextView
+                android:id="@+id/tvStudentStatusPill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="• Regular"
+                android:textColor="#38BDF8"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:background="@drawable/bg_badge_primary"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/tvStudentAveragePill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☆ Promedio: 8.5"
+                android:textColor="#F59E0B"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:background="@drawable/bg_input_field"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStudentSchedule"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:text="Horario"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:layout_marginTop="10dp"
+                android:paddingHorizontal="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                app:icon="@drawable/ic_timetable"
+                app:iconGravity="textStart"
+                app:iconSize="16dp"
+                app:iconTint="?attr/colorPrimary"
+                app:cornerRadius="10dp"
+                app:strokeColor="@color/input_border"
+                app:strokeWidth="1dp"
+                android:backgroundTint="@color/input_bg" />
+        </LinearLayout>
+
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

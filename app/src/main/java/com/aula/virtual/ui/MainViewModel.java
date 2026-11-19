@@ -1,6 +1,7 @@
 package com.aula.virtual.ui;
 
 import android.app.Application;
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.NonNull;
@@ -8,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.aula.virtual.data.CommentInfo;
+import com.aula.virtual.data.RetrofitClient;
 import com.aula.virtual.data.ScheduleInfo;
 import com.aula.virtual.data.StudentGradeInfo;
 import com.aula.virtual.data.StudentInSubjectInfo;
@@ -72,7 +74,7 @@ public class MainViewModel extends AndroidViewModel {
                 if (!ThemeHelper.isLocalMode(getApplication())) {
                     repository.checkServerHealth(null);
                 }
-                keepAliveHandler.postDelayed(this, 20000);
+                keepAliveHandler.postDelayed(this, 12000);
             }
         }
     };
@@ -88,6 +90,12 @@ public class MainViewModel extends AndroidViewModel {
     public void stopKeepAlive() {
         isKeepAliveRunning = false;
         keepAliveHandler.removeCallbacks(keepAliveRunnable);
+    }
+
+    public void resetConnectionFailures() {
+        if (repository != null) {
+            repository.resetConnectionFailures();
+        }
     }
 
     public MainViewModel(Application application) {
@@ -147,11 +155,15 @@ public class MainViewModel extends AndroidViewModel {
                     if (!list.isEmpty() && selectedStudent.getValue() == null) {
                         selectedStudent.postValue(list.get(0));
                     }
+                } else {
+                    myStudents.postValue(new ArrayList<>());
                 }
             }
 
             @Override
-            public void onFailure(Call<List<Student>> call, Throwable t) {}
+            public void onFailure(Call<List<Student>> call, Throwable t) {
+                myStudents.postValue(new ArrayList<>());
+            }
         });
     }
 
@@ -234,6 +246,12 @@ public class MainViewModel extends AndroidViewModel {
         selectedSubject.postValue(null);
         selectedEnrollment.postValue(null);
         subjectBlog.postValue(null);
+        try {
+            getApplication().getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+                    .edit()
+                    .remove("session_token")
+                    .apply();
+        } catch (Exception ignored) {}
     }
 
     public LiveData<User> getSelectedUser() { return selectedUser; }
@@ -652,6 +670,23 @@ public class MainViewModel extends AndroidViewModel {
                         ThemeHelper.setDataMode(getApplication(), ThemeHelper.MODE_SERVER);
                     }
                     currentUser.setValue(user);
+
+                    if (user.session_token != null && !user.session_token.trim().isEmpty()) {
+                        getApplication().getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+                                .edit()
+                                .putString("session_token", user.session_token)
+                                .apply();
+                    }
+
+                    String fcmToken = getApplication().getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+                            .getString("fcm_token", null);
+                    if (fcmToken != null && !fcmToken.trim().isEmpty() && user.id > 0) {
+                        RetrofitClient.getApiService(getApplication()).updateFcmToken(user.id, fcmToken).enqueue(new Callback<Void>() {
+                            @Override public void onResponse(@NonNull Call<Void> c, @NonNull Response<Void> r) {}
+                            @Override public void onFailure(@NonNull Call<Void> c, @NonNull Throwable t) {}
+                        });
+                    }
+
                     callback.onSuccess(user);
                 } else {
                     if (response.code() >= 500) {

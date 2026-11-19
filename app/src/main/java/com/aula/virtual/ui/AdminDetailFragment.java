@@ -21,6 +21,7 @@ import androidx.navigation.Navigation;
 import com.aula.virtual.R;
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentDetailBinding;
+import com.aula.virtual.util.PasswordHasher;
 
 public class AdminDetailFragment extends Fragment {
     private FragmentDetailBinding binding;
@@ -38,7 +39,7 @@ public class AdminDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
-        int adminId = getArguments().getInt("adminId");
+        int adminId = getArguments() != null ? getArguments().getInt("adminId", -1) : -1;
 
         setupUI();
         observeViewModel();
@@ -50,8 +51,12 @@ public class AdminDetailFragment extends Fragment {
             }
         });
 
-        DialogUtils.showLoadingOverlay(binding.getRoot(), requireContext());
-        viewModel.fetchUserById(adminId);
+        if (adminId != -1) {
+            DialogUtils.showLoadingOverlay(binding.getRoot(), requireContext());
+            viewModel.fetchUserById(adminId);
+        } else {
+            DialogUtils.hideLoadingOverlay(binding.getRoot());
+        }
     }
 
     private void setupUI() {
@@ -171,6 +176,7 @@ public class AdminDetailFragment extends Fragment {
 
     private void observeViewModel() {
         viewModel.getSelectedUser().observe(getViewLifecycleOwner(), user -> {
+            if (binding == null || !isAdded()) return;
             if (user != null) {
                 admin = user;
                 
@@ -203,7 +209,12 @@ public class AdminDetailFragment extends Fragment {
 
                 binding.etField1.setText(admin.name);
                 binding.etField2.setText(admin.carnet);
-                binding.etField3.setText(admin.password);
+                if (PasswordHasher.isHashed(admin.password)) {
+                    binding.etField3.setText("");
+                    binding.etField3.setHint("•••••••• (Sin cambios)");
+                } else {
+                    binding.etField3.setText(admin.password);
+                }
                 
                 if ("PROFESSOR".equals(admin.role) || "ADMIN".equals(admin.role) || "ENCARGADO".equals(admin.role)) {
                     binding.layoutAddress.setVisibility(View.VISIBLE);
@@ -294,6 +305,23 @@ public class AdminDetailFragment extends Fragment {
                     binding.etField2.setEnabled(false);
                 }
 
+                User activeUser = viewModel.getCurrentUser().getValue();
+                boolean isCurrentAdmin = activeUser != null && "ADMIN".equalsIgnoreCase(activeUser.role);
+
+                if (!isCurrentAdmin) {
+                    binding.etField1.setEnabled(false);
+                    binding.etField2.setEnabled(false);
+                    binding.etField3.setEnabled(false);
+                    binding.etAddress.setEnabled(false);
+                    binding.etPersonalEmail.setEnabled(false);
+                    binding.switchLockPhoto.setEnabled(false);
+
+                    binding.btnSave.setVisibility(View.GONE);
+                    binding.btnDelete.setVisibility(View.GONE);
+                    binding.cardLockPhotoContainer.setVisibility(View.GONE);
+                    binding.cardImpersonateContainer.setVisibility(View.GONE);
+                }
+
                 DialogUtils.arrangeGridButtons(binding.layoutActionButtons);
                 DialogUtils.hideLoadingOverlay(binding.getRoot());
             }
@@ -350,10 +378,13 @@ public class AdminDetailFragment extends Fragment {
                 }
             }
 
-            if (ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK) {
-                binding.tvPasswordStrength.setText("Contraseña muy débil");
-                binding.tvPasswordStrength.setTextColor(0xFFFF4444);
-                isValid = false;
+            boolean isNewPassword = !pass.isEmpty() && (PasswordHasher.isHashed(admin.password) || !pass.equals(admin.password));
+            if (isNewPassword) {
+                if (!ValidationUtils.isValidPasswordPolicy(pass)) {
+                    binding.tvPasswordStrength.setText("Mín. 8 caracteres, letra y número");
+                    binding.tvPasswordStrength.setTextColor(0xFFFF4444);
+                    isValid = false;
+                }
             }
 
             if (isValid) {
@@ -369,7 +400,9 @@ public class AdminDetailFragment extends Fragment {
                     admin.carnet = carnetDigits;
                 }
                 
-                admin.password = pass;
+                if (isNewPassword) {
+                    admin.password = PasswordHasher.hashPassword(pass);
+                }
                 
                 if ("PROFESSOR".equals(admin.role) || "ADMIN".equals(admin.role) || "ENCARGADO".equals(admin.role)) {
                     admin.address = binding.etAddress.getText().toString();
@@ -377,7 +410,7 @@ public class AdminDetailFragment extends Fragment {
                     
                     boolean isLocked = binding.switchLockPhoto.isChecked();
                     admin.can_change_photo = isLocked ? 0 : 1;
-                    if (isLocked) admin.profile_image = null;
+                    if (isLocked) admin.profile_image = "";
                 }
 
                 User activeAuthor = viewModel.getCurrentUser().getValue();

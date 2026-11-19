@@ -1,9 +1,11 @@
 package com.aula.virtual.ui;
 
 import android.content.res.ColorStateList;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -111,23 +113,31 @@ public class DirectMessagesFragment extends Fragment {
         int primaryColor = ContextCompat.getColor(requireContext(), R.color.bs_primary);
         int inputBg = ContextCompat.getColor(requireContext(), R.color.input_bg);
         int border = ContextCompat.getColor(requireContext(), R.color.input_border);
+        float density = getResources().getDisplayMetrics().density;
 
         for (int i = 0; i < filters.length; i++) {
             String filterKey = filters[i];
             String label = labels[i];
 
-            MaterialButton chip = new MaterialButton(requireContext(), null, com.google.android.material.R.style.Widget_Material3_Button_OutlinedButton);
+            MaterialButton chip = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
             chip.setText(label);
-            chip.setTextSize(12);
+            chip.setTextSize(13);
+            chip.setTypeface(null, Typeface.BOLD);
             chip.setAllCaps(false);
-            chip.setCornerRadius(10);
-            chip.setStrokeWidth(1);
+            chip.setCornerRadius((int) (12 * density));
+            chip.setStrokeWidth((int) (1 * density));
+            chip.setInsetTop(0);
+            chip.setInsetBottom(0);
+            chip.setGravity(Gravity.CENTER);
+
+            int padH = (int) (16 * density);
+            chip.setPadding(padH, 0, padH, 0);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    (int) (36 * getResources().getDisplayMetrics().density)
+                    (int) (40 * density)
             );
-            params.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
+            params.setMargins(0, 0, (int) (8 * density), 0);
             chip.setLayoutParams(params);
 
             boolean isSelected = filterKey.equals(selectedFilterRole);
@@ -261,23 +271,31 @@ public class DirectMessagesFragment extends Fragment {
                 int primaryColor = ContextCompat.getColor(requireContext(), R.color.bs_primary);
                 int inputBg = ContextCompat.getColor(requireContext(), R.color.input_bg);
                 int border = ContextCompat.getColor(requireContext(), R.color.input_border);
+                float density = getResources().getDisplayMetrics().density;
 
                 for (int i = 0; i < filters.length; i++) {
                     String filterKey = filters[i];
                     String label = labels[i];
 
-                    MaterialButton chip = new MaterialButton(requireContext(), null, com.google.android.material.R.style.Widget_Material3_Button_OutlinedButton);
+                    MaterialButton chip = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
                     chip.setText(label);
-                    chip.setTextSize(12);
+                    chip.setTextSize(13);
+                    chip.setTypeface(null, Typeface.BOLD);
                     chip.setAllCaps(false);
-                    chip.setCornerRadius(10);
-                    chip.setStrokeWidth(1);
+                    chip.setCornerRadius((int) (12 * density));
+                    chip.setStrokeWidth((int) (1 * density));
+                    chip.setInsetTop(0);
+                    chip.setInsetBottom(0);
+                    chip.setGravity(Gravity.CENTER);
+
+                    int padH = (int) (16 * density);
+                    chip.setPadding(padH, 0, padH, 0);
 
                     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
-                            (int) (36 * getResources().getDisplayMetrics().density)
+                            (int) (40 * density)
                     );
-                    params.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
+                    params.setMargins(0, 0, (int) (8 * density), 0);
                     chip.setLayoutParams(params);
 
                     boolean isSelected = filterKey.equals(activeRoleFilter[0]);

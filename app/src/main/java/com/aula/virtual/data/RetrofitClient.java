@@ -3,9 +3,11 @@ package com.aula.virtual.data;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import okhttp3.CipherSuite;
+import okhttp3.ConnectionPool;
 import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -20,7 +22,7 @@ public class RetrofitClient {
     private static final String KEY_SERVER_URL = "server_url";
 
     public static final String EMULATOR_URL = "http://10.0.2.2:8000/";
-    public static final String BASE_URL = "https://should-vault-inspections-temp.trycloudflare.com/";
+    public static final String BASE_URL = "https://movies-men-bits-css.trycloudflare.com/";
 
     private static Retrofit retrofit = null;
     private static String activeUrl = null;
@@ -90,10 +92,75 @@ public class RetrofitClient {
                 Request.Builder requestBuilder = original.newBuilder()
                         .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; Mobile; AulaVirtual)")
                         .header("Accept", "application/json")
+                        .header("Connection", "keep-alive")
                         .header("ngrok-skip-browser-warning", "true")
-                        .header("Bypass-Tunnel-Remainder", "true")
-                        .method(original.method(), original.body());
+                        .header("Bypass-Tunnel-Remainder", "true");
+
+                if (context != null) {
+                    SharedPreferences prefs = context.getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE);
+                    String sessionToken = prefs.getString("session_token", null);
+                    if (sessionToken != null && !sessionToken.trim().isEmpty()) {
+                        requestBuilder.header("Authorization", "Bearer " + sessionToken);
+                        requestBuilder.header("X-Session-Token", sessionToken);
+                    }
+                }
+
+                requestBuilder.method(original.method(), original.body());
                 return chain.proceed(requestBuilder.build());
+            };
+
+            Interceptor unauthorizedInterceptor = chain -> {
+                Request request = chain.request();
+                okhttp3.Response response = chain.proceed(request);
+                if (response.code() == 401 && context != null) {
+                    String reason = "Tu sesión ha expirado o se ha iniciado sesión en otro dispositivo.";
+                    context.getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+                            .edit()
+                            .remove("session_token")
+                            .putString("force_logout_reason", reason)
+                            .apply();
+
+                    android.content.Intent intent = new android.content.Intent(context, com.aula.virtual.MainActivity.class);
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    intent.putExtra("force_logout_reason", reason);
+                    context.startActivity(intent);
+                }
+                return response;
+            };
+
+            Interceptor cloudflareRetryInterceptor = chain -> {
+                Request request = chain.request();
+                okhttp3.Response response = null;
+                boolean responseOK = false;
+                int tryCount = 0;
+                int maxLimit = 3;
+
+                while (!responseOK && tryCount < maxLimit) {
+                    try {
+                        if (response != null) {
+                            response.close();
+                        }
+                        response = chain.proceed(request);
+                        if (response.isSuccessful() || (response.code() < 500 && response.code() != 429)) {
+                            responseOK = true;
+                        } else {
+                            tryCount++;
+                            if (tryCount < maxLimit) {
+                                try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+                            }
+                        }
+                    } catch (Exception e) {
+                        tryCount++;
+                        if (tryCount >= maxLimit) {
+                            if (e instanceof IOException) {
+                                throw (IOException) e;
+                            }
+                            throw new IOException(e);
+                        }
+                        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+                    }
+                }
+                return response != null ? response : chain.proceed(request);
             };
 
             ConnectionSpec tlsSpec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
@@ -109,12 +176,15 @@ public class RetrofitClient {
                     .build();
 
             OkHttpClient client = new OkHttpClient.Builder()
+                    .connectionPool(new ConnectionPool(5, 5, TimeUnit.SECONDS))
                     .connectionSpecs(Arrays.asList(tlsSpec, ConnectionSpec.CLEARTEXT))
+                    .addInterceptor(cloudflareRetryInterceptor)
                     .addInterceptor(headerInterceptor)
+                    .addInterceptor(unauthorizedInterceptor)
                     .addInterceptor(logging)
-                    .connectTimeout(5, TimeUnit.SECONDS)
-                    .readTimeout(8, TimeUnit.SECONDS)
-                    .writeTimeout(8, TimeUnit.SECONDS)
+                    .connectTimeout(12, TimeUnit.SECONDS)
+                    .readTimeout(15, TimeUnit.SECONDS)
+                    .writeTimeout(15, TimeUnit.SECONDS)
                     .followRedirects(true)
                     .followSslRedirects(true)
                     .retryOnConnectionFailure(true)

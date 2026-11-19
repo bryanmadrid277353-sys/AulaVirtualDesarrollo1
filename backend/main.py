@@ -1,13 +1,26 @@
 import os
+import re
 import sys
 import threading
 import time
-from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy import create_engine, Column, Integer, BigInteger, String, Double, ForeignKey, Text, UniqueConstraint, func
+
+# Reconfigurar codificación para evitar errores 'charmap' en consolas de Windows
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from starlette.routing import Match
+from sqlalchemy import create_engine, Column, Integer, BigInteger, String, Double, ForeignKey, Text, UniqueConstraint, func, text, or_
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from pydantic import BaseModel, field_validator, ConfigDict
 from typing import List, Optional, Any, Union
 from datetime import date, datetime
+
+import security  # Hash de contraseñas, tokens, roles y límite de intentos (ver security.py)
 
 def to_dict(model):
     if hasattr(model, "model_dump"):
@@ -16,7 +29,7 @@ def to_dict(model):
 
 # Configuración de la Base de Datos MySQL (XAMPP)
 # Reemplaza 'root' y '' si tienes contraseña en MySQL
-DATABASE_URL = "mysql+mysqlconnector://root:@localhost/aula_virtual"
+DATABASE_URL = os.getenv("AULA_DATABASE_URL", "mysql+mysqlconnector://root:@localhost/aula_virtual")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -130,14 +143,6 @@ class AttendanceRecordDB(Base):
     updatedAt = Column(String(100), nullable=True)
     __table_args__ = (UniqueConstraint('studentId', 'subjectId', 'classDate', name='_student_subject_classdate_uc'),)
 
-class UserSubjectColorDB(Base):
-    __tablename__ = "user_subject_colors"
-    id = Column(Integer, primary_key=True, index=True)
-    userId = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    subjectId = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"))
-    color = Column(String(50), default="BLUE")
-    __table_args__ = (UniqueConstraint('userId', 'subjectId', name='_user_subject_color_uc'),)
-
 class BlogEntryDB(Base):
     __tablename__ = "blog_entries"
     id = Column(Integer, primary_key=True, index=True)
@@ -183,6 +188,7 @@ class NotificationDB(Base):
     targetValue = Column(String(255), nullable=True)
     senderName = Column(String(255), nullable=False)
     timestamp = Column(String(100), nullable=False)
+    iconType = Column(String(50), default="GENERAL", nullable=True)
 
 class DirectMessageDB(Base):
     __tablename__ = "direct_messages"
@@ -208,14 +214,34 @@ Base.metadata.create_all(bind=engine)
 def seed_initial_data():
     try:
         db = SessionLocal()
+        # Auto-migración segura: añadir columna iconType si la tabla notifications ya existía sin ella
+        try:
+            db.execute(text("ALTER TABLE notifications ADD COLUMN iconType VARCHAR(50) DEFAULT 'GENERAL'"))
+            db.commit()
+        except Exception:
+            db.rollback()
+
         admin = db.query(UserDB).filter(UserDB.carnet == "ADMIN12345").first()
         if not admin:
-            db.add(UserDB(carnet="ADMIN12345", name="Admin Maestro", password="ASD###", role="ADMIN"))
-        else:
-            if admin.password != "ASD###" or admin.role != "ADMIN":
-                admin.password = "ASD###"
-                admin.role = "ADMIN"
+            initial_pwd = os.getenv("AULA_ADMIN_PASSWORD", "ASD###")
+            db.add(UserDB(carnet="ADMIN12345", name="Admin Maestro", password=security.hash_password(initial_pwd), role="ADMIN"))
+            print("[SEGURIDAD] Se creó el Admin Maestro (ADMIN12345). Cambia su contraseña desde el panel.", flush=True)
+        elif admin.role != "ADMIN":
+            admin.role = "ADMIN"
+
+        # Migración única y automática: convierte a hash las contraseñas guardadas en texto plano
+        migrated = 0
+        for u in db.query(UserDB).all():
+            if not security.is_hashed(u.password):
+                u.password = security.hash_password((u.password or "").strip())
+                migrated += 1
         db.commit()
+        if migrated:
+            print(f"[SEGURIDAD] {migrated} contraseña(s) en texto plano convertidas a hash seguro.", flush=True)
+
+        admin = db.query(UserDB).filter(UserDB.carnet == "ADMIN12345").first()
+        if admin and security.verify_password(admin.password, "ASD###"):
+            print("[SEGURIDAD] AVISO: el Admin Maestro sigue usando la contraseña por defecto (ASD###). Cámbiala.", flush=True)
         db.close()
     except Exception as e:
         print(f"Error seeding initial data in backend: {e}")
@@ -223,6 +249,10 @@ def seed_initial_data():
 seed_initial_data()
 
 # --- Esquemas Pydantic ---
+
+def _clean_carnet(value: str) -> str:
+    """Quita saltos de línea y espacios del carnet (origen del problema que corregía cleanup_carnets.py)."""
+    return value.replace("\r", "").replace("\n", "").strip() if isinstance(value, str) else value
 
 class UserBase(BaseModel):
     carnet: str
@@ -234,9 +264,58 @@ class UserBase(BaseModel):
     profile_image: Optional[str] = None
     can_change_photo: Optional[int] = 1
 
+    @field_validator("carnet")
+    @classmethod
+    def _carnet_limpio(cls, v):
+        return _clean_carnet(v)
+
 class User(UserBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
+
+class UserUpdate(BaseModel):
+    """Todos los campos son opcionales: solo se modifica lo que se envía (antes, editar sin
+    contraseña daba error 422 y editar con ella borraba la foto de perfil)."""
+    carnet: Optional[str] = None
+    name: Optional[str] = None
+    password: Optional[str] = None
+    role: Optional[str] = None
+    address: Optional[str] = None
+    personal_email: Optional[str] = None
+    profile_image: Optional[str] = None
+    can_change_photo: Optional[int] = None
+
+    @field_validator("carnet")
+    @classmethod
+    def _carnet_limpio(cls, v):
+        return _clean_carnet(v)
+
+class UserOut(BaseModel):
+    """Usuario tal como lo devuelve la API: NUNCA incluye la contraseña ni su hash.
+    El campo 'password' se mantiene (siempre vacío) para no romper clientes antiguos."""
+    id: int
+    carnet: str
+    name: str
+    role: str
+    address: Optional[str] = None
+    personal_email: Optional[str] = None
+    profile_image: Optional[str] = None
+    can_change_photo: Optional[int] = 1
+    password: str = ""
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("password", mode="before")
+    @classmethod
+    def _ocultar_password(cls, v):
+        return ""
+
+class LoginBody(BaseModel):
+    carnet: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = ""
+
+class LoginResponse(UserOut):
+    token: str
 
 class StudentBase(BaseModel):
     encargadoId: Optional[int] = None
@@ -244,6 +323,11 @@ class StudentBase(BaseModel):
     name: str
     grade: Optional[str] = None
     profile_image: Optional[str] = None
+
+    @field_validator("carnet")
+    @classmethod
+    def _carnet_limpio(cls, v):
+        return _clean_carnet(v)
 
 class StudentSchema(StudentBase):
     id: int
@@ -360,15 +444,6 @@ class Enrollment(EnrollmentBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
-class UserSubjectColorBase(BaseModel):
-    userId: int
-    subjectId: int
-    color: str = "BLUE"
-
-class UserSubjectColor(UserSubjectColorBase):
-    id: int
-    model_config = ConfigDict(from_attributes=True)
-
 class BlogEntryBase(BaseModel):
     subjectId: int
     category: str
@@ -433,6 +508,7 @@ class NotificationBase(BaseModel):
     targetValue: Optional[str] = None
     senderName: str
     timestamp: str
+    iconType: Optional[str] = "GENERAL"
 
 class NotificationSchema(NotificationBase):
     id: int
@@ -472,9 +548,73 @@ class ChatRoomInfoSchema(BaseModel):
     unreadCount: int
     initiatorId: int
 
+from fastapi.middleware.cors import CORSMiddleware
+
 # --- API FastAPI ---
 
-app = FastAPI(title="Aula Virtual API")
+_docs_on = security.AUTH_MODE != "enforce"   # en modo enforce se oculta el mapa de la API
+app = FastAPI(
+    title="Aula Virtual API",
+    docs_url="/docs" if _docs_on else None,
+    redoc_url=None,
+    openapi_url="/openapi.json" if _docs_on else None,
+)
+
+_auth_warned = set()
+
+def _is_frontend_route(request: Request) -> bool:
+    """True si la ruta solo la atiende el 'catch-all' que devuelve index.html (no es API)."""
+    for route in request.app.router.routes:
+        match, _ = route.matches(request.scope)
+        if match == Match.FULL:
+            return getattr(route, "path", "") == "/{full_path:path}"
+    return False
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    """Lee el token (Authorization: Bearer ...) y aplica la política de roles de security.py.
+    En modo 'monitor' solo avisa; en modo 'enforce' bloquea con 401/403."""
+    path = request.url.path
+    method = request.method.upper()
+    payload = security.verify_token(security.token_from_header(request.headers.get("authorization")))
+    request.state.auth = payload
+
+    if method == "OPTIONS" or security.is_public(path) or _is_frontend_route(request):
+        return await call_next(request)
+
+    roles = security.required_roles(method, path)
+    problem = None
+    if payload is None:
+        problem = (401, "Sesión no iniciada o expirada. Inicia sesión nuevamente.")
+    elif roles is not None and payload.get("role") not in roles:
+        problem = (403, "No tienes permiso para realizar esta acción.")
+
+    if problem:
+        if security.AUTH_MODE == "enforce":
+            return JSONResponse(status_code=problem[0], content={"detail": problem[1]})
+        key = (method, re.sub(r"\d+", "{id}", path), problem[0])
+        if key not in _auth_warned:
+            _auth_warned.add(key)
+            print(f"[AUTH-MONITOR] {method} {path} se bloquearía en modo enforce (HTTP {problem[0]})", flush=True)
+    return await call_next(request)
+
+print(f"[SEGURIDAD] Modo de autenticación: {security.AUTH_MODE.upper()}"
+      + ("  (NO bloquea; solo avisa. Usa AULA_AUTH_MODE=enforce para proteger la API)" if security.AUTH_MODE == "monitor" else "  (API protegida)"),
+      flush=True)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,   # la sesión viaja en la cabecera Authorization, no en cookies
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+if not os.path.exists(WEB_DIR):
+    os.makedirs(WEB_DIR, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
 # Dependencia para obtener la sesión
 def get_db():
@@ -488,25 +628,51 @@ def get_db():
 
 @app.get("/")
 def root():
+    index_path = os.path.join(WEB_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     return {
         "app": "Aula Virtual API",
         "status": "online",
         "docs": "/docs"
     }
 
-@app.get("/users/students", response_model=List[User])
+@app.get("/api-status")
+def api_status():
+    return {
+        "app": "Aula Virtual API",
+        "status": "online",
+        "docs": "/docs"
+    }
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {
+            "app": "Aula Virtual API",
+            "status": "online",
+            "database": "connected"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Sin conexión a la base de datos MySQL en XAMPP: {str(e)}"
+        )
+
+@app.get("/users/students", response_model=List[UserOut])
 def get_students(db: Session = Depends(get_db)):
     return db.query(UserDB).filter(UserDB.role == "STUDENT").all()
 
-@app.get("/users/admins", response_model=List[User])
+@app.get("/users/admins", response_model=List[UserOut])
 def get_admins(db: Session = Depends(get_db)):
     return db.query(UserDB).filter(UserDB.role == "ADMIN").all()
 
-@app.get("/users/professors", response_model=List[User])
+@app.get("/users/professors", response_model=List[UserOut])
 def get_professors(db: Session = Depends(get_db)):
     return db.query(UserDB).filter(UserDB.role == "PROFESSOR").all()
 
-@app.get("/users/encargados", response_model=List[User])
+@app.get("/users/encargados", response_model=List[UserOut])
 def get_encargados(db: Session = Depends(get_db)):
     return db.query(UserDB).filter(UserDB.role == "ENCARGADO").all()
 
@@ -573,8 +739,11 @@ def get_professor_timetable(professor_id: int, db: Session = Depends(get_db)):
 
     return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": s.color, "professorName": u.name} for sch, s, u in results]
 
-@app.post("/users", response_model=User)
+@app.post("/users", response_model=UserOut)
 def create_user(user: UserBase, db: Session = Depends(get_db)):
+    problem = security.password_problem(user.password)
+    if problem:
+        raise HTTPException(status_code=400, detail=problem)
     try:
         existing = db.query(UserDB).filter(UserDB.carnet == user.carnet).first()
         if existing:
@@ -582,7 +751,9 @@ def create_user(user: UserBase, db: Session = Depends(get_db)):
                 status_code=400,
                 detail=f"El carnet '{user.carnet}' ya está registrado. Ingresa un número de carnet diferente."
             )
-        db_user = UserDB(**to_dict(user))
+        data = to_dict(user)
+        data["password"] = security.hash_password(user.password.strip())
+        db_user = UserDB(**data)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
@@ -594,14 +765,47 @@ def create_user(user: UserBase, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Error al registrar usuario: {str(e)}")
 
-@app.put("/users/{user_id}", response_model=User)
-def update_user(user_id: int, user: UserBase, db: Session = Depends(get_db)):
+@app.put("/users/{user_id}", response_model=UserOut)
+def update_user(user_id: int, user: UserUpdate, request: Request, db: Session = Depends(get_db)):
     db_user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    for key, value in to_dict(user).items():
-        setattr(db_user, key, value)
-    db.commit()
+
+    data = user.model_dump(exclude_unset=True)   # solo lo enviado: no se pisan campos como profile_image
+
+    # Con sesión iniciada: un ADMIN edita a cualquiera; el resto solo su propio perfil y sin tocar rol/carnet/nombre
+    auth = getattr(request.state, "auth", None)
+    if auth is not None and auth.get("role") != "ADMIN":
+        if auth.get("src") != "user" or auth.get("uid") != user_id:
+            raise HTTPException(status_code=403, detail="Solo puedes modificar tu propio perfil.")
+        for protegido in ("role", "carnet", "name", "can_change_photo"):
+            data.pop(protegido, None)
+        if "profile_image" in data and db_user.can_change_photo == 0:
+            raise HTTPException(status_code=403, detail="Un administrador bloqueó el cambio de foto de perfil.")
+
+    new_pwd = data.pop("password", None)
+    if new_pwd is not None and new_pwd.strip():   # vacío o ausente = conservar la actual
+        problem = security.password_problem(new_pwd)
+        if problem:
+            raise HTTPException(status_code=400, detail=problem)
+        db_user.password = security.hash_password(new_pwd.strip())
+
+    if data.get("carnet") and data["carnet"] != db_user.carnet:
+        if db.query(UserDB).filter(UserDB.carnet == data["carnet"], UserDB.id != user_id).first():
+            raise HTTPException(status_code=400, detail=f"El carnet '{data['carnet']}' ya está registrado.")
+
+    for key, value in data.items():
+        if value is None and key in ("carnet", "name", "role"):
+            continue   # campos obligatorios: nunca se dejan en blanco
+        if key == "profile_image" and (value == "" or value is None):
+            setattr(db_user, key, None)
+        else:
+            setattr(db_user, key, value)
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error al actualizar usuario: {str(e)}")
     db.refresh(db_user)
     return db_user
 
@@ -614,48 +818,113 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Usuario eliminado"}
 
-@app.get("/users/{user_id}", response_model=User)
+@app.get("/users/{user_id}", response_model=UserOut)
 def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
 
-@app.get("/login")
-def login(carnet: str, password: str, db: Session = Depends(get_db)):
-    c = carnet.strip() if carnet else ""
-    p = password.strip() if password else ""
+# --- Autenticación ---
+_LOGIN_ERROR = "Carnet o contraseña incorrectos."   # mensaje único: no revela si el usuario existe
+
+def _client_ip(request: Request) -> str:
+    return request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "desconocida")
+
+def _authenticate(request: Request, raw_id: Optional[str], password: Optional[str], db: Session) -> LoginResponse:
+    c = (raw_id or "").strip()
+    p = (password or "").strip()
+    if not c or not p:
+        raise HTTPException(status_code=400, detail="Por favor ingresa carnet/usuario y contraseña.")
+
+    c_clean = c.lower()
+    ip = _client_ip(request)
+
+    wait = security.login_limiter.seconds_blocked(ip, c_clean)
+    if wait:
+        mins = max(1, -(-wait // 60))
+        raise HTTPException(status_code=429, detail=f"Demasiados intentos fallidos. Intenta de nuevo en {mins} minuto(s).")
+
+    # 1. Buscar en 'users' por carnet, nombre completo o correo personal
+    clean_carnet = func.replace(func.replace(func.lower(UserDB.carnet), '\n', ''), '\r', '')
+    clean_name = func.replace(func.replace(func.lower(UserDB.name), '\n', ''), '\r', '')
+    clean_email = func.replace(func.replace(func.lower(UserDB.personal_email), '\n', ''), '\r', '')
 
     user = db.query(UserDB).filter(
-        func.lower(UserDB.carnet) == c.lower(),
-        UserDB.password == p
+        or_(clean_carnet == c_clean, clean_name == c_clean, clean_email == c_clean)
     ).first()
-    if user:
-        return user
 
-    user = db.query(UserDB).filter(
-        func.lower(UserDB.name) == c.lower(),
-        UserDB.password == p
-    ).first()
     if user:
-        return user
-
-    if c.upper() in ["ADMIN", "ADMIN12345", "ADMIN MAESTRO"] and p == "ASD###":
-        user = db.query(UserDB).filter(UserDB.carnet == "ADMIN12345").first()
-        if not user:
-            user = UserDB(carnet="ADMIN12345", name="Admin Maestro", password="ASD###", role="ADMIN")
-            db.add(user)
+        if security.verify_password(user.password, p):
+            if not security.is_hashed(user.password):          # migración transparente a hash
+                user.password = security.hash_password(p)
+            if '\n' in user.carnet or '\r' in user.carnet or user.carnet.strip() != user.carnet:
+                user.carnet = _clean_carnet(user.carnet)
             db.commit()
             db.refresh(user)
-        else:
-            if user.role != "ADMIN" or user.password != "ASD###":
-                user.role = "ADMIN"
-                user.password = "ASD###"
-                db.commit()
-                db.refresh(user)
-        return user
+            security.login_limiter.reset(c_clean)
+            out = UserOut.model_validate(user)
+            token = security.create_token(user.id, user.role, user.carnet, "user")
+            return LoginResponse(**out.model_dump(), token=token)
+    else:
+        # 2. Estudiantes (tabla 'students', sin contraseña propia): contraseña genérica configurable o su carnet
+        clean_st_carnet = func.replace(func.replace(func.lower(StudentDB.carnet), '\n', ''), '\r', '')
+        clean_st_name = func.replace(func.replace(func.lower(StudentDB.name), '\n', ''), '\r', '')
+        student = db.query(StudentDB).filter(or_(clean_st_carnet == c_clean, clean_st_name == c_clean)).first()
 
-    raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+        if student and (p == security.STUDENT_DEFAULT_PASSWORD or p.lower() == student.carnet.strip().lower()):
+            security.login_limiter.reset(c_clean)
+            out = UserOut(id=student.id, carnet=student.carnet, name=student.name, role="STUDENT",
+                          profile_image=student.profile_image, can_change_photo=1)
+            token = security.create_token(student.id, "STUDENT", student.carnet, "student")
+            return LoginResponse(**out.model_dump(), token=token)
+        if not student:
+            security.burn_time(p)
+
+    security.login_limiter.register_failure(ip, c_clean)
+    raise HTTPException(status_code=401, detail=_LOGIN_ERROR)
+
+@app.post("/login", response_model=LoginResponse)
+def login_post(
+    request: Request,
+    body: Optional[LoginBody] = None,
+    carnet: Optional[str] = None,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Recomendado: enviar {"carnet": "...", "password": "..."} en el cuerpo JSON (la contraseña no queda en la URL).
+    También acepta parámetros en la URL para compatibilidad con la app Android."""
+    raw_id = (body.carnet or body.username if body else None) or carnet or username
+    pwd = (body.password if body and body.password else None) or password
+    return _authenticate(request, raw_id, pwd, db)
+
+@app.get("/login", response_model=LoginResponse, deprecated=True)
+def login_get(
+    request: Request,
+    carnet: Optional[str] = None,
+    username: Optional[str] = None,
+    password: str = "",
+    db: Session = Depends(get_db),
+):
+    """OBSOLETO: la contraseña viaja en la URL y queda en registros. Se conserva para la app Android actual."""
+    return _authenticate(request, carnet or username, password, db)
+
+@app.get("/me", response_model=UserOut)
+def get_me(request: Request, db: Session = Depends(get_db)):
+    """Devuelve el usuario de la sesión actual leyendo rol y datos desde la base (no desde el navegador)."""
+    auth = getattr(request.state, "auth", None)
+    if not auth:
+        raise HTTPException(status_code=401, detail="Sesión no iniciada o expirada. Inicia sesión nuevamente.")
+    if auth.get("src") == "student":
+        st = db.query(StudentDB).filter(StudentDB.id == auth["uid"]).first()
+        if not st:
+            raise HTTPException(status_code=401, detail="La cuenta ya no existe.")
+        return UserOut(id=st.id, carnet=st.carnet, name=st.name, role="STUDENT", profile_image=st.profile_image)
+    user = db.query(UserDB).filter(UserDB.id == auth["uid"]).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="La cuenta ya no existe.")
+    return user
 
 # --- Subjects ---
 @app.get("/subjects", response_model=List[Subject])
@@ -715,7 +984,7 @@ class StudentGradeInfo(BaseModel):
 
 class StudentInSubjectInfo(BaseModel):
     enrollment: Enrollment
-    student: User
+    student: UserOut
 
 @app.get("/subjects/{sub_id}/enrollments", response_model=List[StudentInSubjectInfo])
 def get_subject_enrollments(sub_id: int, db: Session = Depends(get_db)):
@@ -1001,25 +1270,14 @@ def get_facility_schedules_by_subject(sub_id: int, db: Session = Depends(get_db)
 # --- User specific schedules & subject colors ---
 @app.put("/users/{user_id}/subjects/{subject_id}/color")
 def update_user_subject_color(user_id: int, subject_id: int, color: str, db: Session = Depends(get_db)):
-    usc = db.query(UserSubjectColorDB).filter(UserSubjectColorDB.userId == user_id, UserSubjectColorDB.subjectId == subject_id).first()
-    if not usc:
-        usc = UserSubjectColorDB(userId=user_id, subjectId=subject_id, color=color)
-        db.add(usc)
-    else:
-        usc.color = color
-
     enrollment = db.query(EnrollmentDB).filter(EnrollmentDB.studentId == user_id, EnrollmentDB.subjectId == subject_id).first()
     if enrollment:
         enrollment.color = color
-
-    db.commit()
+        db.commit()
     return {"message": "Color actualizado", "color": color}
 
 @app.get("/users/{user_id}/subjects/{subject_id}/color")
 def get_user_subject_color(user_id: int, subject_id: int, db: Session = Depends(get_db)):
-    usc = db.query(UserSubjectColorDB).filter(UserSubjectColorDB.userId == user_id, UserSubjectColorDB.subjectId == subject_id).first()
-    if usc and usc.color:
-        return {"color": usc.color}
     enrollment = db.query(EnrollmentDB).filter(EnrollmentDB.studentId == user_id, EnrollmentDB.subjectId == subject_id).first()
     if enrollment and enrollment.color:
         return {"color": enrollment.color}
@@ -1034,7 +1292,7 @@ def get_student_personal_schedules(student_id: int, db: Session = Depends(get_db
         .join(EnrollmentDB, SubjectDB.id == EnrollmentDB.subjectId)\
         .filter(EnrollmentDB.studentId == student_id).all()
 
-    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": e.color if e.color else (s.color if s.color else "BLUE"), "professorName": u.name} for sch, s, u, e in results]
+    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": e.color if e.color else (sch.color if sch.color else (s.color if s.color else "BLUE")), "professorName": u.name} for sch, s, u, e in results]
 
 @app.get("/users/professor/{prof_id}/schedules", response_model=List[ScheduleInfo])
 def get_professor_personal_schedules(prof_id: int, db: Session = Depends(get_db)):
@@ -1045,8 +1303,7 @@ def get_professor_personal_schedules(prof_id: int, db: Session = Depends(get_db)
 
     output = []
     for sch, s, u in results:
-        usc = db.query(UserSubjectColorDB).filter(UserSubjectColorDB.userId == prof_id, UserSubjectColorDB.subjectId == s.id).first()
-        color = usc.color if (usc and usc.color) else (s.color if s.color else "BLUE")
+        color = sch.color if (sch and sch.color) else (s.color if s.color else "BLUE")
         output.append({"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": color, "professorName": u.name})
     return output
 
@@ -1219,7 +1476,7 @@ def delete_chat_room(chat_room_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Chat eliminado exitosamente"}
 
-@app.get("/subjects/{sub_id}/participants", response_model=List[User])
+@app.get("/subjects/{sub_id}/participants", response_model=List[UserOut])
 def get_subject_participants(sub_id: int, db: Session = Depends(get_db)):
     subject = db.query(SubjectDB).filter(SubjectDB.id == sub_id).first()
     if not subject:
@@ -1449,6 +1706,13 @@ def save_modification_log(log_in: ModificationLogBase, db: Session = Depends(get
     db.refresh(log)
     return log
 
+@app.get("/{full_path:path}")
+def catch_all_frontend_routes(full_path: str):
+    index_path = os.path.join(WEB_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Página no encontrada")
+
 def get_local_ip():
     try:
         import socket
@@ -1468,27 +1732,27 @@ if __name__ == "__main__":
     def start_tunnel():
         import os
         import time
-        time.sleep(2)
+        time.sleep(1)
         tunnel_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "run_tunnel_and_update_app.py")
         if os.path.exists(tunnel_script):
             try:
                 import run_tunnel_and_update_app
                 run_tunnel_and_update_app.main()
             except Exception as e:
-                print(f"[!] Error al iniciar Cloudflare Tunnel: {e}")
+                print(f"[!] Error al iniciar Cloudflare Tunnel: {e}", flush=True)
 
     tunnel_thread = threading.Thread(target=start_tunnel, daemon=True)
     tunnel_thread.start()
 
     local_ip = get_local_ip()
-    print("===================================================")
-    print("    AULA VIRTUAL - SERVIDOR FASTAPI BACKEND")
-    print("===================================================")
-    print(f"Servidor FastAPI ejecutándose en el puerto 8000:")
-    print(f"  • PC Localhost:            http://localhost:8000/")
-    print(f"  • Emulador Android Studio: http://10.0.2.2:8000/")
-    print(f"  • Red Local Wi-Fi:         http://{local_ip}:8000/")
-    print("===================================================\n")
+    print("===================================================", flush=True)
+    print("    AULA VIRTUAL - SERVIDOR FASTAPI BACKEND", flush=True)
+    print("===================================================", flush=True)
+    print("Servidor FastAPI ejecutandose en el puerto 8000:", flush=True)
+    print("  * PC Localhost:            http://localhost:8000/", flush=True)
+    print("  * Emulador Android Studio: http://10.0.2.2:8000/", flush=True)
+    print(f"  * Red Local Wi-Fi:         http://{local_ip}:8000/", flush=True)
+    print("===================================================\n", flush=True)
 
     # Configurar uvicorn para enviar logs informativos a sys.stdout (evita texto rojo en la consola del IDE)
     log_config = copy.deepcopy(LOGGING_CONFIG)

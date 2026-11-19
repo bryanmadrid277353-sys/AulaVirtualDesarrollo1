@@ -79,8 +79,14 @@ public interface ApiService {
     @DELETE("users/{id}")
     Call<Void> deleteUser(@Path("id") int id);
 
+    @PUT("users/{userId}/fcm-token")
+    Call<Void> updateFcmToken(@Path("userId") int userId, @Query("fcm_token") String fcmToken);
+
     @GET("login")
     Call<User> login(@Query("carnet") String carnet, @Query("password") String password);
+
+    @GET("login")
+    Call<User> loginWithFcm(@Query("carnet") String carnet, @Query("password") String password, @Query("fcm_token") String fcmToken);
 
     @GET("users/{id}")
     Call<User> getUserById(@Path("id") int id);

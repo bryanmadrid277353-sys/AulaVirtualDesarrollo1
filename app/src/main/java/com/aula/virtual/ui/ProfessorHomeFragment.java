@@ -58,14 +58,6 @@ public class ProfessorHomeFragment extends Fragment {
             }
         });
 
-        if (viewModel.isImpersonating()) {
-            binding.cardReturnToAdmin.setVisibility(View.VISIBLE);
-            binding.cardReturnToAdmin.setOnClickListener(v -> {
-                viewModel.stopImpersonation();
-                Navigation.findNavController(view).popBackStack();
-            });
-        }
-
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (user != null) {
                 String nameStr = user.name != null ? user.name : "Profesor";
@@ -119,6 +111,12 @@ public class ProfessorHomeFragment extends Fragment {
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        renderSubjectCards();
+    }
+
     private void renderSubjectCards() {
         if (binding == null || getContext() == null || !isAdded()) return;
         binding.layoutSubjectCardsContainer.removeAllViews();
@@ -145,39 +143,88 @@ public class ProfessorHomeFragment extends Fragment {
             return;
         }
 
-        for (Subject s : filtered) {
-            View cardView = LayoutInflater.from(requireContext()).inflate(R.layout.item_professor_subject_card, null);
+        boolean isGrid = ThemeHelper.isGridHomeLayout(requireContext());
 
-            TextView tvTitle = cardView.findViewById(R.id.tvSubjectTitle);
-            TextView tvSubtitle = cardView.findViewById(R.id.tvSubjectSubtitle);
-            TextView tvScheduleDays = cardView.findViewById(R.id.tvScheduleDays);
-            View btnChevron = cardView.findViewById(R.id.btnChevronRight);
+        if (isGrid) {
+            float density = getResources().getDisplayMetrics().density;
+            for (int i = 0; i < count; i += 2) {
+                LinearLayout rowLayout = new LinearLayout(requireContext());
+                rowLayout.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                rowLp.setMargins(0, 0, 0, (int) (12 * density));
+                rowLayout.setLayoutParams(rowLp);
 
-            tvTitle.setText(s.name != null ? s.name : "Materia");
+                Subject s1 = filtered.get(i);
+                View cardView1 = LayoutInflater.from(requireContext()).inflate(R.layout.item_professor_subject_grid_card, rowLayout, false);
+                populateSubjectCard(cardView1, s1);
+                LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f);
+                lp1.setMarginEnd((int) (6 * density));
+                cardView1.setLayoutParams(lp1);
+                rowLayout.addView(cardView1);
 
-            String facilityName = facilityMap.get(s.id);
-            String secText = (s.section != null && !s.section.trim().isEmpty()) ? ("Sección " + s.section.trim()) : "";
-            String descText = (s.description != null && !s.description.trim().isEmpty()) ? s.description.trim() : "";
+                if (i + 1 < count) {
+                    Subject s2 = filtered.get(i + 1);
+                    View cardView2 = LayoutInflater.from(requireContext()).inflate(R.layout.item_professor_subject_grid_card, rowLayout, false);
+                    populateSubjectCard(cardView2, s2);
+                    LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f);
+                    lp2.setMarginStart((int) (6 * density));
+                    cardView2.setLayoutParams(lp2);
+                    rowLayout.addView(cardView2);
+                } else {
+                    View dummy = new View(requireContext());
+                    LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f);
+                    lp2.setMarginStart((int) (6 * density));
+                    dummy.setLayoutParams(lp2);
+                    rowLayout.addView(dummy);
+                }
 
-            StringBuilder sb = new StringBuilder();
-            if (!descText.isEmpty()) {
-                sb.append(descText);
+                binding.layoutSubjectCardsContainer.addView(rowLayout);
             }
-            if (facilityName != null && !facilityName.trim().isEmpty()) {
-                if (sb.length() > 0) sb.append(" • ");
-                sb.append(facilityName.trim());
+        } else {
+            for (Subject s : filtered) {
+                View cardView = LayoutInflater.from(requireContext()).inflate(R.layout.item_professor_subject_card, null);
+                populateSubjectCard(cardView, s);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(0, 0, 0, (int) (12 * getResources().getDisplayMetrics().density));
+                cardView.setLayoutParams(lp);
+                binding.layoutSubjectCardsContainer.addView(cardView);
             }
-            if (!secText.isEmpty()) {
-                if (sb.length() > 0) sb.append(" • ");
-                sb.append(secText);
-            }
-            if (sb.length() == 0) {
-                sb.append("Materia asignada");
-            }
-            tvSubtitle.setText(sb.toString());
+        }
+    }
 
-            // Real Schedule Days & Times from Database
-            ScheduleInfo schInfo = scheduleMap.get(s.id);
+    private void populateSubjectCard(View cardView, Subject s) {
+        TextView tvTitle = cardView.findViewById(R.id.tvSubjectTitle);
+        TextView tvSubtitle = cardView.findViewById(R.id.tvSubjectSubtitle);
+        TextView tvScheduleDays = cardView.findViewById(R.id.tvScheduleDays);
+        View btnChevron = cardView.findViewById(R.id.btnChevronRight);
+
+        if (tvTitle != null) tvTitle.setText(s.name != null ? s.name : "Materia");
+
+        String facilityName = facilityMap.get(s.id);
+        String secText = (s.section != null && !s.section.trim().isEmpty()) ? ("Sección " + s.section.trim()) : "";
+        String descText = (s.description != null && !s.description.trim().isEmpty()) ? s.description.trim() : "";
+
+        StringBuilder sb = new StringBuilder();
+        if (!descText.isEmpty()) {
+            sb.append(descText);
+        }
+        if (facilityName != null && !facilityName.trim().isEmpty()) {
+            if (sb.length() > 0) sb.append(" • ");
+            sb.append(facilityName.trim());
+        }
+        if (!secText.isEmpty()) {
+            if (sb.length() > 0) sb.append(" • ");
+            sb.append(secText);
+        }
+        if (sb.length() == 0) {
+            sb.append("Materia asignada");
+        }
+        if (tvSubtitle != null) tvSubtitle.setText(sb.toString());
+
+        ScheduleInfo schInfo = scheduleMap.get(s.id);
+        if (tvScheduleDays != null) {
             if (schInfo != null && schInfo.schedule != null && schInfo.schedule.days != null && !schInfo.schedule.days.trim().isEmpty()) {
                 String daysStr = schInfo.schedule.days.trim();
                 if (schInfo.schedule.startTime != null && schInfo.schedule.endTime != null) {
@@ -187,25 +234,17 @@ public class ProfessorHomeFragment extends Fragment {
             } else {
                 tvScheduleDays.setText("Horario por definir");
             }
+        }
 
-            // Navigation to Subject Management (Blog, Foro, Alumnos, Notas, etc.)
-            View.OnClickListener openSubjectManagement = v -> {
-                Bundle args = new Bundle();
-                args.putInt("subjectId", s.id);
-                Navigation.findNavController(requireView()).navigate(R.id.action_professorHomeFragment_to_subjectBlogFragment, args);
-            };
+        View.OnClickListener openSubjectManagement = v -> {
+            Bundle args = new Bundle();
+            args.putInt("subjectId", s.id);
+            Navigation.findNavController(requireView()).navigate(R.id.action_professorHomeFragment_to_subjectBlogFragment, args);
+        };
 
-            cardView.setOnClickListener(openSubjectManagement);
-            if (btnChevron != null) {
-                btnChevron.setOnClickListener(openSubjectManagement);
-            }
-
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.setMargins(0, 0, 0, (int) (12 * getResources().getDisplayMetrics().density));
-            cardView.setLayoutParams(lp);
-
-            binding.layoutSubjectCardsContainer.addView(cardView);
+        cardView.setOnClickListener(openSubjectManagement);
+        if (btnChevron != null) {
+            btnChevron.setOnClickListener(openSubjectManagement);
         }
     }
 

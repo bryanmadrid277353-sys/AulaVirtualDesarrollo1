@@ -271,6 +271,115 @@ public class DialogUtils {
         void onDeleteConfirmed();
     }
 
+    public interface OnOptionSelectedListener {
+        void onOptionSelected(int index, String optionText);
+    }
+
+    public static void showCustomConfirmDialog(
+            Context context,
+            String title,
+            String message,
+            String okText,
+            String cancelText,
+            Runnable onConfirm) {
+
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_custom_confirm, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context, R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvConfirmTitle);
+        TextView tvMessage = dialogView.findViewById(R.id.tvConfirmMessage);
+        com.google.android.material.button.MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancelConfirm);
+        com.google.android.material.button.MaterialButton btnOk = dialogView.findViewById(R.id.btnOkConfirm);
+
+        if (title != null && !title.isEmpty()) tvTitle.setText(title);
+        if (message != null && !message.isEmpty()) tvMessage.setText(message);
+        if (cancelText != null && !cancelText.isEmpty()) btnCancel.setText(cancelText);
+        if (okText != null && !okText.isEmpty()) btnOk.setText(okText);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnOk.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (onConfirm != null) onConfirm.run();
+        });
+
+        dialog.show();
+    }
+
+    public static void showCustomConfirmDialog(Context context, String title, String message, Runnable onConfirm) {
+        showCustomConfirmDialog(context, title, message, "Sí, continuar", "Cancelar", onConfirm);
+    }
+
+    public static void showCustomChoiceDialog(
+            Context context,
+            String title,
+            String subtitle,
+            String[] options,
+            int selectedIndex,
+            OnOptionSelectedListener listener) {
+
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_custom_choice, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context, R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvChoiceTitle);
+        TextView tvSubtitle = dialogView.findViewById(R.id.tvChoiceSubtitle);
+        LinearLayout optionsContainer = dialogView.findViewById(R.id.layoutOptionsContainer);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelChoice);
+
+        if (title != null && !title.isEmpty()) tvTitle.setText(title);
+        if (subtitle != null && !subtitle.isEmpty()) {
+            tvSubtitle.setText(subtitle);
+            tvSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            tvSubtitle.setVisibility(View.GONE);
+        }
+
+        optionsContainer.removeAllViews();
+        if (options != null) {
+            final List<ImageView> radioIcons = new ArrayList<>();
+            for (int i = 0; i < options.length; i++) {
+                final int index = i;
+                final String optionStr = options[i];
+
+                View rowView = LayoutInflater.from(context).inflate(R.layout.item_dialog_choice_option, optionsContainer, false);
+                ImageView ivRadio = rowView.findViewById(R.id.ivRadioIcon);
+                TextView tvOption = rowView.findViewById(R.id.tvOptionText);
+
+                tvOption.setText(optionStr);
+                radioIcons.add(ivRadio);
+
+                boolean isSelected = (index == selectedIndex);
+                ivRadio.setImageResource(isSelected ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
+
+                rowView.setOnClickListener(v -> {
+                    for (int j = 0; j < radioIcons.size(); j++) {
+                        radioIcons.get(j).setImageResource(j == index ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
+                    }
+                    dialog.dismiss();
+                    if (listener != null) {
+                        listener.onOptionSelected(index, optionStr);
+                    }
+                });
+
+                optionsContainer.addView(rowView);
+            }
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
     public static void showConfirmDeleteDialog(
             Context context,
             String title,

@@ -6,11 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -19,13 +17,13 @@ import com.aula.virtual.data.StudentGradeInfo;
 import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.databinding.FragmentStudentHomeBinding;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.List;
 import java.util.Locale;
 
 public class StudentHomeFragment extends Fragment {
     private FragmentStudentHomeBinding binding;
+    private MainViewModel viewModel;
 
     @Nullable
     @Override
@@ -37,18 +35,10 @@ public class StudentHomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        MainViewModel viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
         binding.btnGoToProfileHome.setOnClickListener(v -> 
             Navigation.findNavController(view).navigate(R.id.action_studentHomeFragment_to_studentProfileFragment));
-
-        if (viewModel.isImpersonating()) {
-            binding.cardReturnToAdmin.setVisibility(View.VISIBLE);
-            binding.cardReturnToAdmin.setOnClickListener(v -> {
-                viewModel.stopImpersonation();
-                Navigation.findNavController(view).popBackStack();
-            });
-        }
 
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (binding == null || !isAdded()) return;
@@ -71,6 +61,14 @@ public class StudentHomeFragment extends Fragment {
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (viewModel != null && viewModel.getMyStudents().getValue() != null) {
+            renderStudentCards(viewModel, viewModel.getMyStudents().getValue());
+        }
+    }
+
     private void renderStudentCards(MainViewModel viewModel, List<Student> students) {
         if (binding == null || getContext() == null || !isAdded()) return;
         binding.layoutStudentCardsContainer.removeAllViews();
@@ -88,27 +86,77 @@ public class StudentHomeFragment extends Fragment {
             return;
         }
 
-        for (Student s : students) {
-            View cardView = LayoutInflater.from(requireContext()).inflate(R.layout.item_student_card, null);
+        boolean isGrid = ThemeHelper.isGridHomeLayout(requireContext());
 
-            TextView tvInitials = cardView.findViewById(R.id.tvStudentInitials);
-            TextView tvName = cardView.findViewById(R.id.tvStudentName);
-            TextView tvCarnetGrade = cardView.findViewById(R.id.tvStudentCarnetGrade);
-            TextView tvStatusPill = cardView.findViewById(R.id.tvStudentStatusPill);
-            TextView tvAveragePill = cardView.findViewById(R.id.tvStudentAveragePill);
-            View btnChevronRight = cardView.findViewById(R.id.btnChevronRight);
+        if (isGrid) {
+            float density = getResources().getDisplayMetrics().density;
+            for (int i = 0; i < count; i += 2) {
+                LinearLayout rowLayout = new LinearLayout(requireContext());
+                rowLayout.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                rowLp.setMargins(0, 0, 0, (int) (12 * density));
+                rowLayout.setLayoutParams(rowLp);
 
-            MaterialButton btnSchedule = cardView.findViewById(R.id.btnStudentSchedule);
+                Student s1 = students.get(i);
+                View cardView1 = LayoutInflater.from(requireContext()).inflate(R.layout.item_student_grid_card, rowLayout, false);
+                populateStudentCard(viewModel, cardView1, s1);
+                LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f);
+                lp1.setMarginEnd((int) (6 * density));
+                cardView1.setLayoutParams(lp1);
+                rowLayout.addView(cardView1);
 
-            tvInitials.setText(getInitials(s.name));
-            tvName.setText(s.name != null ? s.name : "Estudiante");
-            String carnetStr = s.carnet != null ? s.carnet : "-";
-            String gradeStr = s.grade != null ? s.grade : "Primaria";
-            tvCarnetGrade.setText("Carnet: " + carnetStr + " • " + gradeStr);
+                if (i + 1 < count) {
+                    Student s2 = students.get(i + 1);
+                    View cardView2 = LayoutInflater.from(requireContext()).inflate(R.layout.item_student_grid_card, rowLayout, false);
+                    populateStudentCard(viewModel, cardView2, s2);
+                    LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f);
+                    lp2.setMarginStart((int) (6 * density));
+                    cardView2.setLayoutParams(lp2);
+                    rowLayout.addView(cardView2);
+                } else {
+                    View dummy = new View(requireContext());
+                    LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f);
+                    lp2.setMarginStart((int) (6 * density));
+                    dummy.setLayoutParams(lp2);
+                    rowLayout.addView(dummy);
+                }
 
-            tvStatusPill.setText("• Regular");
+                binding.layoutStudentCardsContainer.addView(rowLayout);
+            }
+        } else {
+            for (Student s : students) {
+                View cardView = LayoutInflater.from(requireContext()).inflate(R.layout.item_student_card, null);
+                populateStudentCard(viewModel, cardView, s);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(0, 0, 0, (int) (12 * getResources().getDisplayMetrics().density));
+                cardView.setLayoutParams(lp);
 
-            // Calculate student's average based on active academic periods
+                binding.layoutStudentCardsContainer.addView(cardView);
+            }
+        }
+    }
+
+    private void populateStudentCard(MainViewModel viewModel, View cardView, Student s) {
+        TextView tvInitials = cardView.findViewById(R.id.tvStudentInitials);
+        TextView tvName = cardView.findViewById(R.id.tvStudentName);
+        TextView tvCarnetGrade = cardView.findViewById(R.id.tvStudentCarnetGrade);
+        TextView tvStatusPill = cardView.findViewById(R.id.tvStudentStatusPill);
+        TextView tvAveragePill = cardView.findViewById(R.id.tvStudentAveragePill);
+        View btnChevronRight = cardView.findViewById(R.id.btnChevronRight);
+
+        MaterialButton btnSchedule = cardView.findViewById(R.id.btnStudentSchedule);
+
+        if (tvInitials != null) tvInitials.setText(getInitials(s.name));
+        if (tvName != null) tvName.setText(s.name != null ? s.name : "Estudiante");
+        String carnetStr = s.carnet != null ? s.carnet : "-";
+        String gradeStr = s.grade != null ? s.grade : "Primaria";
+        if (tvCarnetGrade != null) tvCarnetGrade.setText("Carnet: " + carnetStr + " • " + gradeStr);
+
+        if (tvStatusPill != null) tvStatusPill.setText("• Regular");
+
+        if (tvAveragePill != null) {
             viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
                 if (periods == null || periods.isEmpty()) {
                     tvAveragePill.setText("☆ Promedio: Sin Calendario");
@@ -136,34 +184,27 @@ public class StudentHomeFragment extends Fragment {
                     }
                 });
             });
+        }
 
-            // Card Click & Chevron Right -> Open Student Management (Gestión del estudiante)
-            View.OnClickListener openManagement = v -> {
-                Bundle args = new Bundle();
-                args.putInt("studentId", s.id);
-                Navigation.findNavController(requireView()).navigate(R.id.action_studentHomeFragment_to_adminEnrollmentListFragment, args);
-            };
+        // Card Click & Chevron Right -> Open Student Management (Gestión del estudiante)
+        View.OnClickListener openManagement = v -> {
+            Bundle args = new Bundle();
+            args.putInt("studentId", s.id);
+            Navigation.findNavController(requireView()).navigate(R.id.action_studentHomeFragment_to_adminEnrollmentListFragment, args);
+        };
 
-            cardView.setOnClickListener(openManagement);
-            if (btnChevronRight != null) btnChevronRight.setOnClickListener(openManagement);
+        cardView.setOnClickListener(openManagement);
+        if (btnChevronRight != null) btnChevronRight.setOnClickListener(openManagement);
 
-            // Right Button: Horario
+        // Right Button: Horario
+        if (btnSchedule != null) {
             btnSchedule.setOnClickListener(v -> {
                 Bundle args = new Bundle();
                 args.putInt("studentId", s.id);
                 Navigation.findNavController(requireView()).navigate(R.id.action_studentHomeFragment_to_adminFacilityTimetableFragment, args);
             });
-
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.setMargins(0, 0, 0, (int) (12 * getResources().getDisplayMetrics().density));
-            cardView.setLayoutParams(lp);
-
-            binding.layoutStudentCardsContainer.addView(cardView);
         }
     }
-
-
 
     private String getInitials(String name) {
         if (name == null || name.trim().isEmpty()) return "AV";

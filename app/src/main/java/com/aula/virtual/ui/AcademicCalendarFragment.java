@@ -122,10 +122,8 @@ public class AcademicCalendarFragment extends Fragment {
         Calendar cal = Calendar.getInstance();
         String current = target.getText().toString().trim();
         if (!current.isEmpty()) {
-            try {
-                Date d = sdf.parse(current);
-                if (d != null) cal.setTime(d);
-            } catch (Exception ignored) {}
+            Date d = parseAnyDate(current);
+            if (d != null) cal.setTime(d);
         }
 
         DatePickerDialog dialog = new DatePickerDialog(
@@ -133,7 +131,7 @@ public class AcademicCalendarFragment extends Fragment {
                 (view, year, month, dayOfMonth) -> {
                     Calendar selected = Calendar.getInstance();
                     selected.set(year, month, dayOfMonth);
-                    target.setText(sdf.format(selected.getTime()));
+                    target.setText(formatDateSpanish(sdf.format(selected.getTime())));
                 },
                 cal.get(Calendar.YEAR),
                 cal.get(Calendar.MONTH),
@@ -149,11 +147,11 @@ public class AcademicCalendarFragment extends Fragment {
                 String endStr = periodInputs[p][1].getText().toString().trim();
                 try {
                     if (!startStr.isEmpty()) {
-                        Date d = sdf.parse(startStr);
+                        Date d = parseAnyDate(startStr);
                         if (d != null && (minTime == null || d.getTime() < minTime)) minTime = d.getTime();
                     }
                     if (!endStr.isEmpty()) {
-                        Date d = sdf.parse(endStr);
+                        Date d = parseAnyDate(endStr);
                         if (d != null && (maxTime == null || d.getTime() > maxTime)) maxTime = d.getTime();
                     }
                 } catch (Exception ignored) {}
@@ -266,10 +264,41 @@ public class AcademicCalendarFragment extends Fragment {
         for (AcademicPeriod ap : periods) {
             if (ap.period >= 1 && ap.period <= activeCount) {
                 int idx = ap.period - 1;
-                periodInputs[idx][0].setText(ap.startDate != null ? ap.startDate : "");
-                periodInputs[idx][1].setText(ap.endDate != null ? ap.endDate : "");
+                periodInputs[idx][0].setText(formatDateSpanish(ap.startDate));
+                periodInputs[idx][1].setText(formatDateSpanish(ap.endDate));
             }
         }
+    }
+
+    private static Date parseAnyDate(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return null;
+        String trimmed = raw.trim();
+        try {
+            SimpleDateFormat ymd = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            return ymd.parse(trimmed);
+        } catch (Exception ignored) {}
+
+        try {
+            SimpleDateFormat spanishSdf = new SimpleDateFormat("d MMM yyyy", Locale.forLanguageTag("es-ES"));
+            return spanishSdf.parse(trimmed);
+        } catch (Exception ignored) {}
+
+        try {
+            SimpleDateFormat slashSdf = new SimpleDateFormat("dd/MM/yyyy", Locale.US);
+            return slashSdf.parse(trimmed);
+        } catch (Exception ignored) {}
+
+        return null;
+    }
+
+    private static String formatDateSpanish(String rawDate) {
+        if (rawDate == null || rawDate.trim().isEmpty()) return "";
+        Date date = parseAnyDate(rawDate);
+        if (date != null) {
+            SimpleDateFormat outputSdf = new SimpleDateFormat("d MMM yyyy", Locale.forLanguageTag("es-ES"));
+            return outputSdf.format(date);
+        }
+        return rawDate;
     }
 
     private void renderNonSchoolDaysList(List<NonSchoolDay> days) {
@@ -294,7 +323,7 @@ public class AcademicCalendarFragment extends Fragment {
 
             TextView tvInfo = new TextView(requireContext());
             tvInfo.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
-            tvInfo.setText("📅 " + nsd.day + " - " + nsd.reason);
+            tvInfo.setText("📅 " + formatDateSpanish(nsd.day) + " - " + nsd.reason);
             tvInfo.setTextSize(13);
             tvInfo.setTextColor(android.graphics.Color.parseColor("#E0E0E0"));
 
@@ -328,8 +357,8 @@ public class AcademicCalendarFragment extends Fragment {
                     return;
                 }
 
-                Date startDate = sdf.parse(startStr);
-                Date endDate = sdf.parse(endStr);
+                Date startDate = parseAnyDate(startStr);
+                Date endDate = parseAnyDate(endStr);
 
                 if (startDate == null || endDate == null) {
                     Toast.makeText(getContext(), "Formato de fecha inválido en el Período " + periodNum, Toast.LENGTH_LONG).show();
@@ -342,12 +371,12 @@ public class AcademicCalendarFragment extends Fragment {
                 }
 
                 if (lastEndDate != null && !startDate.after(lastEndDate)) {
-                    Toast.makeText(getContext(), "Error de traslape: La fecha de inicio del Período " + periodNum + " (" + startStr + ") debe ser posterior al fin del Período " + p + " (" + sdf.format(lastEndDate) + ").", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Error de traslape: La fecha de inicio del Período " + periodNum + " (" + formatDateSpanish(startStr) + ") debe ser posterior al fin del Período " + p + " (" + formatDateSpanish(sdf.format(lastEndDate)) + ").", Toast.LENGTH_LONG).show();
                     return;
                 }
 
                 lastEndDate = endDate;
-                list.add(new AcademicPeriod(periodNum, startStr, endStr));
+                list.add(new AcademicPeriod(periodNum, sdf.format(startDate), sdf.format(endDate)));
             }
 
             Context ctx = getContext();
@@ -410,13 +439,14 @@ public class AcademicCalendarFragment extends Fragment {
             return;
         }
 
-        try {
-            Date targetDate = sdf.parse(dateStr);
-            if (targetDate == null) {
-                Toast.makeText(getContext(), "Formato de fecha inválido.", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        Date targetDate = parseAnyDate(dateStr);
+        if (targetDate == null) {
+            Toast.makeText(getContext(), "Formato de fecha inválido.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String formattedDbDate = sdf.format(targetDate);
 
+        try {
             boolean isWithinCalendar = false;
             boolean hasAnyPeriod = false;
 
@@ -428,8 +458,8 @@ public class AcademicCalendarFragment extends Fragment {
                 if (!startStr.isEmpty() && !endStr.isEmpty()) {
                     hasAnyPeriod = true;
                     try {
-                        Date startDate = sdf.parse(startStr);
-                        Date endDate = sdf.parse(endStr);
+                        Date startDate = parseAnyDate(startStr);
+                        Date endDate = parseAnyDate(endStr);
                         if (startDate != null && endDate != null) {
                             if (!targetDate.before(startDate) && !targetDate.after(endDate)) {
                                 isWithinCalendar = true;
@@ -446,7 +476,7 @@ public class AcademicCalendarFragment extends Fragment {
             }
 
             if (!isWithinCalendar) {
-                Toast.makeText(getContext(), "La fecha (" + dateStr + ") no pertenece a ningún Período Lectivo establecido en el Calendario Académico.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "La fecha (" + formatDateSpanish(formattedDbDate) + ") no pertenece a ningún Período Lectivo establecido en el Calendario Académico.", Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -460,7 +490,7 @@ public class AcademicCalendarFragment extends Fragment {
         DialogUtils.showLoadingOverlay(binding.getRoot(), ctx);
         boolean isLocal = ThemeHelper.isLocalMode(ctx);
 
-        NonSchoolDay nsdNew = new NonSchoolDay(dateStr, reasonStr);
+        NonSchoolDay nsdNew = new NonSchoolDay(formattedDbDate, reasonStr);
 
         Executors.newSingleThreadExecutor().execute(() -> {
             boolean success = false;

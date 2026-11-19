@@ -135,6 +135,10 @@
 
     <style name="Theme.MyApplication.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.MyApplication.Dialog</item>
+        <item name="colorSurface">@color/input_bg</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/bs_secondary</item>
+        <item name="colorPrimary">@color/accent_blue</item>
     </style>
 
     <style name="ShapeAppearance.MyApplication.Dialog" parent="ShapeAppearance.Material3.LargeComponent">

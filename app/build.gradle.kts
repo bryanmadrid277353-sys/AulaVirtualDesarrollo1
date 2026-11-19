@@ -68,6 +68,9 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime:2.9.1")
 
+    // Password Hashing (BCrypt)
+    implementation("at.favre.lib:bcrypt:0.10.2")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)

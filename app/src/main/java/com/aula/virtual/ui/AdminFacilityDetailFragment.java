@@ -92,8 +92,23 @@ public class AdminFacilityDetailFragment extends Fragment {
                         }
                     });
 
-                    binding.btnSave.setEnabled(true);
-                    binding.btnDelete.setEnabled(true);
+                    User activeUser = viewModel.getCurrentUser().getValue();
+                    boolean isCurrentAdmin = activeUser != null && "ADMIN".equalsIgnoreCase(activeUser.role);
+
+                    if (!isCurrentAdmin) {
+                        binding.etField1.setEnabled(false);
+                        binding.etField2.setEnabled(false);
+                        binding.etType.setEnabled(false);
+                        binding.etDesc.setEnabled(false);
+
+                        binding.btnSave.setVisibility(View.GONE);
+                        binding.btnDelete.setVisibility(View.GONE);
+                    } else {
+                        binding.btnSave.setEnabled(true);
+                        binding.btnDelete.setEnabled(true);
+                        binding.btnSave.setVisibility(View.VISIBLE);
+                        binding.btnDelete.setVisibility(View.VISIBLE);
+                    }
 
                     DialogUtils.hideLoadingOverlay(binding.getRoot());
                     break;

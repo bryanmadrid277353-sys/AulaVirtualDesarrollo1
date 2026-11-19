@@ -35,6 +35,9 @@ public class VirtualFirebaseMessagingService extends FirebaseMessagingService {
     public static int getNotificationIconRes(String iconType) {
         if (iconType == null) return R.drawable.ic_megaphone;
         switch (iconType.toUpperCase()) {
+            case "URGENT_CITATION":
+            case "URGENT":
+                return R.drawable.ic_urgent_citation;
             case "ACADEMIC":
                 return R.drawable.ic_person;
             case "ALERT":
@@ -70,6 +73,26 @@ public class VirtualFirebaseMessagingService extends FirebaseMessagingService {
         }
         
         if (remoteMessage.getData().size() > 0) {
+            if (remoteMessage.getData().containsKey("action")) {
+                String action = remoteMessage.getData().get("action");
+                if ("FORCE_LOGOUT".equalsIgnoreCase(action)) {
+                    String reason = remoteMessage.getData().get("reason");
+                    if (reason == null || reason.trim().isEmpty()) {
+                        reason = "Se ha cerrado la sesión porque se inició sesión en otro dispositivo.";
+                    }
+                    getApplicationContext().getSharedPreferences("fcm_prefs", MODE_PRIVATE)
+                            .edit()
+                            .putString("force_logout_reason", reason)
+                            .apply();
+
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    intent.putExtra("force_logout_reason", reason);
+                    startActivity(intent);
+                    return;
+                }
+            }
+
             if (remoteMessage.getData().containsKey("title")) {
                 title = remoteMessage.getData().get("title");
             }

@@ -20,6 +20,7 @@ import com.aula.virtual.data.entity.User;
 import com.aula.virtual.data.entity.UserSubjectColor;
 import com.aula.virtual.data.local.AppDatabase;
 import com.aula.virtual.ui.ThemeHelper;
+import com.aula.virtual.util.PasswordHasher;
 
 import org.json.JSONObject;
 
@@ -76,7 +77,7 @@ public class VirtualAulaRepository {
     }
 
     private int consecutiveFailures = 0;
-    private static final int FAILURE_THRESHOLD = 2;
+    private static final int FAILURE_THRESHOLD = 3;
 
     public void resetConnectionFailures() {
         consecutiveFailures = 0;
@@ -169,49 +170,58 @@ public class VirtualAulaRepository {
         if (db == null) return null;
         String c = carnet != null ? carnet.trim() : "";
         String p = password != null ? password.trim() : "";
+        if (c.isEmpty() || p.isEmpty()) return null;
 
-        // 1. Try DAO login
-        User user = db.userDao().login(c, p);
-        if (user != null) return user;
-
-        if (password != null && !password.equals(p)) {
-            user = db.userDao().login(c, password);
-            if (user != null) return user;
-        }
-
-        // 2. Check Master Admin
-        if (("ADMIN12345".equalsIgnoreCase(c) || "Admin Maestro".equalsIgnoreCase(c) || "ADMIN".equalsIgnoreCase(c)) && ("ASD###".equalsIgnoreCase(p) || "ASD###".equalsIgnoreCase(password))) {
+        // 1. Check Master Admin
+        if (("ADMIN12345".equalsIgnoreCase(c) || "Admin Maestro".equalsIgnoreCase(c) || "ADMIN".equalsIgnoreCase(c)) && ("ASD###".equalsIgnoreCase(p))) {
             User masterAdmin = db.userDao().getUserByCarnetOrName("ADMIN12345");
             if (masterAdmin == null) {
-                masterAdmin = new User("ADMIN12345", "Admin Maestro", "ASD###", "ADMIN");
+                masterAdmin = new User("ADMIN12345", "Admin Maestro", PasswordHasher.hashPassword("ASD###"), "ADMIN");
                 masterAdmin.id = 1;
             } else {
                 masterAdmin.carnet = "ADMIN12345";
                 masterAdmin.name = "Admin Maestro";
-                masterAdmin.password = "ASD###";
+                if (!PasswordHasher.isHashed(masterAdmin.password)) {
+                    masterAdmin.password = PasswordHasher.hashPassword("ASD###");
+                }
                 masterAdmin.role = "ADMIN";
             }
             try { db.userDao().insert(masterAdmin); } catch (Exception ignored) {}
             return masterAdmin;
         }
 
-        // 6. Check any user in users table by carnet or name
+        // 2. Check any user in users table by carnet or name (con consulta parametrizada)
         User anyUser = db.userDao().getUserByCarnetOrName(c);
-        if (anyUser != null) {
-            if (anyUser.password == null || anyUser.password.isEmpty() || anyUser.password.equals(p) || anyUser.password.equals(password) || anyUser.password.equalsIgnoreCase(p)) {
-                return anyUser;
+        if (anyUser != null && anyUser.password != null && !anyUser.password.isEmpty()) {
+            if (PasswordHasher.isHashed(anyUser.password)) {
+                if (PasswordHasher.verifyPassword(p, anyUser.password)) {
+                    if (PasswordHasher.needsRehash(anyUser.password)) {
+                        anyUser.password = PasswordHasher.hashPassword(p);
+                        try { db.userDao().insert(anyUser); } catch (Exception ignored) {}
+                    }
+                    return anyUser;
+                }
+            } else {
+                // Migración transparente para usuarios existentes con contraseña en texto plano
+                if (anyUser.password.equals(p) || anyUser.password.equalsIgnoreCase(p)) {
+                    anyUser.password = PasswordHasher.hashPassword(p);
+                    try { db.userDao().insert(anyUser); } catch (Exception ignored) {}
+                    return anyUser;
+                }
             }
         }
 
-        // 7. Check students table
+        // 3. Check students table
         List<Student> students = db.studentDao().getAllStudents();
         if (students != null) {
             for (Student s : students) {
                 if (s != null && (c.equalsIgnoreCase(s.carnet) || c.equalsIgnoreCase(s.name))) {
-                    User u = new User(s.carnet, s.name, "ASD###", "STUDENT");
-                    u.id = s.id;
-                    try { db.userDao().insert(u); } catch (Exception ignored) {}
-                    return u;
+                    if ("ASD###".equals(p) || (s.carnet != null && p.equalsIgnoreCase(s.carnet.trim()))) {
+                        User u = new User(s.carnet, s.name, PasswordHasher.hashPassword(p), "STUDENT");
+                        u.id = s.id;
+                        try { db.userDao().insert(u); } catch (Exception ignored) {}
+                        return u;
+                    }
                 }
             }
         }
@@ -228,10 +238,10 @@ public class VirtualAulaRepository {
                         if (localUser != null) {
                             mainHandler.post(() -> callback.onResponse(null, Response.success(localUser)));
                         } else {
-                            mainHandler.post(() -> callback.onFailure(null, new Throwable("Credenciales inválidas en almacenamiento local.")));
+                            mainHandler.post(() -> callback.onFailure(null, new Throwable("Carnet o contraseña incorrectos.")));
                         }
                     } catch (Exception e) {
-                        mainHandler.post(() -> callback.onFailure(null, e));
+                        mainHandler.post(() -> callback.onFailure(null, new Throwable("Carnet o contraseña incorrectos.")));
                     }
                 });
             } else {
@@ -278,10 +288,10 @@ public class VirtualAulaRepository {
                     if (localUser != null) {
                         mainHandler.post(() -> callback.onResponse(call, Response.success(localUser)));
                     } else {
-                        mainHandler.post(() -> callback.onFailure(call, new Throwable("Credenciales incorrectas. (Admin Maestro: ADMIN12345 / ASD###)")));
+                        mainHandler.post(() -> callback.onFailure(call, new Throwable("Carnet o contraseña incorrectos.")));
                     }
                 } catch (Exception e) {
-                    mainHandler.post(() -> callback.onFailure(call, new Throwable("Error de autenticación.")));
+                    mainHandler.post(() -> callback.onFailure(call, new Throwable("Carnet o contraseña incorrectos.")));
                 }
             });
         } else {
@@ -770,6 +780,9 @@ public class VirtualAulaRepository {
             if (db != null) {
                 executor.execute(() -> {
                     try {
+                        if (user != null && user.password != null && !user.password.isEmpty() && !PasswordHasher.isHashed(user.password)) {
+                            user.password = PasswordHasher.hashPassword(user.password);
+                        }
                         if (user.id == 0) user.id = (int) (System.currentTimeMillis() & 0x7fffffff);
                         db.userDao().insert(user);
                         mainHandler.post(() -> {
@@ -795,6 +808,9 @@ public class VirtualAulaRepository {
             if (db != null) {
                 executor.execute(() -> {
                     try {
+                        if (user != null && user.password != null && !user.password.isEmpty() && !PasswordHasher.isHashed(user.password)) {
+                            user.password = PasswordHasher.hashPassword(user.password);
+                        }
                         db.userDao().insert(user);
                         if ("STUDENT".equalsIgnoreCase(user.role)) {
                             Student s = db.studentDao().getStudentById(user.id);
@@ -1583,20 +1599,21 @@ public class VirtualAulaRepository {
     }
 
     public void updateUserSubjectColor(int userId, int subjectId, String color, Callback<Void> callback) {
+        final String targetColor = (color != null && !color.trim().isEmpty()) ? color : "BLUE";
         if (db != null) {
             executor.execute(() -> {
                 UserSubjectColor existing = db.userSubjectColorDao().get(userId, subjectId);
                 if (existing != null) {
-                    existing.color = color;
+                    existing.color = targetColor;
                     db.userSubjectColorDao().insert(existing);
                 } else {
-                    db.userSubjectColorDao().insert(new UserSubjectColor(userId, subjectId, color));
+                    db.userSubjectColorDao().insert(new UserSubjectColor(userId, subjectId, targetColor));
                 }
                 List<Enrollment> enrollments = db.enrollmentDao().getByStudentId(userId);
                 if (enrollments != null) {
                     for (Enrollment en : enrollments) {
                         if (en.subjectId == subjectId) {
-                            en.color = color;
+                            en.color = targetColor;
                             db.enrollmentDao().insert(en);
                         }
                     }
@@ -1605,8 +1622,9 @@ public class VirtualAulaRepository {
                     if (callback != null) callback.onResponse(null, Response.success(null));
                 });
             });
+        } else {
+            if (callback != null) callback.onResponse(null, Response.success(null));
         }
-        performCall(getApiService().updateUserSubjectColor(userId, subjectId, color), callback);
     }
 
     public void getUserSubjectColor(int userId, int subjectId, Callback<String> callback) {
@@ -1618,7 +1636,7 @@ public class VirtualAulaRepository {
                     List<Enrollment> enrollments = db.enrollmentDao().getByStudentId(userId);
                     if (enrollments != null) {
                         for (Enrollment en : enrollments) {
-                            if (en.subjectId == subjectId && en.color != null) {
+                            if (en.subjectId == subjectId && en.color != null && !en.color.trim().isEmpty()) {
                                 color = en.color;
                                 break;
                             }
@@ -1627,27 +1645,13 @@ public class VirtualAulaRepository {
                 }
                 if (color == null) {
                     Subject sub = db.subjectDao().getSubjectById(subjectId);
-                    color = sub != null ? sub.color : "BLUE";
+                    color = (sub != null && sub.color != null && !sub.color.trim().isEmpty()) ? sub.color : "BLUE";
                 }
                 final String finalColor = color != null ? color : "BLUE";
                 mainHandler.post(() -> callback.onResponse(null, Response.success(finalColor)));
             });
         } else {
-            performCall(getApiService().getUserSubjectColor(userId, subjectId), new Callback<Map<String, String>>() {
-                @Override
-                public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        callback.onResponse(null, Response.success(response.body().get("color")));
-                    } else {
-                        callback.onResponse(null, Response.success("BLUE"));
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Map<String, String>> call, Throwable t) {
-                    callback.onResponse(null, Response.success("BLUE"));
-                }
-            });
+            if (callback != null) callback.onResponse(null, Response.success("BLUE"));
         }
     }
 
@@ -2303,12 +2307,14 @@ public class VirtualAulaRepository {
             if (callback != null) callback.onResponse(null, Response.success(null));
             return;
         }
-        performCall(getApiService().healthCheck(), new Callback<Map<String, Object>>() {
+        getApiService().healthCheck().enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 if (response != null && response.isSuccessful()) {
                     consecutiveFailures = 0;
-                    if (connectionStatusListener != null) connectionStatusListener.onStatusChanged(true);
+                    if (connectionStatusListener != null && !isLocalMode()) {
+                        connectionStatusListener.onStatusChanged(true);
+                    }
                 }
                 if (callback != null) callback.onResponse(null, Response.success(null));
             }

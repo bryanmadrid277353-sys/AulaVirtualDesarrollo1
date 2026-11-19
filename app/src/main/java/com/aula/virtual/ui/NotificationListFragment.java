@@ -39,6 +39,7 @@ import com.aula.virtual.data.ScheduleInfo;
 import com.aula.virtual.data.StudentGradeInfo;
 import com.aula.virtual.data.entity.Facility;
 import com.aula.virtual.data.entity.Notification;
+import com.aula.virtual.data.entity.Student;
 import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.data.entity.User;
 import com.aula.virtual.databinding.FragmentNotificationListBinding;
@@ -54,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import androidx.core.content.ContextCompat;
 import android.content.res.ColorStateList;
@@ -67,6 +69,8 @@ public class NotificationListFragment extends Fragment {
     private List<Notification> rawServerNotifications = new ArrayList<>();
     private final List<String> userSubjectNames = new ArrayList<>();
     private final List<String> userFacilityNames = new ArrayList<>();
+    private final List<Integer> userStudentIds = new ArrayList<>();
+    private final List<String> userStudentCarnets = new ArrayList<>();
     private final Map<Integer, String> facilityMap = new HashMap<>();
     private final String[] selectedChannelFilter = {"ALL"};
 
@@ -87,7 +91,8 @@ public class NotificationListFragment extends Fragment {
         if (currentUser == null) {
             binding.cardLoginNotice.setVisibility(View.VISIBLE);
             binding.chipsScrollView.setVisibility(View.GONE);
-            binding.etSearchNotification.setVisibility(View.GONE);
+            if (binding.layoutSearchContainer != null) binding.layoutSearchContainer.setVisibility(View.GONE);
+            if (binding.layoutTopActionRow != null) binding.layoutTopActionRow.setVisibility(View.GONE);
 
             binding.btnGoLogin.setOnClickListener(v -> 
                 Navigation.findNavController(view).navigate(R.id.action_global_loginFragment));
@@ -104,25 +109,36 @@ public class NotificationListFragment extends Fragment {
             }
         });
 
-        if (binding.btnToggleSearch != null && binding.layoutSearchContainer != null) {
-            binding.btnToggleSearch.setOnClickListener(v -> {
-                boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
-                binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-                if (!isVisible) {
-                    binding.etSearchNotification.requestFocus();
-                }
-            });
+        boolean isAdmin = "ADMIN".equals(currentUser.role);
+
+        if (isAdmin) {
+            if (binding.layoutTopActionRow != null) binding.layoutTopActionRow.setVisibility(View.VISIBLE);
+            if (binding.btnCreateNotification != null) {
+                binding.btnCreateNotification.setVisibility(View.VISIBLE);
+                binding.btnCreateNotification.setOnClickListener(v -> showCreateNotificationDialog(null, "ALL"));
+            }
+            if (binding.btnToggleSearch != null) {
+                binding.btnToggleSearch.setVisibility(View.VISIBLE);
+                binding.btnToggleSearch.setOnClickListener(v -> {
+                    if (binding.layoutSearchContainer != null) {
+                        boolean isVisible = binding.layoutSearchContainer.getVisibility() == View.VISIBLE;
+                        binding.layoutSearchContainer.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                        if (!isVisible) {
+                            binding.etSearchNotification.requestFocus();
+                        }
+                    }
+                });
+            }
+            if (binding.layoutSearchContainer != null) binding.layoutSearchContainer.setVisibility(View.GONE);
+        } else {
+            if (binding.layoutTopActionRow != null) binding.layoutTopActionRow.setVisibility(View.GONE);
+            if (binding.btnCreateNotification != null) binding.btnCreateNotification.setVisibility(View.GONE);
+            if (binding.btnToggleSearch != null) binding.btnToggleSearch.setVisibility(View.GONE);
+            if (binding.layoutSearchContainer != null) binding.layoutSearchContainer.setVisibility(View.VISIBLE);
         }
 
         binding.btnConfigurePush.setOnClickListener(v -> 
             Navigation.findNavController(v).navigate(R.id.action_notificationListFragment_to_notificationSettingsFragment));
-
-        boolean isAdmin = "ADMIN".equals(currentUser.role);
-
-        if (binding.btnCreateNotification != null) {
-            binding.btnCreateNotification.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
-            binding.btnCreateNotification.setOnClickListener(v -> showCreateNotificationDialog(null, "ALL"));
-        }
 
         if (binding.btnViewAllChannels != null) {
             binding.btnViewAllChannels.setOnClickListener(v -> {
@@ -198,6 +214,21 @@ public class NotificationListFragment extends Fragment {
                     reFilterAndRender();
                 }
             });
+        } else if ("ENCARGADO".equals(currentUser.role) || "GUARDIAN".equals(currentUser.role)) {
+            viewModel.fetchStudentsForEncargado(currentUser.id);
+            viewModel.getMyStudents().observe(getViewLifecycleOwner(), students -> {
+                if (students != null) {
+                    userStudentIds.clear();
+                    userStudentCarnets.clear();
+                    for (Student s : students) {
+                        if (s != null) {
+                            userStudentIds.add(s.id);
+                            if (s.carnet != null) userStudentCarnets.add(s.carnet.trim().toUpperCase());
+                        }
+                    }
+                    reFilterAndRender();
+                }
+            });
         }
 
         viewModel.getAllNotifications().observe(getViewLifecycleOwner(), notifications -> {
@@ -253,8 +284,8 @@ public class NotificationListFragment extends Fragment {
         }
 
         // Check priority alert exception
-        boolean isPriorityAlert = n.iconType != null && 
-                ("ALERT".equalsIgnoreCase(n.iconType) || "SYSTEM".equalsIgnoreCase(n.iconType)) &&
+        boolean isPriorityAlert = ("URGENT_CITATION".equalsIgnoreCase(n.targetType) || "URGENT_CITATION".equalsIgnoreCase(n.iconType) ||
+                (n.iconType != null && ("ALERT".equalsIgnoreCase(n.iconType) || "SYSTEM".equalsIgnoreCase(n.iconType)))) &&
                 getContext() != null && NotificationPrefs.isPriorityAlertsEnabled(requireContext());
 
         // Check channel preferences unless it's a priority alert
@@ -278,6 +309,43 @@ public class NotificationListFragment extends Fragment {
         if (n.targetType == null || "ALL".equalsIgnoreCase(n.targetType)) return true;
 
         String type = n.targetType.toUpperCase();
+        if ("URGENT_CITATION".equals(type)) {
+            if ("ADMIN".equals(currentUser.role)) return true;
+
+            if (n.targetValue != null && !n.targetValue.trim().isEmpty()) {
+                String val = n.targetValue.trim();
+                String[] parts = val.split(":");
+                // Format: ESTUDIANTE:studentId:carnet:name:encargadoId
+
+                // 1. Direct check against encargadoId in parts[4] if available
+                if (parts.length >= 5 && ("ENCARGADO".equalsIgnoreCase(currentUser.role) || "GUARDIAN".equalsIgnoreCase(currentUser.role))) {
+                    try {
+                        int encIdInNotif = Integer.parseInt(parts[4]);
+                        if (encIdInNotif == currentUser.id) return true;
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                // 2. Check if studentId in parts[1] matches userStudentIds
+                if (parts.length >= 2) {
+                    try {
+                        int stIdInNotif = Integer.parseInt(parts[1]);
+                        if (userStudentIds.contains(stIdInNotif)) return true;
+                        if ("STUDENT".equalsIgnoreCase(currentUser.role) && stIdInNotif == currentUser.id) return true;
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                // 3. Check if student carnet in parts[2] matches userStudentCarnets
+                if (parts.length >= 3) {
+                    String carnetInNotif = parts[2].trim();
+                    if (!carnetInNotif.isEmpty()) {
+                        if (userStudentCarnets.contains(carnetInNotif.toUpperCase())) return true;
+                        if ("STUDENT".equalsIgnoreCase(currentUser.role) && carnetInNotif.equalsIgnoreCase(currentUser.carnet)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         if ("ROLE_STUDENTS".equals(type)) {
             if ("STUDENT".equals(currentUser.role) || "ENCARGADO".equals(currentUser.role) || "GUARDIAN".equals(currentUser.role)) return true;
         }
@@ -300,6 +368,10 @@ public class NotificationListFragment extends Fragment {
     private void renderNotificationsAndChips() {
         if (binding == null || !isAdded()) return;
 
+        if (binding.chipsScrollView != null) {
+            binding.chipsScrollView.setVisibility(View.GONE);
+        }
+
         String query = binding.etSearchNotification.getText().toString().toLowerCase().trim();
 
         List<Notification> queryFiltered = new ArrayList<>();
@@ -317,44 +389,41 @@ public class NotificationListFragment extends Fragment {
             }
         }
 
-        List<Notification> generalNotifs = new ArrayList<>();
-        List<Notification> supportNotifs = new ArrayList<>();
-        List<Notification> studentNotifs = new ArrayList<>();
-        List<Notification> professorNotifs = new ArrayList<>();
-        List<Notification> adminNotifs = new ArrayList<>();
-        List<Notification> subjectNotifs = new ArrayList<>();
-        List<Notification> facilityNotifs = new ArrayList<>();
+        // Separate Urgent Citations (Pinned at Top) from Regular Notifications
+        List<Notification> urgentPinnedNotifs = new ArrayList<>();
+        List<Notification> regularNotifs = new ArrayList<>();
 
         for (Notification n : queryFiltered) {
-            if (n == null || n.targetType == null) {
-                generalNotifs.add(n);
-                continue;
-            }
-            String type = n.targetType.toUpperCase();
-            if ("SUPPORT".equals(type)) {
-                supportNotifs.add(n);
-            } else if ("ROLE_STUDENTS".equals(type)) {
-                studentNotifs.add(n);
-            } else if ("ROLE_PROFESSORS".equals(type)) {
-                professorNotifs.add(n);
-            } else if ("ROLE_ADMINS".equals(type)) {
-                adminNotifs.add(n);
-            } else if ("SUBJECT".equals(type)) {
-                subjectNotifs.add(n);
-            } else if ("FACILITY".equals(type)) {
-                facilityNotifs.add(n);
+            if (n == null) continue;
+            boolean isUrgent = (n.targetType != null && "URGENT_CITATION".equalsIgnoreCase(n.targetType.trim()))
+                            || (n.iconType != null && "URGENT_CITATION".equalsIgnoreCase(n.iconType.trim()));
+            if (isUrgent) {
+                urgentPinnedNotifs.add(n);
             } else {
-                generalNotifs.add(n);
+                regularNotifs.add(n);
             }
         }
+
+        // Sort both lists by timestamp / ID (newest first)
+        java.util.Comparator<Notification> notifComparator = (n1, n2) -> {
+            if (n1.timestamp != null && n2.timestamp != null) {
+                int cmp = n2.timestamp.compareTo(n1.timestamp);
+                if (cmp != 0) return cmp;
+            }
+            return Integer.compare(n2.id, n1.id);
+        };
+
+        urgentPinnedNotifs.sort(notifComparator);
+        regularNotifs.sort(notifComparator);
+
+        List<Notification> finalOrderedList = new ArrayList<>();
+        finalOrderedList.addAll(urgentPinnedNotifs);
+        finalOrderedList.addAll(regularNotifs);
 
         if (binding != null && binding.tvRecordCount != null) {
-            int total = queryFiltered.size();
+            int total = finalOrderedList.size();
             binding.tvRecordCount.setText("Avisos publicados (" + total + (total == 1 ? " registro)" : " registros)"));
         }
-
-        int activeThemeColor = ThemeHelper.getSubjectColor(requireContext(), ThemeHelper.getAccentColorName(requireContext()));
-        renderChannelChips(generalNotifs, supportNotifs, studentNotifs, professorNotifs, adminNotifs, subjectNotifs, facilityNotifs, activeThemeColor);
 
         binding.notificationsContainer.removeAllViews();
         boolean isDark = ThemeHelper.isDarkMode(requireContext());
@@ -364,146 +433,33 @@ public class NotificationListFragment extends Fragment {
         requireContext().getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValue, true);
         int secondaryTextColor = typedValue.data;
 
-        String filter = selectedChannelFilter[0];
-        boolean hasContent = false;
-
-        if ("ALL".equals(filter) || "GENERAL".equals(filter)) {
-            if (!generalNotifs.isEmpty()) {
-                renderNotificationCards(binding.notificationsContainer, generalNotifs, primaryTextColor, secondaryTextColor, isDark);
-                hasContent = true;
-            }
-        }
-        if ("ALL".equals(filter) || "SUPPORT".equals(filter)) {
-            if (!supportNotifs.isEmpty()) {
-                renderNotificationCards(binding.notificationsContainer, supportNotifs, primaryTextColor, secondaryTextColor, isDark);
-                hasContent = true;
-            }
-        }
-        if ("ALL".equals(filter) || "ROLE_STUDENTS".equals(filter)) {
-            if (!studentNotifs.isEmpty()) {
-                renderNotificationCards(binding.notificationsContainer, studentNotifs, primaryTextColor, secondaryTextColor, isDark);
-                hasContent = true;
-            }
-        }
-        if ("ALL".equals(filter) || "ROLE_PROFESSORS".equals(filter)) {
-            if (!professorNotifs.isEmpty()) {
-                renderNotificationCards(binding.notificationsContainer, professorNotifs, primaryTextColor, secondaryTextColor, isDark);
-                hasContent = true;
-            }
-        }
-        if ("ALL".equals(filter) || "ROLE_ADMINS".equals(filter)) {
-            if (!adminNotifs.isEmpty()) {
-                renderNotificationCards(binding.notificationsContainer, adminNotifs, primaryTextColor, secondaryTextColor, isDark);
-                hasContent = true;
-            }
-        }
-        if ("ALL".equals(filter) || "SUBJECT".equals(filter)) {
-            if (!subjectNotifs.isEmpty()) {
-                renderNotificationCards(binding.notificationsContainer, subjectNotifs, primaryTextColor, secondaryTextColor, isDark);
-                hasContent = true;
-            }
-        }
-        if ("ALL".equals(filter) || "FACILITY".equals(filter)) {
-            if (!facilityNotifs.isEmpty()) {
-                renderNotificationCards(binding.notificationsContainer, facilityNotifs, primaryTextColor, secondaryTextColor, isDark);
-                hasContent = true;
-            }
-        }
-
-        if (!hasContent) {
+        if (finalOrderedList.isEmpty()) {
             TextView tvEmpty = new TextView(requireContext());
-            tvEmpty.setText("\nNo hay avisos o notificaciones para esta categoría.\n");
+            tvEmpty.setText("\nNo hay avisos o notificaciones registradas.\n");
             tvEmpty.setGravity(Gravity.CENTER);
             tvEmpty.setTextColor(0xFF757575);
             binding.notificationsContainer.addView(tvEmpty);
-        }
-    }
-
-    private void renderChannelChips(List<Notification> gen, List<Notification> sup, List<Notification> stu, List<Notification> prof, List<Notification> adm, List<Notification> sub, List<Notification> fcl, int activeColor) {
-        binding.chipsLayout.removeAllViews();
-        List<MaterialButton> chipButtons = new ArrayList<>();
-
-        addChipButton(binding.chipsLayout, chipButtons, "📢 Canal General", "GENERAL", activeColor);
-        addChipButton(binding.chipsLayout, chipButtons, "👨‍🎓 Estudiantes", "ROLE_STUDENTS", activeColor);
-        addChipButton(binding.chipsLayout, chipButtons, "👨‍🏫 Profesores", "ROLE_PROFESSORS", activeColor);
-        addChipButton(binding.chipsLayout, chipButtons, "⚙️ Administración", "ROLE_ADMINS", activeColor);
-        addChipButton(binding.chipsLayout, chipButtons, "📚 Por Materias", "SUBJECT", activeColor);
-    }
-
-    private void addChipButton(LinearLayout layout, List<MaterialButton> allChips, String label, String channelKey, int activeColor) {
-        MaterialButton chip = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
-        chip.setText(label);
-        chip.setTextSize(12);
-        chip.setAllCaps(false);
-        chip.setCornerRadius(24);
-        chip.setInsetTop(0);
-        chip.setInsetBottom(0);
-
-        boolean isSelected = channelKey.equals(selectedChannelFilter[0]);
-        updateChipStyle(chip, isSelected, activeColor);
-
-        chip.setOnClickListener(v -> {
-            selectedChannelFilter[0] = channelKey;
-            for (MaterialButton btn : allChips) {
-                boolean active = channelKey.equals(btn.getTag());
-                updateChipStyle(btn, active, activeColor);
-            }
-            renderNotificationsAndChips();
-        });
-
-        chip.setTag(channelKey);
-        allChips.add(chip);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, 0, 10, 0);
-        chip.setLayoutParams(lp);
-
-        layout.addView(chip);
-    }
-
-    private void updateChipStyle(MaterialButton chip, boolean isSelected, int activeColor) {
-        if (isSelected) {
-            chip.setBackgroundColor(0xFF2563EB);
-            chip.setTextColor(0xFFFFFFFF);
-            chip.setStrokeWidth(0);
         } else {
-            chip.setBackgroundColor(0xFF131B2E);
-            chip.setTextColor(0xFF8E9BB0);
-            chip.setStrokeColor(ColorStateList.valueOf(0xFF1E293B));
-            chip.setStrokeWidth((int) (1f * getResources().getDisplayMetrics().density));
+            renderNotificationCards(binding.notificationsContainer, finalOrderedList, primaryTextColor, secondaryTextColor, isDark);
         }
-    }
-
-    private void addChannelHeaderView(LinearLayout container, String channelName, int accentColor) {
-        TextView header = new TextView(requireContext());
-        header.setText(channelName);
-        header.setTextSize(13);
-        header.setTypeface(null, Typeface.BOLD);
-        header.setTextColor(0xFFFFFFFF);
-        header.setPadding(24, 10, 24, 10);
-        
-        GradientDrawable gd = new GradientDrawable();
-        gd.setColor(accentColor);
-        gd.setCornerRadius(16f);
-        header.setBackground(gd);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, 16, 0, 8);
-        header.setLayoutParams(lp);
-
-        container.addView(header);
     }
 
     private void renderNotificationCards(LinearLayout container, List<Notification> notifs, int primaryTextColor, int secondaryTextColor, boolean isDark) {
         for (Notification n : notifs) {
+            boolean isUrgentNotif = (n.targetType != null && "URGENT_CITATION".equalsIgnoreCase(n.targetType.trim()))
+                                 || (n.iconType != null && "URGENT_CITATION".equalsIgnoreCase(n.iconType.trim()));
+
             MaterialCardView card = new MaterialCardView(requireContext());
             card.setCardElevation(0f);
             card.setRadius(24f);
             card.setStrokeWidth(1);
             card.setStrokeColor(ColorStateList.valueOf(isDark ? 0xFF1E293B : 0xFFCBD5E1));
-            card.setCardBackgroundColor(ColorStateList.valueOf(isDark ? 0xFF121929 : 0xFFF1F5F9));
+
+            if (isUrgentNotif) {
+                card.setCardBackgroundColor(ColorStateList.valueOf(isDark ? 0xFF1C1318 : 0xFFFFF1F2));
+            } else {
+                card.setCardBackgroundColor(ColorStateList.valueOf(isDark ? 0xFF121929 : 0xFFF1F5F9));
+            }
             
             LinearLayout cardLayout = new LinearLayout(requireContext());
             cardLayout.setOrientation(LinearLayout.VERTICAL);
@@ -532,7 +488,12 @@ public class NotificationListFragment extends Fragment {
             ivIcon.setLayoutParams(iconLp);
 
             String iconKind = n.iconType != null ? n.iconType.toUpperCase() : "GENERAL";
-            if ("ACADEMIC".equals(iconKind)) {
+            if ("URGENT_CITATION".equals(iconKind) || isUrgentNotif) {
+                capsuleBg.setColor(isDark ? 0xFF2A161B : 0xFFFFE4E6);
+                capsuleBg.setStroke((int) (1f * getResources().getDisplayMetrics().density), 0x80F87171);
+                ivIcon.setImageResource(R.drawable.ic_urgent_citation);
+                ivIcon.setImageTintList(ColorStateList.valueOf(0xFFF87171));
+            } else if ("ACADEMIC".equals(iconKind)) {
                 capsuleBg.setColor(isDark ? 0xFF291F15 : 0xFFFEF3C7);
                 capsuleBg.setStroke((int) (1f * getResources().getDisplayMetrics().density), 0x66D97706);
                 ivIcon.setImageResource(R.drawable.ic_person);
@@ -584,7 +545,11 @@ public class NotificationListFragment extends Fragment {
             int tagBorderColor = 0x8038BDF8;
 
             String type = n.targetType != null ? n.targetType.toUpperCase() : "ALL";
-            if ("ROLE_PROFESSORS".equals(type)) {
+            if ("URGENT_CITATION".equals(type) || isUrgentNotif) {
+                tagColor = 0xFFF87171;
+                tagBgColor = isDark ? 0xFF2A161B : 0xFFFFE4E6;
+                tagBorderColor = 0x80F87171;
+            } else if ("ROLE_PROFESSORS".equals(type)) {
                 tagColor = 0xFFD97706;
                 tagBgColor = isDark ? 0xFF291F15 : 0xFFFEF3C7;
                 tagBorderColor = 0x80D97706;
@@ -867,55 +832,89 @@ public class NotificationListFragment extends Fragment {
         MaterialCardView btnIconAlert = dialogView.findViewById(R.id.btnIconAlert);
         MaterialCardView btnIconSystem = dialogView.findViewById(R.id.btnIconSystem);
         MaterialCardView btnIconSubject = dialogView.findViewById(R.id.btnIconSubject);
+        MaterialCardView btnIconUrgent = dialogView.findViewById(R.id.btnIconUrgent);
 
-        final String[] selectedIconType = {isEditing && existingNotif.iconType != null ? existingNotif.iconType : "GENERAL"};
+        final String defaultTarget = (isEditing && existingNotif.targetType != null) ? existingNotif.targetType : (initialTargetType != null ? initialTargetType : "ALL");
+        final String[] targetType = {defaultTarget};
+        final String[] targetValue = {isEditing ? existingNotif.targetValue : null};
+
+        final String[] selectedIconType = {isEditing && existingNotif.iconType != null ? existingNotif.iconType : ("URGENT_CITATION".equals(targetType[0]) ? "URGENT_CITATION" : "GENERAL")};
 
         Runnable updateIconSelectionUI = () -> {
-            int activeBorder = Color.parseColor("#38BDF8");
-            int inactiveBorder = Color.parseColor("#1E293B");
+            boolean isUrgentTarget = "URGENT_CITATION".equalsIgnoreCase(targetType[0]);
 
-            boolean isGen = "GENERAL".equals(selectedIconType[0]);
-            boolean isAcad = "ACADEMIC".equals(selectedIconType[0]);
-            boolean isAlr = "ALERT".equals(selectedIconType[0]);
-            boolean isSys = "SYSTEM".equals(selectedIconType[0]);
-            boolean isSub = "SUBJECT".equals(selectedIconType[0]);
+            if (isUrgentTarget) {
+                selectedIconType[0] = "URGENT_CITATION";
 
-            btnIconGeneral.setStrokeWidth(isGen ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
-            btnIconGeneral.setStrokeColor(isGen ? activeBorder : inactiveBorder);
+                if (btnIconUrgent != null) btnIconUrgent.setVisibility(View.VISIBLE);
+                btnIconGeneral.setVisibility(View.GONE);
+                btnIconAcademic.setVisibility(View.GONE);
+                btnIconAlert.setVisibility(View.GONE);
+                btnIconSystem.setVisibility(View.GONE);
+                btnIconSubject.setVisibility(View.GONE);
 
-            btnIconAcademic.setStrokeWidth(isAcad ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
-            btnIconAcademic.setStrokeColor(isAcad ? Color.parseColor("#F59E0B") : inactiveBorder);
+                if (btnIconUrgent != null) {
+                    btnIconUrgent.setStrokeWidth((int) (2 * getResources().getDisplayMetrics().density));
+                    btnIconUrgent.setStrokeColor(Color.parseColor("#FF5252"));
+                }
+                tvSelectedIconLabel.setText("🚨 Citación Urgente (Obligatorio)");
+            } else {
+                if (btnIconUrgent != null) btnIconUrgent.setVisibility(View.GONE);
+                btnIconGeneral.setVisibility(View.VISIBLE);
+                btnIconAcademic.setVisibility(View.VISIBLE);
+                btnIconAlert.setVisibility(View.VISIBLE);
+                btnIconSystem.setVisibility(View.VISIBLE);
+                btnIconSubject.setVisibility(View.VISIBLE);
 
-            btnIconAlert.setStrokeWidth(isAlr ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
-            btnIconAlert.setStrokeColor(isAlr ? Color.parseColor("#06B6D4") : inactiveBorder);
+                if ("URGENT_CITATION".equalsIgnoreCase(selectedIconType[0])) {
+                    selectedIconType[0] = "GENERAL";
+                }
 
-            btnIconSystem.setStrokeWidth(isSys ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
-            btnIconSystem.setStrokeColor(isSys ? Color.parseColor("#8B5CF6") : inactiveBorder);
+                int activeBorder = Color.parseColor("#38BDF8");
+                int inactiveBorder = Color.parseColor("#1E293B");
 
-            btnIconSubject.setStrokeWidth(isSub ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
-            btnIconSubject.setStrokeColor(isSub ? Color.parseColor("#10B981") : inactiveBorder);
+                boolean isGen = "GENERAL".equals(selectedIconType[0]);
+                boolean isAcad = "ACADEMIC".equals(selectedIconType[0]);
+                boolean isAlr = "ALERT".equals(selectedIconType[0]);
+                boolean isSys = "SYSTEM".equals(selectedIconType[0]);
+                boolean isSub = "SUBJECT".equals(selectedIconType[0]);
 
-            if (isGen) tvSelectedIconLabel.setText("Aviso general");
-            else if (isAcad) tvSelectedIconLabel.setText("Académico");
-            else if (isAlr) tvSelectedIconLabel.setText("Alerta");
-            else if (isSys) tvSelectedIconLabel.setText("Sistema");
-            else if (isSub) tvSelectedIconLabel.setText("Materias");
+                btnIconGeneral.setStrokeWidth(isGen ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
+                btnIconGeneral.setStrokeColor(isGen ? activeBorder : inactiveBorder);
+
+                btnIconAcademic.setStrokeWidth(isAcad ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
+                btnIconAcademic.setStrokeColor(isAcad ? Color.parseColor("#F59E0B") : inactiveBorder);
+
+                btnIconAlert.setStrokeWidth(isAlr ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
+                btnIconAlert.setStrokeColor(isAlr ? Color.parseColor("#06B6D4") : inactiveBorder);
+
+                btnIconSystem.setStrokeWidth(isSys ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
+                btnIconSystem.setStrokeColor(isSys ? Color.parseColor("#8B5CF6") : inactiveBorder);
+
+                btnIconSubject.setStrokeWidth(isSub ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
+                btnIconSubject.setStrokeColor(isSub ? Color.parseColor("#10B981") : inactiveBorder);
+
+                if (isGen) tvSelectedIconLabel.setText("Aviso general");
+                else if (isAcad) tvSelectedIconLabel.setText("Académico");
+                else if (isAlr) tvSelectedIconLabel.setText("Alerta");
+                else if (isSys) tvSelectedIconLabel.setText("Sistema");
+                else if (isSub) tvSelectedIconLabel.setText("Materias");
+            }
         };
 
-        btnIconGeneral.setOnClickListener(v -> { selectedIconType[0] = "GENERAL"; updateIconSelectionUI.run(); });
-        btnIconAcademic.setOnClickListener(v -> { selectedIconType[0] = "ACADEMIC"; updateIconSelectionUI.run(); });
-        btnIconAlert.setOnClickListener(v -> { selectedIconType[0] = "ALERT"; updateIconSelectionUI.run(); });
-        btnIconSystem.setOnClickListener(v -> { selectedIconType[0] = "SYSTEM"; updateIconSelectionUI.run(); });
-        btnIconSubject.setOnClickListener(v -> { selectedIconType[0] = "SUBJECT"; updateIconSelectionUI.run(); });
+        btnIconGeneral.setOnClickListener(v -> { if (!"URGENT_CITATION".equalsIgnoreCase(targetType[0])) { selectedIconType[0] = "GENERAL"; updateIconSelectionUI.run(); } });
+        btnIconAcademic.setOnClickListener(v -> { if (!"URGENT_CITATION".equalsIgnoreCase(targetType[0])) { selectedIconType[0] = "ACADEMIC"; updateIconSelectionUI.run(); } });
+        btnIconAlert.setOnClickListener(v -> { if (!"URGENT_CITATION".equalsIgnoreCase(targetType[0])) { selectedIconType[0] = "ALERT"; updateIconSelectionUI.run(); } });
+        btnIconSystem.setOnClickListener(v -> { if (!"URGENT_CITATION".equalsIgnoreCase(targetType[0])) { selectedIconType[0] = "SYSTEM"; updateIconSelectionUI.run(); } });
+        btnIconSubject.setOnClickListener(v -> { if (!"URGENT_CITATION".equalsIgnoreCase(targetType[0])) { selectedIconType[0] = "SUBJECT"; updateIconSelectionUI.run(); } });
+        if (btnIconUrgent != null) {
+            btnIconUrgent.setOnClickListener(v -> { selectedIconType[0] = "URGENT_CITATION"; updateIconSelectionUI.run(); });
+        }
 
         updateIconSelectionUI.run();
 
         if (isEditing && existingNotif.title != null) etTitle.setText(existingNotif.title);
         if (isEditing && existingNotif.message != null) etMessage.setText(existingNotif.message);
-
-        final String defaultTarget = (isEditing && existingNotif.targetType != null) ? existingNotif.targetType : (initialTargetType != null ? initialTargetType : "ALL");
-        final String[] targetType = {defaultTarget};
-        final String[] targetValue = {isEditing ? existingNotif.targetValue : null};
 
         TextView tvSelectedTarget = dialogView.findViewById(R.id.tvSelectedTarget);
         View btnSelectTarget = dialogView.findViewById(R.id.btnSelectTarget);
@@ -947,6 +946,7 @@ public class NotificationListFragment extends Fragment {
             cancelBtn.setOnClickListener(v2 -> targetDialog.dismiss());
 
             MaterialCardView cardGen = targetDialogView.findViewById(R.id.cardTargetGeneral);
+            MaterialCardView cardUrgent = targetDialogView.findViewById(R.id.cardTargetUrgentParentCitation);
             MaterialCardView cardStu = targetDialogView.findViewById(R.id.cardTargetStudents);
             MaterialCardView cardProf = targetDialogView.findViewById(R.id.cardTargetProfessors);
             MaterialCardView cardAdm = targetDialogView.findViewById(R.id.cardTargetAdmins);
@@ -969,6 +969,7 @@ public class NotificationListFragment extends Fragment {
                 int inactiveColor = Color.parseColor("#1E293B");
 
                 boolean isGen = "ALL".equals(tempTargetType[0]);
+                boolean isUrg = "URGENT_CITATION".equals(tempTargetType[0]);
                 boolean isStu = "ROLE_STUDENTS".equals(tempTargetType[0]);
                 boolean isProf = "ROLE_PROFESSORS".equals(tempTargetType[0]);
                 boolean isAdm = "ROLE_ADMINS".equals(tempTargetType[0]);
@@ -979,6 +980,11 @@ public class NotificationListFragment extends Fragment {
                 cardGen.setStrokeColor(isGen ? activeColor : inactiveColor);
                 radioGen.setImageResource(isGen ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
                 radioGen.setImageTintList(ColorStateList.valueOf(isGen ? Color.parseColor("#38BDF8") : Color.parseColor("#64748B")));
+
+                if (cardUrgent != null) {
+                    cardUrgent.setStrokeWidth(isUrg ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
+                    cardUrgent.setStrokeColor(isUrg ? Color.parseColor("#FF5252") : inactiveColor);
+                }
 
                 cardStu.setStrokeWidth(isStu ? (int) (2 * getResources().getDisplayMetrics().density) : (int) (1 * getResources().getDisplayMetrics().density));
                 cardStu.setStrokeColor(isStu ? activeColor : inactiveColor);
@@ -1012,6 +1018,32 @@ public class NotificationListFragment extends Fragment {
             updateTargetCardsUI.run();
 
             cardGen.setOnClickListener(v2 -> { tempTargetType[0] = "ALL"; tempTargetValue[0] = null; updateTargetCardsUI.run(); });
+
+            if (cardUrgent != null) {
+                cardUrgent.setOnClickListener(v2 -> {
+                    showSelectStudentCitationDialog(student -> {
+                        if (student == null) return;
+                        tempTargetType[0] = "URGENT_CITATION";
+                        tempTargetValue[0] = "ESTUDIANTE:" + student.id + ":" + (student.carnet != null ? student.carnet : "") + ":" + (student.name != null ? student.name : "") + ":" + (student.encargadoId != null ? student.encargadoId : 0);
+
+                        targetType[0] = tempTargetType[0];
+                        targetValue[0] = tempTargetValue[0];
+
+                        tvSelectedTarget.setText("Destinatarios: [🚨 Citación Urgente: " + student.name + "]");
+                        updateIconSelectionUI.run();
+
+                        if (etTitle.getText().toString().trim().isEmpty()) {
+                            etTitle.setText("CITACIÓN URGENTE: " + student.name);
+                        }
+                        if (etMessage.getText().toString().trim().isEmpty()) {
+                            etMessage.setText("Se solicita la presencia urgente del Encargado/Padre de familia del estudiante " + student.name + " (Carnet: " + (student.carnet != null ? student.carnet : "-") + ") en la dirección del centro escolar.");
+                        }
+
+                        targetDialog.dismiss();
+                    });
+                });
+            }
+
             cardStu.setOnClickListener(v2 -> { tempTargetType[0] = "ROLE_STUDENTS"; tempTargetValue[0] = null; updateTargetCardsUI.run(); });
             cardProf.setOnClickListener(v2 -> { tempTargetType[0] = "ROLE_PROFESSORS"; tempTargetValue[0] = null; updateTargetCardsUI.run(); });
             cardAdm.setOnClickListener(v2 -> { tempTargetType[0] = "ROLE_ADMINS"; tempTargetValue[0] = null; updateTargetCardsUI.run(); });
@@ -1020,13 +1052,18 @@ public class NotificationListFragment extends Fragment {
                 observeOnce(viewModel.getAllSubjects(), subjects -> {
                     if (subjects != null && !subjects.isEmpty()) {
                         String[] subNames = subjects.stream().map(s -> s.name).toArray(String[]::new);
-                        new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Seleccionar Materia")
-                            .setItems(subNames, (d3, w3) -> {
+                        DialogUtils.showCustomChoiceDialog(
+                            requireContext(),
+                            "Seleccionar Materia",
+                            "Elige la materia o aula para publicar la notificación.",
+                            subNames,
+                            -1,
+                            (w3, optionText) -> {
                                 tempTargetType[0] = "SUBJECT";
                                 tempTargetValue[0] = subNames[w3];
                                 updateTargetCardsUI.run();
-                            }).show();
+                            }
+                        );
                     } else {
                         Toast.makeText(getContext(), "No hay materias registradas", Toast.LENGTH_SHORT).show();
                     }
@@ -1037,13 +1074,18 @@ public class NotificationListFragment extends Fragment {
                 observeOnce(viewModel.getAllFacilities(), facilities -> {
                     if (facilities != null && !facilities.isEmpty()) {
                         String[] facNames = facilities.stream().map(f -> f.name).toArray(String[]::new);
-                        new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Seleccionar Instalación")
-                            .setItems(facNames, (d3, w3) -> {
+                        DialogUtils.showCustomChoiceDialog(
+                            requireContext(),
+                            "Seleccionar Instalación",
+                            "Elige el espacio o área física de la instalación.",
+                            facNames,
+                            -1,
+                            (w3, optionText) -> {
                                 tempTargetType[0] = "FACILITY";
                                 tempTargetValue[0] = facNames[w3];
                                 updateTargetCardsUI.run();
-                            }).show();
+                            }
+                        );
                     } else {
                         Toast.makeText(getContext(), "No hay instalaciones registradas", Toast.LENGTH_SHORT).show();
                     }
@@ -1060,8 +1102,17 @@ public class NotificationListFragment extends Fragment {
                 else if ("ROLE_ADMINS".equals(targetType[0])) label = "Destinatarios: [⚙️ Administración]";
                 else if ("SUBJECT".equals(targetType[0])) label = "Materia: [" + (targetValue[0] != null ? targetValue[0] : "") + "]";
                 else if ("FACILITY".equals(targetType[0])) label = "Instalación: [" + (targetValue[0] != null ? targetValue[0] : "") + "]";
+                else if ("URGENT_CITATION".equals(targetType[0])) {
+                    if (targetValue[0] != null && targetValue[0].contains(":")) {
+                        String[] parts = targetValue[0].split(":");
+                        label = "Destinatarios: [🚨 Citación Urgente: " + (parts.length >= 4 ? parts[3] : "") + "]";
+                    } else {
+                        label = "Destinatarios: [🚨 Citación Urgente]";
+                    }
+                }
 
                 tvSelectedTarget.setText(label);
+                updateIconSelectionUI.run();
                 targetDialog.dismiss();
             });
 
@@ -1143,10 +1194,103 @@ public class NotificationListFragment extends Fragment {
         }
     }
 
+    private interface OnStudentCitationSelectedListener {
+        void onSelected(Student student);
+    }
+
+    private void showSelectStudentCitationDialog(OnStudentCitationSelectedListener listener) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_select_student_citation, null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        EditText etSearch = dialogView.findViewById(R.id.etSearchStudentCitation);
+        TextView tvCountHeader = dialogView.findViewById(R.id.tvStudentCountHeader);
+        LinearLayout container = dialogView.findViewById(R.id.layoutStudentsCitationContainer);
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        final List<Student>[] allStudentsHolder = new List[]{new ArrayList<>()};
+
+        Runnable renderStudentList = () -> {
+            container.removeAllViews();
+            String query = etSearch.getText().toString().trim().toLowerCase();
+            List<Student> filtered = allStudentsHolder[0].stream().filter(s -> {
+                if (s == null) return false;
+                if (query.isEmpty()) return true;
+                String name = s.name != null ? s.name.toLowerCase() : "";
+                String carnet = s.carnet != null ? s.carnet.toLowerCase() : "";
+                String grade = s.grade != null ? s.grade.toLowerCase() : "";
+                return name.contains(query) || carnet.contains(query) || grade.contains(query);
+            }).collect(Collectors.toList());
+
+            tvCountHeader.setText("ESTUDIANTES ENCONTRADOS (" + filtered.size() + ")");
+
+            if (filtered.isEmpty()) {
+                TextView tvEmpty = new TextView(requireContext());
+                tvEmpty.setText("No se encontraron estudiantes.");
+                tvEmpty.setTextColor(0xFF8E9BB0);
+                tvEmpty.setPadding(0, 16, 0, 16);
+                container.addView(tvEmpty);
+                return;
+            }
+
+            for (Student s : filtered) {
+                View rowView = LayoutInflater.from(requireContext()).inflate(R.layout.item_student_citation_row, container, false);
+                TextView tvInitials = rowView.findViewById(R.id.tvStudentInitials);
+                TextView tvName = rowView.findViewById(R.id.tvStudentName);
+                TextView tvCarnetGrade = rowView.findViewById(R.id.tvStudentCarnetGrade);
+
+                if (tvInitials != null) tvInitials.setText(ImageUtils.getInitials(s.name));
+                if (tvName != null) tvName.setText(s.name != null ? s.name : "Estudiante");
+                String carnetStr = s.carnet != null ? s.carnet : "-";
+                String gradeStr = s.grade != null ? s.grade : "Primaria";
+                if (tvCarnetGrade != null) tvCarnetGrade.setText("Carnet: " + carnetStr + " • " + gradeStr);
+
+                rowView.setOnClickListener(v -> {
+                    dialog.dismiss();
+                    if (listener != null) listener.onSelected(s);
+                });
+
+                container.addView(rowView);
+            }
+        };
+
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { renderStudentList.run(); }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        observeOnce(viewModel.getAllStudentRecords(), students -> {
+            allStudentsHolder[0] = students != null ? students : new ArrayList<>();
+            renderStudentList.run();
+        });
+
+        dialog.show();
+    }
+
     private String getNotificationTargetLabel(Notification n) {
         if (n == null || n.targetType == null) return "📢 Canal General";
         String type = n.targetType.toUpperCase();
         String val = n.targetValue != null ? n.targetValue : "";
+
+        if ("URGENT_CITATION".equals(type)) {
+            if (!val.isEmpty() && val.contains(":")) {
+                String[] parts = val.split(":");
+                if (parts.length >= 4) {
+                    return "🚨 Citación Urgente: " + parts[3];
+                }
+            }
+            return "🚨 Citación Urgente";
+        }
 
         switch (type) {
             case "SUPPORT": return "✉️ Soporte";

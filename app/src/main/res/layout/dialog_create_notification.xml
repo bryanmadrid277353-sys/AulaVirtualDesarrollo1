@@ -247,6 +247,7 @@
                         android:id="@+id/btnIconSubject"
                         android:layout_width="56dp"
                         android:layout_height="56dp"
+                        android:layout_marginEnd="10dp"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="#0D281E"
@@ -263,6 +264,30 @@
                             android:src="@drawable/ic_open_book"
                             app:tint="#10B981"
                             android:contentDescription="Materias" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Icon Option 6: Citación Urgente (Exclusivo) -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnIconUrgent"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#2E1218"
+                        app:strokeWidth="2dp"
+                        app:strokeColor="#FF5252"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?android:attr/selectableItemBackground"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_urgent_citation"
+                            app:tint="#FF5252"
+                            android:contentDescription="Citación Urgente" />
                     </com.google.android.material.card.MaterialCardView>
 
                 </LinearLayout>

@@ -46,6 +46,7 @@
 
         <!-- Top Action Row: Create Button + Search Toggle Button on Right -->
         <LinearLayout
+            android:id="@+id/layoutTopActionRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -112,22 +113,17 @@
                 android:textColor="?android:attr/textColorPrimary"
                 android:textColorHint="?android:attr/textColorSecondary"
                 android:singleLine="true" />
-
-            <Spinner
-                android:id="@+id/spinnerFilter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="?attr/colorPrimary" />
         </LinearLayout>
 
-        <!-- Filter Chips Row -->
+        <!-- Filter Chips Row (Oculto: Notificaciones ordenadas por fecha con Citaciones Urgentes ancladas al inicio) -->
         <HorizontalScrollView
             android:id="@+id/chipsScrollView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scrollbars="none"
             android:overScrollMode="never"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="8dp"
+            android:visibility="gone">
 
             <LinearLayout
                 android:id="@+id/chipsLayout"

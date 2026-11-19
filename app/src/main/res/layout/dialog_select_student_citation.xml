@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/input_bg"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/input_border">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Drag Handle Bar -->
+            <View
+                android:layout_width="36dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/bg_input_field"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Header Row: Title & Close Button -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/tvDialogTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@id/btnCloseDialog"
+                    android:text="Seleccionar Estudiante"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/btnCloseDialog"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_close"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="Cerrar" />
+            </RelativeLayout>
+
+            <!-- Subtitle -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selecciona el alumno para enviar la citación urgente a su Encargado"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Search Bar Input -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_input_field"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="14dp"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_search"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:layout_marginEnd="10dp"
+                    android:contentDescription="Buscar" />
+
+                <EditText
+                    android:id="@+id/etSearchStudentCitation"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:hint="Buscar por nombre o carnet..."
+                    android:textColorHint="@color/input_hint"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="15sp"
+                    android:singleLine="true"
+                    android:inputType="text" />
+            </LinearLayout>
+
+            <!-- Student Count Header -->
+            <TextView
+                android:id="@+id/tvStudentCountHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ESTUDIANTES REGISTRADOS"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Students List Container (Nested Scrollable) -->
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="280dp"
+                android:layout_marginBottom="20dp">
+
+                <LinearLayout
+                    android:id="@+id/layoutStudentsCitationContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </androidx.core.widget.NestedScrollView>
+
+            <!-- Action Buttons: Cancel -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCancelDialog"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:paddingHorizontal="24dp"
+                    android:text="Cancelar"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="false"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/input_border"
+                    app:strokeWidth="1dp"
+                    android:backgroundTint="@color/input_bg" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</ScrollView>

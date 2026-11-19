@@ -219,8 +219,8 @@ public class AdminAdminListFragment extends Fragment {
                 if (tvCarnetError != null) tvCarnetError.setVisibility(View.GONE);
             }
 
-            if (pass.isEmpty() || ValidationUtils.getPasswordStrength(pass) == ValidationUtils.PasswordStrength.WEAK) {
-                if (tvPassError != null) { tvPassError.setText("Obligatorio"); tvPassError.setVisibility(View.VISIBLE); }
+            if (!ValidationUtils.isValidPasswordPolicy(pass)) {
+                if (tvPassError != null) { tvPassError.setText("Mín. 8 caracteres, letra y número"); tvPassError.setVisibility(View.VISIBLE); }
                 isValid = false;
             } else {
                 if (tvPassError != null) tvPassError.setVisibility(View.GONE);

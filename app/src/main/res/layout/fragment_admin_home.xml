@@ -130,456 +130,934 @@
             android:textSize="14sp"
             android:layout_marginBottom="16dp" />
 
-        <!-- ================= CATEGORY 1: PERSONAS ================= -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="PERSONAS"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="4dp" />
-
-        <!-- Card 1: Encargados -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardEncargados"
+        <!-- ================= LIST LAYOUT (LISTA) ================= -->
+        <LinearLayout
+            android:id="@+id/layoutAdminHomeList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/input_bg"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/input_border"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
+            android:orientation="vertical">
 
+            <!-- CATEGORY 1: PERSONAS -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PERSONAS"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="4dp" />
+
+            <!-- Card 1: Encargados -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardEncargados"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_person_badge"
+                            app:tint="@color/bs_warning"
+                            android:contentDescription="Encargados" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Encargados"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Familias y tutores"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Navegar" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card 2: Alumnos -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardStudents"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_book"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Alumnos" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Alumnos"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Estudiantes de primaria"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Navegar" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card 3: Profesores -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardProfessors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_professor"
+                            app:tint="@color/bs_success"
+                            android:contentDescription="Profesores" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Profesores"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Equipo docente"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Navegar" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+
+            <!-- CATEGORY 2: ORGANIZACIÓN -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ORGANIZACIÓN"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp" />
+
+            <!-- Card 4: Materias -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardSubjects"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_open_book"
+                            app:tint="@color/accent_cyan"
+                            android:contentDescription="Materias" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Materias"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Asignaturas del aula"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Navegar" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card 5: Instalaciones -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardFacilities"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_building"
+                            app:tint="@color/accent_yellow"
+                            android:contentDescription="Instalaciones" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Instalaciones"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Espacios educativos"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Navegar" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+
+            <!-- CATEGORY 3: ADMINISTRACIÓN -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ADMINISTRACIÓN"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp" />
+
+            <!-- Card 6: Administradores -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardAdmins"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_shield_check"
+                            app:tint="@color/bs_danger"
+                            android:contentDescription="Administradores" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Administradores"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Accesos y permisos"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:contentDescription="Navegar" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- ================= GRID LAYOUT (CUADRÍCULA) ================= -->
+        <LinearLayout
+            android:id="@+id/layoutAdminHomeGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Row 1: Encargados | Alumnos -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
+                android:layout_marginBottom="12dp">
 
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_input_field"
-                    android:layout_marginEnd="14dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_person_badge"
-                        app:tint="@color/bs_warning"
-                        android:contentDescription="Encargados" />
-                </FrameLayout>
-
-                <LinearLayout
+                <!-- Grid Card 1: Encargados -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardEncargadosGrid"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/input_border"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Encargados"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                        <FrameLayout
+                            android:id="@+id/iconEncargadosBoxGrid"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_input_field"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_person_badge"
+                                app:tint="@color/bs_warning"
+                                android:contentDescription="Encargados" />
+                        </FrameLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="?android:attr/textColorSecondary"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:contentDescription="Navegar" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/iconEncargadosBoxGrid"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Encargados"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Familias y tutores"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="13sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Grid Card 2: Alumnos -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardStudentsGrid"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/input_border"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Familias y tutores"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="13sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
+                        android:padding="16dp">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Navegar" />
+                        <FrameLayout
+                            android:id="@+id/iconStudentsBoxGrid"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_input_field"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_book"
+                                app:tint="?attr/colorPrimary"
+                                android:contentDescription="Alumnos" />
+                        </FrameLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="?android:attr/textColorSecondary"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:contentDescription="Navegar" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/iconStudentsBoxGrid"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Alumnos"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Estudiantes de primaria"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="13sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
-        <!-- Card 2: Alumnos -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardStudents"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/input_bg"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/input_border"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
-
+            <!-- Row 2: Profesores | Materias -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
+                android:layout_marginBottom="12dp">
 
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_input_field"
-                    android:layout_marginEnd="14dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_book"
-                        app:tint="?attr/colorPrimary"
-                        android:contentDescription="Alumnos" />
-                </FrameLayout>
-
-                <LinearLayout
+                <!-- Grid Card 3: Profesores -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardProfessorsGrid"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/input_border"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Alumnos"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                        <FrameLayout
+                            android:id="@+id/iconProfessorsBoxGrid"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_input_field"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_professor"
+                                app:tint="@color/bs_success"
+                                android:contentDescription="Profesores" />
+                        </FrameLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="?android:attr/textColorSecondary"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:contentDescription="Navegar" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/iconProfessorsBoxGrid"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Profesores"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Equipo docente"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="13sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Grid Card 4: Materias -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardSubjectsGrid"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/input_border"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Estudiantes de primaria"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="13sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
+                        android:padding="16dp">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Navegar" />
+                        <FrameLayout
+                            android:id="@+id/iconSubjectsBoxGrid"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_input_field"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_open_book"
+                                app:tint="@color/accent_cyan"
+                                android:contentDescription="Materias" />
+                        </FrameLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="?android:attr/textColorSecondary"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:contentDescription="Navegar" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/iconSubjectsBoxGrid"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Materias"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Asignaturas del aula"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="13sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
-        <!-- Card 3: Profesores -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardProfessors"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/input_bg"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/input_border"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
-
+            <!-- Row 3: Instalaciones | Administradores -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
+                android:layout_marginBottom="12dp">
 
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_input_field"
-                    android:layout_marginEnd="14dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_professor"
-                        app:tint="@color/bs_success"
-                        android:contentDescription="Profesores" />
-                </FrameLayout>
-
-                <LinearLayout
+                <!-- Grid Card 5: Instalaciones -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardFacilitiesGrid"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/input_border"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Profesores"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Equipo docente"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="13sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
+                        <FrameLayout
+                            android:id="@+id/iconFacilitiesBoxGrid"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_input_field"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Navegar" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_building"
+                                app:tint="@color/accent_yellow"
+                                android:contentDescription="Instalaciones" />
+                        </FrameLayout>
 
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="?android:attr/textColorSecondary"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:contentDescription="Navegar" />
 
-        <!-- ================= CATEGORY 2: ORGANIZACIÓN ================= -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ORGANIZACIÓN"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="8dp" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/iconFacilitiesBoxGrid"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
 
-        <!-- Card 4: Materias -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardSubjects"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/input_bg"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/input_border"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Instalaciones"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Espacios educativos"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="13sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
 
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_input_field"
-                    android:layout_marginEnd="14dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_open_book"
-                        app:tint="@color/accent_cyan"
-                        android:contentDescription="Materias" />
-                </FrameLayout>
-
-                <LinearLayout
+                <!-- Grid Card 6: Administradores -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardAdminsGrid"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_marginStart="6dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/input_bg"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/input_border"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Materias"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Asignaturas del aula"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="13sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
+                        <FrameLayout
+                            android:id="@+id/iconAdminsBoxGrid"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_input_field"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Navegar" />
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_shield_check"
+                                app:tint="@color/bs_danger"
+                                android:contentDescription="Administradores" />
+                        </FrameLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="?android:attr/textColorSecondary"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:contentDescription="Navegar" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@id/iconAdminsBoxGrid"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Administradores"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Accesos y permisos"
+                                android:textColor="?android:attr/textColorSecondary"
+                                android:textSize="13sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
-        <!-- Card 5: Instalaciones -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardFacilities"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/input_bg"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/input_border"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
-
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_input_field"
-                    android:layout_marginEnd="14dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_building"
-                        app:tint="@color/accent_yellow"
-                        android:contentDescription="Instalaciones" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Instalaciones"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Espacios educativos"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="13sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Navegar" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-
-
-
-        <!-- ================= CATEGORY 3: ADMINISTRACIÓN ================= -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ADMINISTRACIÓN"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="8dp" />
-
-        <!-- Card 6: Administradores -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardAdmins"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@color/input_bg"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/input_border"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="16dp">
-
-                <FrameLayout
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_input_field"
-                    android:layout_marginEnd="14dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_shield_check"
-                        app:tint="@color/bs_danger"
-                        android:contentDescription="Administradores" />
-                </FrameLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Administradores"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Accesos y permisos"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="13sp"
-                        android:layout_marginTop="2dp" />
-                </LinearLayout>
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="?android:attr/textColorSecondary"
-                    android:contentDescription="Navegar" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

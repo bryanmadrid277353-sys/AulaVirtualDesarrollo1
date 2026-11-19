@@ -2,6 +2,14 @@
 title FastAPI Backend - Aula Virtual
 color 0A
 cd /d "%~dp0"
+
+rem ---------------------------------------------------------------
+rem  SEGURIDAD DE LA API
+rem    monitor : no bloquea nada, solo avisa (compatible con la app Android actual)
+rem    enforce : exige inicio de sesion y respeta los roles (API protegida)
+rem  Cambia la palabra de abajo a "enforce" cuando la app envie el token.
+rem ---------------------------------------------------------------
+if not defined AULA_AUTH_MODE set AULA_AUTH_MODE=monitor
 echo ===================================================
 echo     AULA VIRTUAL - SERVIDOR BACKEND FASTAPI
 echo ===================================================

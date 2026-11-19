@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Context;
+import com.aula.virtual.util.PasswordHasher;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -530,7 +531,15 @@ public class SettingsAdvancedFragment extends Fragment {
 
             boolean isValid = true;
 
-            if (!currentPass.equals(currentUser.password)) {
+            boolean currentPassValid = false;
+            if (currentUser != null && currentUser.password != null) {
+                if (PasswordHasher.isHashed(currentUser.password)) {
+                    currentPassValid = PasswordHasher.verifyPassword(currentPass, currentUser.password);
+                } else {
+                    currentPassValid = currentPass.equals(currentUser.password);
+                }
+            }
+            if (!currentPassValid) {
                 etCurrentPass.setError("Contraseña actual incorrecta");
                 isValid = false;
             }
@@ -538,8 +547,8 @@ public class SettingsAdvancedFragment extends Fragment {
             if (newPass.isEmpty()) {
                 etNewPass.setError("Ingrese la nueva contraseña");
                 isValid = false;
-            } else if (ValidationUtils.getPasswordStrength(newPass) == ValidationUtils.PasswordStrength.WEAK) {
-                etNewPass.setError("Contraseña demasiado débil (mínimo 4 caracteres)");
+            } else if (!ValidationUtils.isValidPasswordPolicy(newPass)) {
+                etNewPass.setError("La contraseña debe tener al menos 8 caracteres, una letra y un número");
                 isValid = false;
             }
 
@@ -550,11 +559,12 @@ public class SettingsAdvancedFragment extends Fragment {
 
             if (isValid) {
                 viewModel.performOnlineAction(() -> {
-                    currentUser.password = newPass;
+                    String hashedPassword = PasswordHasher.hashPassword(newPass);
+                    currentUser.password = hashedPassword;
                     viewModel.updateUser(currentUser);
                     if (getContext() != null) {
                         CredentialsManager credentialsManager = new CredentialsManager(requireContext());
-                        credentialsManager.saveCredentials(currentUser.carnet, currentUser.password, currentUser.name);
+                        credentialsManager.saveCredentials(currentUser.carnet, newPass, currentUser.name);
                     }
                     Toast.makeText(getContext(), "Contraseña actualizada exitosamente", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();

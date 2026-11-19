@@ -197,11 +197,15 @@ public class BlogDiscussionFragment extends Fragment {
 
     private void showMessageOptionsDialog(BlogComment comment, int currentUserId, boolean isAdmin) {
         boolean canDelete = (comment.userId == currentUserId || isAdmin);
-        CharSequence[] options = canDelete ? new CharSequence[]{"Copiar mensaje", "Eliminar"} : new CharSequence[]{"Copiar mensaje"};
+        String[] options = canDelete ? new String[]{"Copiar mensaje", "Eliminar mensaje"} : new String[]{"Copiar mensaje"};
 
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Opciones de mensaje")
-                .setItems(options, (dialog, which) -> {
+        DialogUtils.showCustomChoiceDialog(
+                requireContext(),
+                "Opciones de mensaje",
+                "Elige una acción para el mensaje seleccionado.",
+                options,
+                -1,
+                (which, optionText) -> {
                     if (which == 0) {
                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
                         android.content.ClipData clip = android.content.ClipData.newPlainText("Mensaje del foro", comment.content);
@@ -213,19 +217,19 @@ public class BlogDiscussionFragment extends Fragment {
                         viewModel.performOnlineAction(() -> viewModel.deleteBlogComment(comment));
                         Toast.makeText(getContext(), "Mensaje eliminado", Toast.LENGTH_SHORT).show();
                     }
-                })
-                .show();
+                }
+        );
     }
 
     private void showClearChatConfirmation() {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Vaciar conversación")
-                .setMessage("¿Deseas eliminar TODOS los mensajes de esta discusión? Esta acción no se puede deshacer.")
-                .setPositiveButton("Vaciar todo", (dialog, which) -> {
-                    viewModel.performOnlineAction(() -> viewModel.clearBlogDiscussion(blogEntryId));
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+        DialogUtils.showCustomConfirmDialog(
+                requireContext(),
+                "Vaciar conversación",
+                "¿Deseas eliminar TODOS los mensajes de esta discusión? Esta acción no se puede deshacer.",
+                "Sí, Vaciar todo",
+                "Cancelar",
+                () -> viewModel.performOnlineAction(() -> viewModel.clearBlogDiscussion(blogEntryId))
+        );
     }
 
     private void applyChatSearch() {

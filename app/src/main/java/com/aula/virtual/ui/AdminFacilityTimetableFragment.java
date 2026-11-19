@@ -14,16 +14,19 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import android.content.res.ColorStateList;
+import android.widget.Toast;
+import com.google.android.material.button.MaterialButton;
 import com.aula.virtual.R;
 import com.aula.virtual.data.ScheduleInfo;
-import com.aula.virtual.data.entity.Subject;
 import com.aula.virtual.databinding.FragmentFacilityTimetableBinding;
 import com.aula.virtual.databinding.ItemTimetableBlockBinding;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AdminFacilityTimetableFragment extends Fragment {
     private FragmentFacilityTimetableBinding binding;
@@ -133,7 +136,7 @@ public class AdminFacilityTimetableFragment extends Fragment {
     }
 
     private void showScheduleDetailDialog(ScheduleInfo info) {
-        if (info == null || info.schedule == null) return;
+        if (info == null || info.schedule == null || getContext() == null) return;
 
         final boolean[] dialogShown = {false};
         viewModel.getSubjectById(info.schedule.subjectId, subject -> {
@@ -141,27 +144,99 @@ public class AdminFacilityTimetableFragment extends Fragment {
                 if (getContext() == null || dialogShown[0]) return;
                 dialogShown[0] = true;
                 requireActivity().runOnUiThread(() -> {
-                    StringBuilder details = new StringBuilder();
-                    details.append("📚 Materia: ").append(info.subjectName != null && !info.subjectName.isEmpty() ? info.subjectName : "N/A").append("\n");
-                    
-                    String facName = (facility != null && facility.name != null && !facility.name.isEmpty()) ? facility.name : "N/A";
-                    details.append("🏢 Instalación: ").append(facName).append("\n");
+                    View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_schedule_detail, null);
 
-                    if (subject != null) {
-                        if (subject.description != null && !subject.description.isEmpty()) {
-                            details.append("📝 Descripción: ").append(subject.description).append("\n");
-                        }
-                        details.append("📌 Sección: ").append(subject.section != null ? subject.section : "01").append("\n");
+                    MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+                    builder.setView(dialogView);
+
+                    AlertDialog dialog = builder.create();
+                    if (dialog.getWindow() != null) {
+                        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
                     }
-                    details.append("👨‍🏫 Profesor: ").append(info.professorName != null && !info.professorName.isEmpty() ? info.professorName : "N/A").append("\n");
-                    details.append("📅 Días: ").append(info.schedule.days != null ? info.schedule.days : "N/A").append("\n");
-                    details.append("⏰ Hora: ").append(info.schedule.startTime).append(" - ").append(info.schedule.endTime);
 
-                    new MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Detalle de la Clase")
-                        .setMessage(details.toString())
-                        .setPositiveButton("Cerrar", null)
-                        .show();
+                    TextView tvSectionBadge = dialogView.findViewById(R.id.tvSectionBadge);
+                    TextView tvSubjectName = dialogView.findViewById(R.id.tvSubjectName);
+                    TextView tvFacilityName = dialogView.findViewById(R.id.tvFacilityName);
+                    View layoutDescRow = dialogView.findViewById(R.id.layoutDescRow);
+                    TextView tvSubjectDesc = dialogView.findViewById(R.id.tvSubjectDesc);
+                    TextView tvProfessorName = dialogView.findViewById(R.id.tvProfessorName);
+                    TextView tvDays = dialogView.findViewById(R.id.tvDays);
+                    TextView tvTime = dialogView.findViewById(R.id.tvTime);
+
+                    View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+                    MaterialButton btnSaveColor = dialogView.findViewById(R.id.btnSaveColorDialog);
+
+                    // Bind Fields
+                    String secStr = (subject != null && subject.section != null && !subject.section.isEmpty()) ? subject.section : "01";
+                    tvSectionBadge.setText("Sección " + secStr);
+
+                    tvSubjectName.setText(info.subjectName != null && !info.subjectName.isEmpty() ? info.subjectName : "Sin Materia");
+
+                    String facName = (facility != null && facility.name != null && !facility.name.isEmpty()) ? facility.name : "N/A";
+                    tvFacilityName.setText(facName);
+
+                    if (subject != null && subject.description != null && !subject.description.trim().isEmpty()) {
+                        tvSubjectDesc.setText(subject.description.trim());
+                        layoutDescRow.setVisibility(View.VISIBLE);
+                    } else {
+                        layoutDescRow.setVisibility(View.GONE);
+                    }
+
+                    tvProfessorName.setText(info.professorName != null && !info.professorName.isEmpty() ? info.professorName : "Sin Profesor Asignado");
+                    tvDays.setText(info.schedule.days != null ? info.schedule.days : "N/A");
+                    tvTime.setText((info.schedule.startTime != null ? info.schedule.startTime : "") + " - " + (info.schedule.endTime != null ? info.schedule.endTime : ""));
+
+                    // Setup Color Palette Selection
+                    final String[] selectedColorHolder = {info.schedule.color != null ? info.schedule.color : "BLUE"};
+
+                    Map<String, MaterialButton> colorButtons = new HashMap<>();
+                    colorButtons.put("BLUE", dialogView.findViewById(R.id.btnColorBlue));
+                    colorButtons.put("GREEN", dialogView.findViewById(R.id.btnColorGreen));
+                    colorButtons.put("YELLOW_DARK", dialogView.findViewById(R.id.btnColorYellow));
+                    colorButtons.put("PURPLE", dialogView.findViewById(R.id.btnColorPurple));
+                    colorButtons.put("RED", dialogView.findViewById(R.id.btnColorRed));
+                    colorButtons.put("CYAN", dialogView.findViewById(R.id.btnColorCyan));
+
+                    Runnable highlightSelectedColor = () -> {
+                        for (Map.Entry<String, MaterialButton> entry : colorButtons.entrySet()) {
+                            MaterialButton btn = entry.getValue();
+                            if (btn == null) continue;
+                            if (entry.getKey().equalsIgnoreCase(selectedColorHolder[0])) {
+                                btn.setIconResource(R.drawable.ic_check);
+                                btn.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_START);
+                                int colorInt = ThemeHelper.getSubjectColor(requireContext(), entry.getKey());
+                                int tint = ThemeHelper.isColorLight(colorInt) ? 0xFF000000 : 0xFFFFFFFF;
+                                btn.setIconTint(ColorStateList.valueOf(tint));
+                            } else {
+                                btn.setIcon(null);
+                            }
+                        }
+                    };
+
+                    for (Map.Entry<String, MaterialButton> entry : colorButtons.entrySet()) {
+                        MaterialButton btn = entry.getValue();
+                        if (btn != null) {
+                            btn.setOnClickListener(v -> {
+                                selectedColorHolder[0] = entry.getKey();
+                                highlightSelectedColor.run();
+                            });
+                        }
+                    }
+
+                    highlightSelectedColor.run();
+
+                    btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+                    btnSaveColor.setOnClickListener(v -> {
+                        info.schedule.color = selectedColorHolder[0];
+                        viewModel.performOnlineAction(() -> {
+                            viewModel.updateSchedule(info.schedule);
+                            Toast.makeText(getContext(), "Color de la clase actualizado", Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                        });
+                    });
+
+                    dialog.show();
                 });
             });
         });

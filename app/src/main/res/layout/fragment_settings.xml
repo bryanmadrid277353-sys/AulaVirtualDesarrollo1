@@ -68,64 +68,146 @@
             app:strokeWidth="1dp"
             app:strokeColor="@color/input_border">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:orientation="vertical">
 
-                <FrameLayout
-                    android:id="@+id/iconDarkModeBox"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/bg_input_field"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="14dp">
+                <!-- Row 1: Modo oscuro -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <FrameLayout
+                        android:id="@+id/iconDarkModeBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_moon"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Modo Oscuro" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconDarkModeBox"
+                        android:layout_toStartOf="@id/switchDarkMode"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Modo oscuro"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvDarkModeStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Activado"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp"
+                            tools:text="Activado" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchDarkMode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        app:useMaterialThemeColors="true" />
+                </RelativeLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/input_border" />
+
+                <!-- Row 2: Estilo de Inicio -->
+                <RelativeLayout
+                    android:id="@+id/btnHomeLayoutStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <FrameLayout
+                        android:id="@+id/iconHomeStyleBox"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_input_field"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="14dp">
+
+                        <ImageView
+                            android:id="@+id/ivHomeStyleIcon"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_grid"
+                            app:tint="?attr/colorPrimary"
+                            android:contentDescription="Estilo de Inicio" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconHomeStyleBox"
+                        android:layout_toStartOf="@id/arrowHomeStyle"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Estilo de Inicio"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvHomeLayoutStyleStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Lista"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp"
+                            tools:text="Lista" />
+                    </LinearLayout>
 
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_moon"
-                        app:tint="?attr/colorPrimary"
-                        android:contentDescription="Modo Oscuro" />
-                </FrameLayout>
+                        android:id="@+id/arrowHomeStyle"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_back"
+                        android:rotation="180"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:contentDescription="Ir" />
+                </RelativeLayout>
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@id/iconDarkModeBox"
-                    android:layout_toStartOf="@id/switchDarkMode"
-                    android:layout_centerVertical="true"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Modo oscuro"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvDarkModeStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Activado"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:textSize="13sp"
-                        android:layout_marginTop="2dp"
-                        tools:text="Activado" />
-                </LinearLayout>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchDarkMode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    app:useMaterialThemeColors="true" />
-            </RelativeLayout>
+            </LinearLayout>
         </androidx.cardview.widget.CardView>
 
         <!-- Categoria 2: Preferencias -->

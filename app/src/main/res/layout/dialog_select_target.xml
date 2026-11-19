@@ -135,6 +135,83 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Option 2: Citación urgente a padres de familia -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardTargetUrgentParentCitation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/input_bg"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/input_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
+
+                    <FrameLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_badge_semester"
+                        android:backgroundTint="#2E1218"
+                        android:layout_marginEnd="12dp">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_urgent_citation"
+                            app:tint="#FF5252"
+                            android:contentDescription="Citación Urgente" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Citación urgente a padres de familia"
+                            android:textColor="#FF5252"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSubTargetUrgentParentCitation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Notificación e informe al Encargado del estudiante"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_input_field">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="?android:attr/textColorSecondary"
+                            android:contentDescription="Next" />
+                    </FrameLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Option 2: Todos los Estudiantes -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardTargetStudents"

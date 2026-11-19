@@ -15,6 +15,8 @@ public class User {
     public String personal_email;
     public String profile_image;
     public Integer can_change_photo = 1;
+    public String fcm_token;
+    public String session_token;
 
     public User() {}
 

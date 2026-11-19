@@ -55,6 +55,7 @@ public class SettingsFragment extends Fragment {
             });
         }
 
+        setupHomeLayoutStyle();
         setupBiometricAutofillSwitch();
 
         MainViewModel viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
@@ -86,27 +87,59 @@ public class SettingsFragment extends Fragment {
             if (isUpdatingSwitch) return;
 
             if (!isChecked) {
-                new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog)
-                        .setTitle("⚠️ Desactivar Datos Biométricos")
-                        .setMessage("Al desactivar los Datos Biométricos, se ELIMINARÁN TODAS las cuentas guardadas para inicio de sesión biométrico en este dispositivo.\n\n¿Deseas continuar?")
-                        .setPositiveButton("Sí, Desactivar y Eliminar", (dialog, which) -> {
+                DialogUtils.showCustomConfirmDialog(
+                        requireContext(),
+                        "⚠️ Desactivar Datos Biométricos",
+                        "Al desactivar los Datos Biométricos, se ELIMINARÁN TODAS las cuentas guardadas para inicio de sesión biométrico en este dispositivo.\n\n¿Deseas continuar?",
+                        "Sí, Desactivar y Eliminar",
+                        "Cancelar",
+                        () -> {
                             CredentialsManager manager = new CredentialsManager(requireContext());
                             manager.clearAllCredentials();
                             ThemeHelper.setBiometricAutofillEnabled(requireContext(), false);
                             Toast.makeText(getContext(), "Datos biométricos desactivados y cuentas guardadas eliminadas", Toast.LENGTH_LONG).show();
-                        })
-                        .setNegativeButton("Cancelar", (dialog, which) -> {
-                            isUpdatingSwitch = true;
-                            binding.switchBiometricAutofill.setChecked(true);
-                            isUpdatingSwitch = false;
-                        })
-                        .setCancelable(false)
-                        .show();
+                        }
+                );
             } else {
                 ThemeHelper.setBiometricAutofillEnabled(requireContext(), true);
                 Toast.makeText(getContext(), "Inicio de sesión biométrico activado", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void setupHomeLayoutStyle() {
+        if (binding.btnHomeLayoutStyle == null) return;
+        updateHomeStyleUI();
+
+        binding.btnHomeLayoutStyle.setOnClickListener(v -> {
+            String[] options = {"Lista (Diseño vertical)", "Cuadrícula (Diseño en rejilla)"};
+            int checkedItem = ThemeHelper.isGridHomeLayout(requireContext()) ? 1 : 0;
+
+            DialogUtils.showCustomChoiceDialog(
+                    requireContext(),
+                    "Estilo de Inicio",
+                    "Selecciona el diseño de inicio para tu cuenta.",
+                    options,
+                    checkedItem,
+                    (index, optionText) -> {
+                        String newStyle = (index == 1) ? ThemeHelper.HOME_LAYOUT_GRID : ThemeHelper.HOME_LAYOUT_LIST;
+                        ThemeHelper.setHomeLayoutStyle(requireContext(), newStyle);
+                        updateHomeStyleUI();
+                        Toast.makeText(requireContext(), "Estilo de inicio actualizado", Toast.LENGTH_SHORT).show();
+                    }
+            );
+        });
+    }
+
+    private void updateHomeStyleUI() {
+        if (binding == null) return;
+        boolean isGrid = ThemeHelper.isGridHomeLayout(requireContext());
+        if (binding.tvHomeLayoutStyleStatus != null) {
+            binding.tvHomeLayoutStyleStatus.setText(isGrid ? "Cuadrícula" : "Lista");
+        }
+        if (binding.ivHomeStyleIcon != null) {
+            binding.ivHomeStyleIcon.setImageResource(isGrid ? R.drawable.ic_grid : R.drawable.ic_list);
+        }
     }
 
     @Override

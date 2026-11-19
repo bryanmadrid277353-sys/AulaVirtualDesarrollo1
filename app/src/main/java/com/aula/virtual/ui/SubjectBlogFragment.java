@@ -419,42 +419,69 @@ public class SubjectBlogFragment extends Fragment {
     }
 
     private void showEntryDialog(@Nullable BlogEntry existing) {
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), existing == null ? "Nueva Asignación" : "Editar Asignación");
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_forum_entry, null);
 
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
-
-        final String[] selectedCategory = {existing != null ? existing.category : "Aviso"};
-        final TextView tvCategory = DialogUtils.createDialogOptionButton(requireContext(), existing != null ? "Categoría: " + existing.category : "Categoría: Aviso", existing == null);
-        String[] categories = {"Aviso", "Parcial", "Tarea"};
-        tvCategory.setOnClickListener(v -> {
-            new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Categoría de Asignación")
-                .setItems(categories, (dialog1, which) -> {
-                    selectedCategory[0] = categories[which];
-                    DialogUtils.setOptionState(tvCategory, "Categoría: " + selectedCategory[0], false, requireContext());
-                }).show();
-        });
-        layout.addView(tvCategory);
-
-        final EditText etTitle = DialogUtils.createStyledEditText(requireContext(), "Título", 0);
-        if (existing != null) etTitle.setText(existing.title);
-        layout.addView(etTitle);
-
-        final EditText etContent = DialogUtils.createStyledEditText(requireContext(), "Contenido/Instrucciones", 0);
-        if (existing != null) etContent.setText(existing.content);
-        layout.addView(etContent);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Guardar", null); 
-        builder.setNegativeButton("Cancelar", null);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
 
         AlertDialog dialog = builder.create();
-        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+        TextView tvTitle = dialogView.findViewById(R.id.tvForumDialogTitle);
+        TextView tvSubtitle = dialogView.findViewById(R.id.tvForumDialogSubtitle);
+        View btnSelectCategory = dialogView.findViewById(R.id.btnSelectCategory);
+        TextView tvSelectedCategory = dialogView.findViewById(R.id.tvSelectedCategory);
+        EditText etTitle = dialogView.findViewById(R.id.etForumTitle);
+        EditText etContent = dialogView.findViewById(R.id.etForumContent);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelForumDialog);
+        View btnSave = dialogView.findViewById(R.id.btnSaveForumDialog);
+
+        if (existing == null) {
+            tvTitle.setText("Nueva Publicación del Foro");
+            tvSubtitle.setText("Crea una asignación, aviso o tarea para los alumnos.");
+        } else {
+            tvTitle.setText("Editar Publicación");
+            tvSubtitle.setText("Modifica la categoría, título o contenido de la publicación.");
+        }
+
+        final String[] categories = {"Aviso", "Parcial", "Tarea"};
+        final String[] selectedCategory = {existing != null && existing.category != null ? existing.category : "Aviso"};
+        tvSelectedCategory.setText("Categoría: " + selectedCategory[0]);
+
+        btnSelectCategory.setOnClickListener(v -> {
+            int selectedIndex = 0;
+            for (int i = 0; i < categories.length; i++) {
+                if (categories[i].equalsIgnoreCase(selectedCategory[0])) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            DialogUtils.showCustomChoiceDialog(
+                    requireContext(),
+                    "Categoría de Asignación",
+                    "Elige el tipo de publicación para el foro.",
+                    categories,
+                    selectedIndex,
+                    (index, optionText) -> {
+                        selectedCategory[0] = categories[index];
+                        tvSelectedCategory.setText("Categoría: " + selectedCategory[0]);
+                    }
+            );
+        });
+
+        if (existing != null) {
+            if (existing.title != null) etTitle.setText(existing.title);
+            if (existing.content != null) etContent.setText(existing.content);
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
             String cat = selectedCategory[0];
-            String title = etTitle.getText().toString();
-            String content = etContent.getText().toString();
+            String title = etTitle.getText().toString().trim();
+            String content = etContent.getText().toString().trim();
 
             boolean isValid = true;
             if (title.isEmpty()) {
@@ -487,6 +514,8 @@ public class SubjectBlogFragment extends Fragment {
                 }
             }
         });
+
+        dialog.show();
     }
 
     private void showDeleteDialog(BlogEntry entry) {

@@ -148,26 +148,28 @@ public class SubjectDetailFragment extends Fragment {
 
     private void observeViewModel() {
         User currentUser = viewModel.getCurrentUser().getValue();
-        if (currentUser != null && !"ADMIN".equals(currentUser.role)) {
+        boolean isCurrentAdmin = currentUser != null && "ADMIN".equalsIgnoreCase(currentUser.role);
+
+        if (!isCurrentAdmin) {
+            binding.etField1.setEnabled(false);
             binding.etField1.setFocusable(false);
             binding.etField1.setClickable(false);
+            binding.etField2.setEnabled(false);
             binding.etField2.setFocusable(false);
             binding.etField2.setClickable(false);
+            binding.etField4.setEnabled(false);
             binding.etField4.setFocusable(false);
             binding.etField4.setClickable(false);
+            binding.etDesc.setEnabled(false);
+            binding.etDesc.setFocusable(false);
+            binding.etDesc.setClickable(false);
             
             binding.btnDelete.setVisibility(View.GONE);
-            binding.layoutColorSelector.setVisibility(View.VISIBLE);
-            binding.btnSave.setText("Guardar Color");
-            binding.btnSave.setVisibility(View.VISIBLE);
+            binding.btnSave.setVisibility(View.GONE);
+            binding.layoutColorSelector.setVisibility(View.GONE);
+            binding.btnManageStudents.setVisibility(View.GONE);
 
-            if ("PROFESSOR".equals(currentUser.role)) {
-                binding.tvColorLabel.setText("Color Personalizado para tu Horario Semanal");
-                binding.btnManageStudents.setVisibility(View.GONE);
-            } else {
-                binding.tvColorLabel.setText("Color Materia");
-                binding.btnManageStudents.setVisibility(View.GONE);
-
+            if ("STUDENT".equals(currentUser != null ? currentUser.role : "")) {
                 viewModel.getGradeInfoForStudent(currentUser.id).observe(getViewLifecycleOwner(), gradeInfos -> {
                     if (gradeInfos != null && subject != null && binding != null) {
                         for (StudentGradeInfo info : gradeInfos) {
@@ -233,26 +235,20 @@ public class SubjectDetailFragment extends Fragment {
 
                 DialogUtils.hideLoadingOverlay(binding.getRoot());
 
-                if (currentUser != null && !"ADMIN".equals(currentUser.role)) {
-                    viewModel.getUserSubjectColor(currentUser.id, subject.id, color -> {
-                        if (binding != null) selectColor(color);
-                    });
-
-                    if ("STUDENT".equals(currentUser.role)) {
-                        viewModel.getGradeInfoForStudent(currentUser.id).observe(getViewLifecycleOwner(), gradeInfos -> {
-                            if (gradeInfos != null && binding != null) {
-                                for (StudentGradeInfo info : gradeInfos) {
-                                    if (info.subject != null && info.subject.id == subject.id && info.enrollment != null) {
-                                        Enrollment e = info.enrollment;
-                                        viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
-                                            displayStudentGrades(e, periods);
-                                        });
-                                        break;
-                                    }
+                if (currentUser != null && "STUDENT".equals(currentUser.role)) {
+                    viewModel.getGradeInfoForStudent(currentUser.id).observe(getViewLifecycleOwner(), gradeInfos -> {
+                        if (gradeInfos != null && binding != null) {
+                            for (StudentGradeInfo info : gradeInfos) {
+                                if (info.subject != null && info.subject.id == subject.id && info.enrollment != null) {
+                                    Enrollment e = info.enrollment;
+                                    viewModel.getAcademicPeriods().observe(getViewLifecycleOwner(), periods -> {
+                                        displayStudentGrades(e, periods);
+                                    });
+                                    break;
                                 }
                             }
-                        });
-                    }
+                        }
+                    });
                 }
             }
         });

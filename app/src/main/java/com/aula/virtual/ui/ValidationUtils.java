@@ -7,25 +7,41 @@ public class ValidationUtils {
         return carnet != null && carnet.length() == 10 && carnet.matches("\\d+");
     }
 
+    /**
+     * Valida la política de contraseñas requerida:
+     * Mínimo 8 caracteres, al menos una letra y al menos un número.
+     */
+    public static boolean isValidPasswordPolicy(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isLetter(c)) hasLetter = true;
+            if (Character.isDigit(c)) hasDigit = true;
+            if (hasLetter && hasDigit) return true;
+        }
+        return false;
+    }
+
     public static PasswordStrength getPasswordStrength(String password) {
-        if (password == null || password.length() < 4) {
+        if (!isValidPasswordPolicy(password)) {
             return PasswordStrength.WEAK;
         }
 
         boolean hasUppercase = !password.equals(password.toLowerCase());
         boolean hasSymbol = Pattern.compile("[!@#$%^&*(),.?\":{}|<>]").matcher(password).find();
 
-        if (hasUppercase && hasSymbol) {
+        if (hasUppercase && hasSymbol && password.length() >= 10) {
             return PasswordStrength.STRONG;
-        } else if (hasUppercase || hasSymbol || password.length() >= 6) {
-            return PasswordStrength.MEDIUM;
         } else {
-            return PasswordStrength.WEAK;
+            return PasswordStrength.MEDIUM;
         }
     }
 
     public enum PasswordStrength {
-        WEAK("Débil (mín. 4 caracteres)", 0xFFFF4444),
+        WEAK("Débil (mín. 8 caracteres, letra y número)", 0xFFFF4444),
         MEDIUM("Aceptable", 0xFFFFBB33),
         STRONG("Fuerte", 0xFF00C851);
 

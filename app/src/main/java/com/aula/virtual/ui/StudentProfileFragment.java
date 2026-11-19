@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
@@ -14,9 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.aula.virtual.util.PasswordHasher;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -155,16 +154,33 @@ public class StudentProfileFragment extends Fragment {
         binding.btnEditProfile.setOnClickListener(v -> showEditProfileDialog());
         binding.btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
 
+        if (viewModel.isImpersonating()) {
+            binding.cardReturnToAdmin.setVisibility(View.VISIBLE);
+            binding.cardReturnToAdmin.setOnClickListener(v -> {
+                viewModel.stopImpersonation();
+                Toast.makeText(getContext(), "Sesión de Administrador restaurada", Toast.LENGTH_SHORT).show();
+                if (!Navigation.findNavController(v).popBackStack(R.id.adminDetailFragment, false)) {
+                    if (!Navigation.findNavController(v).popBackStack(R.id.adminHomeFragment, false)) {
+                        Navigation.findNavController(v).popBackStack();
+                    }
+                }
+            });
+        } else {
+            binding.cardReturnToAdmin.setVisibility(View.GONE);
+        }
+
         binding.btnLogout.setOnClickListener(v -> {
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Cerrar sesión")
-                    .setMessage("¿Estás seguro de que deseas cerrar sesión?")
-                    .setPositiveButton("Sí, Cerrar sesión", (dialog, which) -> {
+            DialogUtils.showCustomConfirmDialog(
+                    requireContext(),
+                    "Cerrar sesión",
+                    "¿Estás seguro de que deseas cerrar sesión de tu cuenta?",
+                    "Sí, Cerrar sesión",
+                    "Cancelar",
+                    () -> {
                         viewModel.logout();
                         Navigation.findNavController(v).navigate(R.id.loginFragment);
-                    })
-                    .setNegativeButton("Cancelar", null)
-                    .show();
+                    }
+            );
         });
     }
 
@@ -195,13 +211,17 @@ public class StudentProfileFragment extends Fragment {
             String initials = getInitials(user.name);
             binding.tvAvatarInitials.setText(initials);
 
-            if (user.profile_image != null && !user.profile_image.isEmpty()) {
+            if (user.profile_image != null && !user.profile_image.trim().isEmpty()) {
                 binding.tvAvatarInitials.setVisibility(View.GONE);
                 binding.ivProfilePicture.setVisibility(View.VISIBLE);
                 ImageUtils.setProfileImage(binding.ivProfilePicture, user.profile_image, 0);
             } else {
+                binding.ivProfilePicture.setImageBitmap(null);
                 binding.ivProfilePicture.setVisibility(View.GONE);
                 binding.tvAvatarInitials.setVisibility(View.VISIBLE);
+                int primaryColor = ThemeHelper.getSubjectColor(requireContext(), ThemeHelper.getAccentColorName(requireContext()));
+                binding.cardProfilePicture.setCardBackgroundColor(primaryColor);
+                binding.cardProfilePicture.setCardElevation(0);
             }
         }
     }
@@ -400,7 +420,15 @@ public class StudentProfileFragment extends Fragment {
 
             boolean isValid = true;
 
-            if (!currentPass.equals(currentUser.password)) {
+            boolean currentPassValid = false;
+            if (currentUser != null && currentUser.password != null) {
+                if (PasswordHasher.isHashed(currentUser.password)) {
+                    currentPassValid = PasswordHasher.verifyPassword(currentPass, currentUser.password);
+                } else {
+                    currentPassValid = currentPass.equals(currentUser.password);
+                }
+            }
+            if (!currentPassValid) {
                 etCurrentPass.setError("Contraseña actual incorrecta");
                 isValid = false;
             }
@@ -408,8 +436,8 @@ public class StudentProfileFragment extends Fragment {
             if (newPass.isEmpty()) {
                 etNewPass.setError("Ingrese la nueva contraseña");
                 isValid = false;
-            } else if (ValidationUtils.getPasswordStrength(newPass) == ValidationUtils.PasswordStrength.WEAK) {
-                etNewPass.setError("Contraseña demasiado débil (mínimo 4 caracteres)");
+            } else if (!ValidationUtils.isValidPasswordPolicy(newPass)) {
+                etNewPass.setError("La contraseña debe tener al menos 8 caracteres, una letra y un número");
                 isValid = false;
             }
 
@@ -420,11 +448,12 @@ public class StudentProfileFragment extends Fragment {
 
             if (isValid) {
                 viewModel.performOnlineAction(() -> {
-                    currentUser.password = newPass;
+                    String hashedPassword = PasswordHasher.hashPassword(newPass);
+                    currentUser.password = hashedPassword;
                     viewModel.updateUser(currentUser);
                     if (getContext() != null) {
                         CredentialsManager credentialsManager = new CredentialsManager(requireContext());
-                        credentialsManager.saveCredentials(currentUser.carnet, currentUser.password, currentUser.name);
+                        credentialsManager.saveCredentials(currentUser.carnet, newPass, currentUser.name);
                     }
                     Toast.makeText(getContext(), "Contraseña actualizada exitosamente", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
@@ -455,6 +484,8 @@ public class StudentProfileFragment extends Fragment {
             binding.ivProfilePicture.setImageTintList(null);
             binding.ivProfilePicture.setVisibility(View.VISIBLE);
             binding.tvAvatarInitials.setVisibility(View.GONE);
+            binding.cardProfilePicture.setCardBackgroundColor(android.graphics.Color.WHITE);
+            binding.cardProfilePicture.setCardElevation((int) (2 * getResources().getDisplayMetrics().density));
             
             viewModel.performOnlineAction(() -> {
                 viewModel.updateUser(currentUser);
@@ -465,11 +496,20 @@ public class StudentProfileFragment extends Fragment {
 
     private void removeProfilePicture() {
         if (currentUser != null) {
+            currentUser.profile_image = "";
+            binding.ivProfilePicture.setImageBitmap(null);
+            binding.ivProfilePicture.setVisibility(View.GONE);
+            
+            int primaryColor = ThemeHelper.getSubjectColor(requireContext(), ThemeHelper.getAccentColorName(requireContext()));
+            binding.cardProfilePicture.setCardBackgroundColor(primaryColor);
+            binding.cardProfilePicture.setCardElevation(0);
+            
+            String initials = getInitials(currentUser.name);
+            binding.tvAvatarInitials.setText(initials);
+            binding.tvAvatarInitials.setVisibility(View.VISIBLE);
+            
             viewModel.performOnlineAction(() -> {
-                currentUser.profile_image = null;
                 viewModel.updateUser(currentUser);
-                binding.ivProfilePicture.setVisibility(View.GONE);
-                binding.tvAvatarInitials.setVisibility(View.VISIBLE);
                 Toast.makeText(getContext(), "Foto de perfil eliminada", Toast.LENGTH_SHORT).show();
             });
         }

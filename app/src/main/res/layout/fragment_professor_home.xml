@@ -194,47 +194,6 @@
             </LinearLayout>
         </RelativeLayout>
 
-        <!-- Return to Admin Card (When Impersonating) -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardReturnToAdmin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#132540"
-            app:strokeWidth="1.5dp"
-            app:strokeColor="#2563EB"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="14dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_logout"
-                    app:tint="#38BDF8"
-                    android:layout_marginEnd="12dp"
-                    android:contentDescription="Volver" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Volver a Gestión Administrativa"
-                    android:textColor="#38BDF8"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
         <!-- Materias asignadas Section Header & Subtitle -->
         <TextView
             android:id="@+id/tvSubjectsSectionTitle"

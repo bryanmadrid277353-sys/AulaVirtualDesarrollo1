@@ -28,31 +28,43 @@ public class AdminHomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         MainViewModel viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
-        binding.cardEncargados.setOnClickListener(v -> {
+        updateHomeLayout();
+
+        View.OnClickListener openEncargados = v -> {
             Bundle args = new Bundle();
             args.putString("filterRole", "ENCARGADO");
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminStudentListFragment, args);
-        });
+            Navigation.findNavController(v).navigate(R.id.action_adminHomeFragment_to_adminStudentListFragment, args);
+        };
+        binding.cardEncargados.setOnClickListener(openEncargados);
+        if (binding.cardEncargadosGrid != null) binding.cardEncargadosGrid.setOnClickListener(openEncargados);
 
-        binding.cardStudents.setOnClickListener(v -> {
+        View.OnClickListener openStudents = v -> {
             Bundle args = new Bundle();
             args.putString("filterRole", "STUDENT");
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminStudentListFragment, args);
-        });
-        
-        binding.cardSubjects.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminSubjectListFragment));
+            Navigation.findNavController(v).navigate(R.id.action_adminHomeFragment_to_adminStudentListFragment, args);
+        };
+        binding.cardStudents.setOnClickListener(openStudents);
+        if (binding.cardStudentsGrid != null) binding.cardStudentsGrid.setOnClickListener(openStudents);
 
-        binding.cardAdmins.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminAdminListFragment));
+        View.OnClickListener openSubjects = v ->
+            Navigation.findNavController(v).navigate(R.id.action_adminHomeFragment_to_adminSubjectListFragment);
+        binding.cardSubjects.setOnClickListener(openSubjects);
+        if (binding.cardSubjectsGrid != null) binding.cardSubjectsGrid.setOnClickListener(openSubjects);
 
-        binding.cardProfessors.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminProfessorListFragment));
+        View.OnClickListener openAdmins = v ->
+            Navigation.findNavController(v).navigate(R.id.action_adminHomeFragment_to_adminAdminListFragment);
+        binding.cardAdmins.setOnClickListener(openAdmins);
+        if (binding.cardAdminsGrid != null) binding.cardAdminsGrid.setOnClickListener(openAdmins);
 
-        binding.cardFacilities.setOnClickListener(v -> 
-            Navigation.findNavController(view).navigate(R.id.action_adminHomeFragment_to_adminFacilityListFragment));
+        View.OnClickListener openProfessors = v ->
+            Navigation.findNavController(v).navigate(R.id.action_adminHomeFragment_to_adminProfessorListFragment);
+        binding.cardProfessors.setOnClickListener(openProfessors);
+        if (binding.cardProfessorsGrid != null) binding.cardProfessorsGrid.setOnClickListener(openProfessors);
 
-
+        View.OnClickListener openFacilities = v ->
+            Navigation.findNavController(v).navigate(R.id.action_adminHomeFragment_to_adminFacilityListFragment);
+        binding.cardFacilities.setOnClickListener(openFacilities);
+        if (binding.cardFacilitiesGrid != null) binding.cardFacilitiesGrid.setOnClickListener(openFacilities);
 
         viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
             if (binding == null || !isAdded()) return;
@@ -61,6 +73,21 @@ public class AdminHomeFragment extends Fragment {
                 ImageUtils.setProfileImage(binding.ivProfileImageAdmin, user.profile_image, user.name);
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateHomeLayout();
+    }
+
+    private void updateHomeLayout() {
+        if (binding == null || getContext() == null) return;
+        boolean isGrid = ThemeHelper.isGridHomeLayout(requireContext());
+        if (binding.layoutAdminHomeGrid != null && binding.layoutAdminHomeList != null) {
+            binding.layoutAdminHomeGrid.setVisibility(isGrid ? View.VISIBLE : View.GONE);
+            binding.layoutAdminHomeList.setVisibility(isGrid ? View.GONE : View.VISIBLE);
+        }
     }
 
     @Override
