@@ -1,0 +1,13 @@
+# Copia este archivo como local.properties (NO se sube a Git).
+# backend.mode: emulador | lan | cloudflare | tailscale
+backend.mode=emulador
+
+# URLs para variante debug según el modo seleccionado
+backend.url.emulador=http://10.0.2.2:8000/
+backend.url.lan=http://192.168.1.35:8000/
+backend.url.cloudflare=https://api.tudominio.com/
+# Tailscale: IP 100.x.y.z o nombre MagicDNS de la PC con el backend
+backend.url.tailscale=http://100.x.y.z:8000/
+
+# Release: siempre HTTPS con dominio estable (iniciar obligatoriamente con https://)
+backend.url.release=https://api.tudominio.com/

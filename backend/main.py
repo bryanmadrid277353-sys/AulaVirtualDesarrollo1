@@ -1737,6 +1737,18 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
+def get_tailscale_ip():
+    try:
+        import socket
+        hostname = socket.gethostname()
+        addresses = socket.gethostbyname_ex(hostname)[2]
+        for ip in addresses:
+            if ip.startswith("100."):
+                return ip
+    except Exception:
+        pass
+    return None
+
 if __name__ == "__main__":
     import uvicorn
     import copy
@@ -1758,6 +1770,7 @@ if __name__ == "__main__":
     tunnel_thread.start()
 
     local_ip = get_local_ip()
+    tailscale_ip = get_tailscale_ip()
     print("===================================================", flush=True)
     print("    AULA VIRTUAL - SERVIDOR FASTAPI BACKEND", flush=True)
     print("===================================================", flush=True)
@@ -1765,6 +1778,10 @@ if __name__ == "__main__":
     print("  * PC Localhost:            http://localhost:8000/", flush=True)
     print("  * Emulador Android Studio: http://10.0.2.2:8000/", flush=True)
     print(f"  * Red Local Wi-Fi:         http://{local_ip}:8000/", flush=True)
+    if tailscale_ip:
+        print(f"  * VPN Tailscale (Activa):  http://{tailscale_ip}:8000/", flush=True)
+    else:
+        print("  * VPN Tailscale:           http://100.x.y.z:8000/ (Modo Tailscale inactivo o no detectado)", flush=True)
     print("===================================================\n", flush=True)
 
     # Configurar uvicorn para enviar logs informativos a sys.stdout (evita texto rojo en la consola del IDE)

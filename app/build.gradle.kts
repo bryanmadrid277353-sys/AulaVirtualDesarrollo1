@@ -1,6 +1,61 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+
+fun normalizeUrl(url: String): String {
+    val trimmed = url.trim()
+    return if (trimmed.endsWith("/")) trimmed else "$trimmed/"
+}
+
+// Lógica para variante Debug
+val validDebugModes = setOf("emulador", "lan", "cloudflare", "tailscale")
+val rawMode = localProperties.getProperty("backend.mode")?.trim()?.lowercase()
+
+val (debugBackendMode, debugBaseUrl) = if (rawMode.isNullOrEmpty()) {
+    // Modo retrocompatible: si existe backend.url.debug, la usamos directamente
+    val legacyDebugUrl = localProperties.getProperty("backend.url.debug")?.trim()
+    if (!legacyDebugUrl.isNullOrEmpty()) {
+        if (!legacyDebugUrl.startsWith("http://") && !legacyDebugUrl.startsWith("https://")) {
+            throw GradleException("Error en local.properties: 'backend.url.debug' debe iniciar con 'http://' o 'https://'. Valor ingresado: '$legacyDebugUrl'")
+        }
+        "debug_custom" to normalizeUrl(legacyDebugUrl)
+    } else {
+        // Por defecto: emulador
+        "emulador" to normalizeUrl(localProperties.getProperty("backend.url.emulador")?.trim() ?: "http://10.0.2.2:8000/")
+    }
+} else {
+    if (rawMode !in validDebugModes) {
+        throw GradleException("Error en local.properties: 'backend.mode' no es válido. Valor ingresado: '$rawMode'. Modos permitidos: ${validDebugModes.joinToString(", ")}")
+    }
+    val defaultUrl = when (rawMode) {
+        "emulador" -> "http://10.0.2.2:8000/"
+        "lan" -> "http://192.168.1.35:8000/"
+        "cloudflare" -> "https://api.tudominio.com/"
+        "tailscale" -> "http://nombre-pc.tailXXXX.ts.net:8000/"
+        else -> "http://10.0.2.2:8000/"
+    }
+    val configuredUrl = localProperties.getProperty("backend.url.$rawMode")?.trim()
+    val urlToUse = if (!configuredUrl.isNullOrEmpty()) configuredUrl else defaultUrl
+    if (!urlToUse.startsWith("http://") && !urlToUse.startsWith("https://")) {
+        throw GradleException("Error en local.properties: 'backend.url.$rawMode' debe iniciar con 'http://' o 'https://'. Valor ingresado: '$urlToUse'")
+    }
+    rawMode to normalizeUrl(urlToUse)
+}
+
+// Lógica para variante Release
+val rawReleaseUrl = localProperties.getProperty("backend.url.release")?.trim() ?: "https://api.tudominio.com/"
+if (!rawReleaseUrl.startsWith("https://")) {
+    throw GradleException("Error en local.properties: En la variante 'release', la URL debe ser HTTPS (iniciar con 'https://'). Valor ingresado: '$rawReleaseUrl'")
+}
+val releaseBaseUrl = normalizeUrl(rawReleaseUrl)
 
 android {
     namespace = "com.aula.virtual"
@@ -17,13 +72,20 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
+            buildConfigField("String", "BACKEND_MODE", "\"$debugBackendMode\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            buildConfigField("String", "BASE_URL", "\"$releaseBaseUrl\"")
+            buildConfigField("String", "BACKEND_MODE", "\"release\"")
         }
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

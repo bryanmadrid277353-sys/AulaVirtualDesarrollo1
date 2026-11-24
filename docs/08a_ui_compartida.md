@@ -66,7 +66,7 @@ Este documento forma parte del módulo de Interfaz de Usuario y describe la acti
 Permite el ingreso de usuarios mediante carnet institucional y contraseña, así como el acceso directo por huella digital mediante `BiometricPrompt`.
 
 ### Diálogos Asociados
-- **`dialog_configure_server.xml`**: Permite cambiar la URL Base del servidor backend HTTP (IP o túnel Cloudflare).
+- **`dialog_configure_server.xml`**: Cuadro de diálogo *"Configurar Conexión"* que permite seleccionar el modo de servidor (Cloudflare Tunnel, Emulador, Red Local Wi-Fi o VPN Tailscale) y ajustar la URL Base del backend.
 - **`dialog_saved_accounts.xml`**: Permite seleccionar una cuenta previamente guardada en `CredentialsManager`.
 
 [⬆️ Volver al inicio del documento](#8a-interfaz-de-usuario-pantallas-compartidas)

@@ -110,17 +110,30 @@ Abre la carpeta raíz del proyecto (**Open**), espera el *Gradle Sync* y confirm
 
 **6. Configurar la dirección del servidor**
 
-La app guarda la URL del backend y puede cambiarse desde **Ajustes avanzados** (configurar servidor). También puedes editar las constantes de `app/src/main/java/com/aula/virtual/data/RetrofitClient.java`:
+La dirección del backend se configura en el archivo `local.properties` (copiando `local.properties.example`) seleccionando el modo en `backend.mode` (`emulador` | `lan` | `cloudflare` | `tailscale`):
 
-| Escenario | URL del servidor |
-| --- | --- |
-| Emulador de Android Studio | `http://10.0.2.2:8000/` |
-| Teléfono físico (misma red Wi-Fi) | `http://<IP_DE_TU_PC>:8000/` (obtén la IP con `ipconfig`) |
-| Acceso remoto con Cloudflare Tunnel | `https://<subdominio>.trycloudflare.com/` |
+| Modo (`backend.mode`) | Escenario | Clave en `local.properties` | Valor de ejemplo |
+| --- | --- | --- | --- |
+| `emulador` | Emulador de Android Studio | `backend.url.emulador` | `http://10.0.2.2:8000/` |
+| `lan` | Teléfono físico (misma Wi-Fi) | `backend.url.lan` | `http://<IP_DE_TU_PC>:8000/` |
+| `cloudflare` | Túnel remoto con Cloudflare | `backend.url.cloudflare` | `https://<subdominio>.trycloudflare.com/` |
+| `tailscale` | VPN privada Tailscale (PC y Móvil) | `backend.url.tailscale` | `http://100.x.y.z:8000/` |
+| *(Release)* | Servidor Producción (Release) | `backend.url.release` | `https://api.tudominio.com/` |
 
-Para el túnel remoto, con el backend en ejecución, corre `.\backend\run_cloudflare_tunnel.bat`. El script inicia `cloudflared`, captura la URL `.trycloudflare.com` generada y actualiza automáticamente `BASE_URL` en `RetrofitClient.java`; después, vuelve a compilar la app. Requiere tener `cloudflared` instalado o `cloudflared.exe` dentro de `backend/`.
+> ⚠️ **Nota:** Los modos de prueba (`emulador`, `lan`, `cloudflare`, `tailscale`) funcionan únicamente en compilaciones `debug`. Para `release`, Gradle requiere obligatoriamente una URL segura con protocolo HTTPS (`backend.url.release`).
 
-> Si la app no conecta en el primer arranque, revisa que `BASE_URL` no apunte a un túnel anterior: las URL de `trycloudflare.com` cambian cada vez.
+---
+
+## Configuración del Backend por Modo de Conexión
+
+La aplicación Android utiliza `BuildConfig.BASE_URL` y `BuildConfig.BACKEND_MODE` para inyectar la URL del servidor Retrofit según el modo configurado en `local.properties`:
+
+- **`debug`**: Lee `backend.mode` para seleccionar la URL de `backend.url.<modo>`. Permite tráfico HTTP en claro en desarrollo mediante `network_security_config.xml` (incluyendo IPs variables de Tailscale `100.x.y.z`).
+- **`release`**: Fuerza el uso de `backend.url.release` en HTTPS, rechazando esquemas `http://` y bloqueando tráfico en claro.
+
+Tras modificar `local.properties`, sincroniza el proyecto con Gradle (**Sync Project with Gradle Files**) y recompila la aplicación.
+
+---
 
 **7. Compilar y ejecutar**
 
@@ -187,7 +200,7 @@ Otros documentos del repositorio: [MANUAL_DE_INSTALACION.md](MANUAL_DE_INSTALACI
 - **Base de datos:** MySQL / MariaDB (vía XAMPP) con el conector `mysql-connector-python`
 - **Seguridad:** módulo `security.py` con hash de contraseñas PBKDF2-SHA256, tokens de sesión firmados con HMAC-SHA256, política de acceso por rol (modos `monitor` y `enforce`) y límite de intentos de inicio de sesión
 - **Panel web:** archivos estáticos en `backend/web/`
-- **Túnel seguro remoto:** Cloudflare Quick Tunnel (`cloudflared`, HTTPS) para pruebas globales sin abrir puertos
+- **Conexión remota de desarrollo:** Tailscale VPN mesh privada (`http://100.x.y.z:8000/`) y Cloudflare Quick Tunnel (`cloudflared`, HTTPS) para pruebas sin abrir puertos en el router
 
 ---
 
@@ -213,6 +226,7 @@ Los estudiantes no tienen contraseña propia en la base de datos: ingresan con s
 ```
 AulaVirtualDesarrollo1/
 ├── app/                              # Aplicación Android
+│   ├── src/debug/                    # Configuración exclusiva para variante debug (network security config)
 │   └── src/main/
 │       ├── java/com/aula/virtual/
 │       │   ├── MainActivity.java     # Actividad única con NavHostFragment
@@ -231,10 +245,11 @@ AulaVirtualDesarrollo1/
 │   ├── sync_database.py              # Crea la base y ejecuta init.sql y seed_demo.sql
 │   ├── run_backend.py / .bat         # Inicio del servidor Uvicorn
 │   ├── run_cloudflare_tunnel.bat     # Inicio del túnel Cloudflare
-│   ├── run_tunnel_and_update_app.py  # Túnel + actualización automática de BASE_URL
+│   ├── run_tunnel_and_update_app.py  # Túnel de prueba Cloudflare
 │   └── web/                          # Panel de administración web
 ├── docs/                             # Documentación técnica completa (18 archivos)
 ├── gradle/                           # Wrapper de Gradle y catálogo de versiones
+├── local.properties.example          # Plantilla versionada de URLs del backend por variante
 ├── Sincronizar_BD.bat                # Atajo para sincronizar la base de datos (Windows)
 ├── AI_AGENT_GUIDE.md                 # Guía técnica de arquitectura
 ├── MANUAL_DE_INSTALACION.md          # Guía detallada de instalación

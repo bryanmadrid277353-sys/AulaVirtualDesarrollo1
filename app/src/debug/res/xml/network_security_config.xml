@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+      network_security_config no admite rangos CIDR (ej: 100.64.0.0/10 para Tailscale)
+      ni direcciones IP dinámicas de desarrollo local o LAN (192.168.x.x / 100.x.y.z).
+      Por este motivo, se habilita base-config cleartextTrafficPermitted="true"
+      ÚNICAMENTE para la variante debug.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
