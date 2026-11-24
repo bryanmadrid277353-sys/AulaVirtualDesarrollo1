@@ -300,6 +300,7 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
     private View createAvgBox(android.content.Context ctx, String label, String val) {
         MaterialCardView card = new MaterialCardView(ctx);
         int density = (int) ctx.getResources().getDisplayMetrics().density;
+        int studentColor = ctx.getColor(R.color.entity_alumno);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(58 * density, 48 * density);
         lp.setMargins(14 * density, 0, 0, 0);
@@ -307,9 +308,9 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
 
         card.setRadius(10 * density);
         card.setCardElevation(0f);
-        card.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#132540")));
+        card.setCardBackgroundColor(ColorStateList.valueOf(ctx.getColor(R.color.input_bg)));
         card.setStrokeWidth((int) (1.5f * density));
-        card.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#2563EB")));
+        card.setStrokeColor(ColorStateList.valueOf(studentColor));
 
         LinearLayout layout = new LinearLayout(ctx);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -323,14 +324,14 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
         tvLabel.setTextSize(10);
         tvLabel.setTypeface(null, Typeface.BOLD);
         tvLabel.setGravity(Gravity.CENTER);
-        tvLabel.setTextColor(Color.parseColor("#38BDF8"));
+        tvLabel.setTextColor(studentColor);
 
         TextView tvVal = new TextView(ctx);
         tvVal.setText(val);
         tvVal.setTextSize(18);
         tvVal.setTypeface(null, Typeface.BOLD);
         tvVal.setGravity(Gravity.CENTER);
-        tvVal.setTextColor(Color.parseColor("#38BDF8"));
+        tvVal.setTextColor(studentColor);
 
         layout.addView(tvLabel);
         layout.addView(tvVal);

@@ -58,4 +58,35 @@
     <!-- Surface Colors -->
     <color name="surface_light">#FFFFFF</color>
     <color name="surface_dark">#111827</color>
+
+    <!-- Entity Type Standard Tokens (Unchanged by Theme Mode) -->
+    <!-- Encargado (Naranja) -->
+    <color name="entity_encargado">#F97316</color>
+    <color name="entity_encargado_soft">#26F97316</color>
+    <color name="entity_encargado_on">#FFFFFF</color>
+
+    <!-- Alumno / Estudiante (Azul) -->
+    <color name="entity_alumno">#2563EB</color>
+    <color name="entity_alumno_soft">#262563EB</color>
+    <color name="entity_alumno_on">#FFFFFF</color>
+
+    <!-- Profesor / Docente (Verde) -->
+    <color name="entity_profesor">#10B981</color>
+    <color name="entity_profesor_soft">#2610B981</color>
+    <color name="entity_profesor_on">#FFFFFF</color>
+
+    <!-- Materia (Cian) -->
+    <color name="entity_materia">#06B6D4</color>
+    <color name="entity_materia_soft">#2606B6D4</color>
+    <color name="entity_materia_on">#FFFFFF</color>
+
+    <!-- Instalación (Amarillo / Dorado) -->
+    <color name="entity_instalacion">#F59E0B</color>
+    <color name="entity_instalacion_soft">#26F59E0B</color>
+    <color name="entity_instalacion_on">#FFFFFF</color>
+
+    <!-- Administrador (Rojo) -->
+    <color name="entity_administrador">#EF4444</color>
+    <color name="entity_administrador_soft">#26EF4444</color>
+    <color name="entity_administrador_on">#FFFFFF</color>
 </resources>

@@ -46,7 +46,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:text="Sección 01"
-                android:textColor="#38BDF8"
+                android:textColor="@color/entity_materia"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:paddingHorizontal="10dp"
@@ -106,7 +106,7 @@
                         android:layout_height="18dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_timetable"
-                        app:tint="#38BDF8"
+                        app:tint="@color/entity_materia"
                         android:contentDescription="Reloj" />
                 </FrameLayout>
 

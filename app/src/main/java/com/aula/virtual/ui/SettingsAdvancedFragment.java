@@ -1,5 +1,6 @@
 package com.aula.virtual.ui;
 
+import com.aula.virtual.BuildConfig;
 import android.app.ProgressDialog;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -306,10 +307,12 @@ public class SettingsAdvancedFragment extends Fragment {
         View cardCloudflare = dialogView.findViewById(R.id.cardOptionCloudflare);
         View cardEmulator = dialogView.findViewById(R.id.cardOptionEmulator);
         View cardLocalNet = dialogView.findViewById(R.id.cardOptionLocalNet);
+        View cardTailscale = dialogView.findViewById(R.id.cardOptionTailscale);
 
         ImageView ivRadioCloudflare = dialogView.findViewById(R.id.ivRadioCloudflare);
         ImageView ivRadioEmulator = dialogView.findViewById(R.id.ivRadioEmulator);
         ImageView ivRadioLocalNet = dialogView.findViewById(R.id.ivRadioLocalNet);
+        ImageView ivRadioTailscale = dialogView.findViewById(R.id.ivRadioTailscale);
 
         TextView tvSslBadge = dialogView.findViewById(R.id.tvSslBadge);
         EditText etServerUrl = dialogView.findViewById(R.id.etServerUrl);
@@ -328,12 +331,19 @@ public class SettingsAdvancedFragment extends Fragment {
         Runnable updateSelectionUI = () -> {
             String url = etServerUrl.getText().toString().trim();
 
-            boolean isCloudflare = url.equals(RetrofitClient.BASE_URL) || url.contains("trycloudflare.com") || url.contains("https://");
-            boolean isEmulator = url.equals(RetrofitClient.EMULATOR_URL) || url.contains("10.0.2.2");
-            boolean isLocalNet = url.contains("192.168.") || url.contains("localhost");
+            boolean isTailscale = url.contains("100.") || url.contains(".ts.net");
+            boolean isCloudflare = !isTailscale && (url.equals(RetrofitClient.BASE_URL) || url.contains("trycloudflare.com") || url.contains("https://"));
+            boolean isEmulator = !isTailscale && (url.equals(RetrofitClient.EMULATOR_URL) || url.contains("10.0.2.2"));
+            boolean isLocalNet = !isTailscale && (url.contains("192.168.") || url.contains("localhost"));
 
-            if (!isCloudflare && !isEmulator && !isLocalNet) {
-                isCloudflare = true;
+            if (!isCloudflare && !isEmulator && !isLocalNet && !isTailscale) {
+                if (url.startsWith("https://")) {
+                    isCloudflare = true;
+                } else if (url.contains("100.") || url.contains(".ts.net")) {
+                    isTailscale = true;
+                } else {
+                    isLocalNet = true;
+                }
             }
 
             if (cardCloudflare instanceof com.google.android.material.card.MaterialCardView) {
@@ -345,10 +355,14 @@ public class SettingsAdvancedFragment extends Fragment {
             if (cardLocalNet instanceof com.google.android.material.card.MaterialCardView) {
                 ((com.google.android.material.card.MaterialCardView) cardLocalNet).setStrokeColor(isLocalNet ? colorPrimary : colorBorder);
             }
+            if (cardTailscale instanceof com.google.android.material.card.MaterialCardView) {
+                ((com.google.android.material.card.MaterialCardView) cardTailscale).setStrokeColor(isTailscale ? colorPrimary : colorBorder);
+            }
 
             ImageView ivIconCloudflare = dialogView.findViewById(R.id.ivIconCloudflare);
             ImageView ivIconEmulator = dialogView.findViewById(R.id.ivIconEmulator);
             ImageView ivIconLocalNet = dialogView.findViewById(R.id.ivIconLocalNet);
+            ImageView ivIconTailscale = dialogView.findViewById(R.id.ivIconTailscale);
 
             TypedValue typedValue = new TypedValue();
             requireContext().getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValue, true);
@@ -357,6 +371,7 @@ public class SettingsAdvancedFragment extends Fragment {
             if (ivIconCloudflare != null) ivIconCloudflare.setImageTintList(ColorStateList.valueOf(isCloudflare ? colorPrimary : colorSecondary));
             if (ivIconEmulator != null) ivIconEmulator.setImageTintList(ColorStateList.valueOf(isEmulator ? colorPrimary : colorSecondary));
             if (ivIconLocalNet != null) ivIconLocalNet.setImageTintList(ColorStateList.valueOf(isLocalNet ? colorPrimary : colorSecondary));
+            if (ivIconTailscale != null) ivIconTailscale.setImageTintList(ColorStateList.valueOf(isTailscale ? colorPrimary : colorSecondary));
 
             if (ivRadioCloudflare != null) {
                 ivRadioCloudflare.setImageResource(isCloudflare ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
@@ -366,6 +381,9 @@ public class SettingsAdvancedFragment extends Fragment {
             }
             if (ivRadioLocalNet != null) {
                 ivRadioLocalNet.setImageResource(isLocalNet ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
+            }
+            if (ivRadioTailscale != null) {
+                ivRadioTailscale.setImageResource(isTailscale ? R.drawable.ic_radio_checked : R.drawable.ic_radio_unchecked);
             }
 
             if (tvSslBadge != null) {
@@ -402,6 +420,16 @@ public class SettingsAdvancedFragment extends Fragment {
             updateSelectionUI.run();
             Toast.makeText(getContext(), "Seleccionado: Red Local Wi-Fi", Toast.LENGTH_SHORT).show();
         });
+
+        if (cardTailscale != null) {
+            cardTailscale.setOnClickListener(v -> {
+                if (!etServerUrl.getText().toString().contains("100.") && !etServerUrl.getText().toString().contains(".ts.net")) {
+                    etServerUrl.setText("http://100.80.174.96:8000/");
+                }
+                updateSelectionUI.run();
+                Toast.makeText(getContext(), "Seleccionado: VPN Tailscale (Red Privada)", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         ImageView btnCopyServerUrl = dialogView.findViewById(R.id.btnCopyServerUrl);
         if (btnCopyServerUrl != null) {

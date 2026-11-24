@@ -181,7 +181,7 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_person_badge"
-                            app:tint="@color/bs_warning"
+                            app:tint="@color/entity_encargado"
                             android:contentDescription="Encargados" />
                     </FrameLayout>
 
@@ -319,7 +319,7 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_professor"
-                            app:tint="@color/bs_success"
+                            app:tint="@color/entity_profesor"
                             android:contentDescription="Profesores" />
                     </FrameLayout>
 
@@ -400,7 +400,7 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_open_book"
-                            app:tint="@color/accent_cyan"
+                            app:tint="@color/entity_materia"
                             android:contentDescription="Materias" />
                     </FrameLayout>
 
@@ -469,7 +469,7 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_building"
-                            app:tint="@color/accent_yellow"
+                            app:tint="@color/entity_instalacion"
                             android:contentDescription="Instalaciones" />
                     </FrameLayout>
 
@@ -550,7 +550,7 @@
                             android:layout_height="22dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_shield_check"
-                            app:tint="@color/bs_danger"
+                            app:tint="@color/entity_administrador"
                             android:contentDescription="Administradores" />
                     </FrameLayout>
 
@@ -636,7 +636,7 @@
                                 android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_person_badge"
-                                app:tint="@color/bs_warning"
+                                app:tint="@color/entity_encargado"
                                 android:contentDescription="Encargados" />
                         </FrameLayout>
 
@@ -709,7 +709,7 @@
                                 android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_book"
-                                app:tint="?attr/colorPrimary"
+                                app:tint="@color/entity_alumno"
                                 android:contentDescription="Alumnos" />
                         </FrameLayout>
 
@@ -790,7 +790,7 @@
                                 android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_professor"
-                                app:tint="@color/bs_success"
+                                app:tint="@color/entity_profesor"
                                 android:contentDescription="Profesores" />
                         </FrameLayout>
 
@@ -863,7 +863,7 @@
                                 android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_open_book"
-                                app:tint="@color/accent_cyan"
+                                app:tint="@color/entity_materia"
                                 android:contentDescription="Materias" />
                         </FrameLayout>
 
@@ -944,7 +944,7 @@
                                 android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_building"
-                                app:tint="@color/accent_yellow"
+                                app:tint="@color/entity_instalacion"
                                 android:contentDescription="Instalaciones" />
                         </FrameLayout>
 
@@ -1017,7 +1017,7 @@
                                 android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_shield_check"
-                                app:tint="@color/bs_danger"
+                                app:tint="@color/entity_administrador"
                                 android:contentDescription="Administradores" />
                         </FrameLayout>
 

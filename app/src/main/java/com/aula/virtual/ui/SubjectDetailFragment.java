@@ -77,6 +77,10 @@ public class SubjectDetailFragment extends Fragment {
 
     private void setupUI() {
         binding.btnBackDetail.setOnClickListener(v -> popBackToManagementMenu());
+        EntityType type = EntityType.MATERIA;
+        binding.tvDetailTitle.setTextColor(type.getAccentColor(requireContext()));
+        EntityTheme.applyToButton(binding.btnSave, type, false);
+
         binding.btnSave.setOnClickListener(v -> saveChanges());
         binding.btnDelete.setOnClickListener(v -> showDeleteConfirmation());
         binding.btnManageStudents.setOnClickListener(v -> navigateToStudents());

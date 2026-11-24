@@ -87,7 +87,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Estudiante"
-                        android:textColor="?attr/colorPrimary"
+                        android:textColor="@color/entity_alumno"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -107,7 +107,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Carnet: EST3688888 • 8º Primaria"
-                        android:textColor="@color/accent_blue"
+                        android:textColor="@color/entity_alumno"
                         android:textSize="13sp"
                         android:layout_marginTop="2dp"
                         tools:text="Carnet: EST3688888 • 8º Primaria" />
@@ -128,18 +128,18 @@
                     android:layout_height="40dp"
                     android:layout_marginEnd="6dp"
                     android:text="Horario"
-                    android:textColor="@color/accent_blue"
+                    android:textColor="@color/entity_alumno"
                     android:textSize="13sp"
                     android:textStyle="bold"
                     android:textAllCaps="false"
                     app:icon="@drawable/ic_timetable"
                     app:iconGravity="textStart"
                     app:iconSize="16dp"
-                    app:iconTint="@color/accent_blue"
+                    app:iconTint="@color/entity_alumno"
                     app:cornerRadius="10dp"
-                    app:strokeColor="@color/input_border"
+                    app:strokeColor="@color/entity_alumno"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="@color/input_bg" />
+                    android:backgroundTint="@color/entity_alumno_soft" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnHeaderDetail"
@@ -149,18 +149,18 @@
                     android:layout_height="40dp"
                     android:layout_marginStart="6dp"
                     android:text="Detalle"
-                    android:textColor="@color/accent_blue"
+                    android:textColor="@color/entity_alumno"
                     android:textSize="13sp"
                     android:textStyle="bold"
                     android:textAllCaps="false"
                     app:icon="@drawable/ic_person_badge"
                     app:iconGravity="textStart"
                     app:iconSize="16dp"
-                    app:iconTint="@color/accent_blue"
+                    app:iconTint="@color/entity_alumno"
                     app:cornerRadius="10dp"
-                    app:strokeColor="@color/input_border"
+                    app:strokeColor="@color/entity_alumno"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="@color/input_bg" />
+                    android:backgroundTint="@color/entity_alumno_soft" />
             </LinearLayout>
 
         </LinearLayout>
@@ -205,7 +205,7 @@
             android:textSize="15sp"
             android:textStyle="bold"
             app:cornerRadius="12dp"
-            app:backgroundTint="?attr/colorPrimary"
+            app:backgroundTint="@color/entity_alumno"
             app:elevation="0dp" />
 
         <!-- Search Toggle ImageButton -->
@@ -216,7 +216,7 @@
             android:layout_marginStart="10dp"
             android:background="@drawable/bg_input_field"
             android:src="@drawable/ic_search"
-            app:tint="?attr/colorPrimary"
+            app:tint="@color/entity_alumno"
             android:contentDescription="Alternar búsqueda" />
     </LinearLayout>
 

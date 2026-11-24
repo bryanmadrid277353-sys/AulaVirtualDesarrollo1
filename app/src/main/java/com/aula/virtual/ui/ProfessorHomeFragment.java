@@ -70,6 +70,10 @@ public class ProfessorHomeFragment extends Fragment {
                 String carnetStr = user.carnet != null ? user.carnet : "DOC9842101";
                 binding.tvProfessorCarnetBadge.setText("Carnet: " + carnetStr);
 
+                EntityType type = EntityType.PROFESOR;
+                binding.tvRoleTagProf.setTextColor(type.getAccentColor(requireContext()));
+                binding.tvProfessorCarnetBadge.setTextColor(type.getAccentColor(requireContext()));
+
                 ImageUtils.setProfileImage(binding.ivProfileImageProf, user.profile_image, user.name);
 
                 // Fetch subjects assigned to professor

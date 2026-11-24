@@ -302,6 +302,7 @@
                     android:textStyle="bold"
                     android:textAllCaps="false"
                     app:cornerRadius="12dp"
+                    app:backgroundTint="@color/entity_alumno"
                     app:elevation="0dp" />
             </LinearLayout>
 

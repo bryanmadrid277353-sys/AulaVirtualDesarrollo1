@@ -44,9 +44,12 @@ public class StudentHomeFragment extends Fragment {
             if (binding == null || !isAdded()) return;
             if (user != null) {
                 binding.tvWelcomeName.setText(user.name != null ? user.name : "Usuario");
-                binding.tvRoleTag.setText("• Encargado de Familia");
+                EntityType type = EntityType.fromRole(user.role);
+                binding.tvRoleTag.setText("• " + type.getLabel());
+                binding.tvRoleTag.setTextColor(type.getAccentColor(requireContext()));
                 String carnetStr = user.carnet != null ? user.carnet : "-";
                 binding.tvCarnetTag.setText("Carnet: " + carnetStr);
+                binding.tvCarnetTag.setTextColor(type.getAccentColor(requireContext()));
 
                 ImageUtils.setProfileImage(binding.ivProfileImageHome, user.profile_image, user.name);
 

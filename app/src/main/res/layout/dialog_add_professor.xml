@@ -318,7 +318,7 @@
                     android:textStyle="bold"
                     android:textAllCaps="false"
                     app:cornerRadius="12dp"
-                    app:backgroundTint="?attr/colorPrimary"
+                    app:backgroundTint="@color/entity_profesor"
                     app:elevation="0dp" />
             </LinearLayout>
 

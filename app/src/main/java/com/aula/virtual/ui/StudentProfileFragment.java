@@ -203,6 +203,10 @@ public class StudentProfileFragment extends Fragment {
             }
             binding.tvProfileRole.setText(roleText);
 
+            EntityType type = EntityType.fromRole(user.role);
+            binding.tvProfileRole.setTextColor(type.getAccentColor(requireContext()));
+            binding.cardProfilePicture.setCardBackgroundColor(type.getAccentColor(requireContext()));
+
             // Institutional Email
             String emailSuffix = ("PROFESSOR".equals(user.role) || "ADMIN".equals(user.role)) ? "@mail.AulaV.edu.sv" : "@mail.AulaV.sv";
             binding.tvValInstitutionalEmail.setText(user.carnet + emailSuffix);

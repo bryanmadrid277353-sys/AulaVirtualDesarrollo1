@@ -70,9 +70,10 @@
                     android:layout_marginBottom="16dp">
 
                     <FrameLayout
+                        android:id="@+id/layoutEncargadoAvatar"
                         android:layout_width="44dp"
                         android:layout_height="44dp"
-                        android:background="@drawable/bg_circle_primary"
+                        android:background="@drawable/bg_circle_orange"
                         android:layout_marginEnd="12dp">
 
                         <TextView
@@ -96,7 +97,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Encargado"
-                            android:textColor="@color/accent_orange"
+                            android:textColor="@color/entity_encargado"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -116,7 +117,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="ENC1444444"
-                            android:textColor="@color/accent_orange"
+                            android:textColor="@color/entity_encargado"
                             android:textSize="13sp"
                             android:layout_marginTop="2dp"
                             tools:text="ENC1444444" />
@@ -130,18 +131,18 @@
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:text="Detalle"
-                    android:textColor="@color/accent_orange"
+                    android:textColor="@color/entity_encargado"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textAllCaps="false"
                     app:icon="@drawable/ic_person_badge"
                     app:iconGravity="textStart"
                     app:iconSize="18dp"
-                    app:iconTint="@color/accent_orange"
+                    app:iconTint="@color/entity_encargado"
                     app:cornerRadius="12dp"
-                    app:strokeColor="@color/input_border"
+                    app:strokeColor="@color/entity_encargado"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="@color/input_bg" />
+                    android:backgroundTint="@color/entity_encargado_soft" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -183,7 +184,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:cornerRadius="12dp"
-                app:backgroundTint="?attr/colorPrimary"
+                app:backgroundTint="@color/entity_alumno"
                 app:elevation="0dp" />
 
             <!-- Search Toggle ImageButton -->
@@ -194,7 +195,7 @@
                 android:layout_marginStart="10dp"
                 android:background="@drawable/bg_input_field"
                 android:src="@drawable/ic_search"
-                app:tint="?attr/colorPrimary"
+                app:tint="@color/entity_alumno"
                 android:contentDescription="Alternar búsqueda" />
         </LinearLayout>
 

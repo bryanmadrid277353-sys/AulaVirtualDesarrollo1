@@ -146,7 +146,7 @@ Archivo: `backend/run_tunnel_and_update_app.py`
 Este script realiza las siguientes acciones:
 1. Ejecuta el binario `cloudflared.exe` para generar una URL HTTPS pública dinámica (ej.: `https://xxx-xxx.trycloudflare.com`).
 2. Captura automáticamente la URL generada desde la consola.
-3. Actualiza dinámicamente la constante `BASE_URL` en el archivo `app/src/main/java/com/aula/virtual/data/RetrofitClient.java` del proyecto Android.
+3. Actualiza dinámicamente la propiedad `backend.url.debug` en el archivo `local.properties` en la raíz del proyecto para que la variante `debug` tome la URL en la siguiente recompilación.
 
 [⬆️ Volver al inicio del documento](#5-api-backend-fastapi)
 

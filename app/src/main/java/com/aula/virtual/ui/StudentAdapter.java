@@ -61,18 +61,13 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.ViewHold
 
         holder.tvCarnet.setText("Carnet: " + carnetDisplay);
 
-        if (isEncargado) {
-            holder.tvCarnet.setTextColor(holder.itemView.getContext().getColor(R.color.accent_orange));
-        } else if ("PROFESSOR".equals(user.role)) {
-            holder.tvCarnet.setTextColor(holder.itemView.getContext().getColor(R.color.accent_green));
-        } else {
-            android.util.TypedValue typedValue = new android.util.TypedValue();
-            holder.itemView.getContext().getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValue, true);
-            holder.tvCarnet.setTextColor(typedValue.data);
+        EntityType type = EntityType.fromRole(user.role);
+        if (holder.tvCarnet != null) {
+            holder.tvCarnet.setTextColor(type.getAccentColor(holder.itemView.getContext()));
         }
 
         if (holder.layoutAvatarFrame != null) {
-            holder.layoutAvatarFrame.setBackgroundResource(R.drawable.bg_circle_primary);
+            EntityTheme.applyToAvatar(holder.layoutAvatarFrame, holder.tvAvatarInitials, type);
         }
 
         if (holder.tvAvatarInitials != null) {

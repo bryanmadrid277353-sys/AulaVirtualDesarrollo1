@@ -184,7 +184,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"
                     android:text="Modificar Notas"
-                    android:textColor="#38BDF8"
+                    android:textColor="@color/entity_alumno"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:textAllCaps="false"
@@ -193,14 +193,14 @@
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     app:icon="@drawable/ic_edit_grades"
-                    app:iconTint="#38BDF8"
+                    app:iconTint="@color/entity_alumno"
                     app:iconSize="16dp"
                     app:iconPadding="6dp"
                     app:iconGravity="textStart"
                     app:cornerRadius="10dp"
-                    app:strokeColor="#38BDF8"
+                    app:strokeColor="@color/entity_alumno"
                     app:strokeWidth="1dp"
-                    android:backgroundTint="@color/input_bg"
+                    android:backgroundTint="@color/entity_alumno_soft"
                     android:visibility="gone" />
             </LinearLayout>
 

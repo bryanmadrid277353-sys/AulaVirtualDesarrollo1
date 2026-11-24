@@ -4,6 +4,9 @@
         <item name="colorPrimary">@color/accent_blue</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/bs_secondary</item>
+        <item name="entityAccent">@color/entity_alumno</item>
+        <item name="entityAccentSoft">@color/entity_alumno_soft</item>
+        <item name="entityOnAccent">@color/entity_alumno_on</item>
         <item name="android:statusBarColor">@color/bs_light</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowBackground">@color/bs_light</item>
@@ -172,5 +175,80 @@
 
     <style name="ShapeAppearance.Bootstrap.Circle" parent="ShapeAppearance.Material3.SmallComponent">
         <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Entity Theme Overlays -->
+    <style name="ThemeOverlay.Aula.Encargado" parent="">
+        <item name="entityAccent">@color/entity_encargado</item>
+        <item name="entityAccentSoft">@color/entity_encargado_soft</item>
+        <item name="entityOnAccent">@color/entity_encargado_on</item>
+    </style>
+
+    <style name="ThemeOverlay.Aula.Alumno" parent="">
+        <item name="entityAccent">@color/entity_alumno</item>
+        <item name="entityAccentSoft">@color/entity_alumno_soft</item>
+        <item name="entityOnAccent">@color/entity_alumno_on</item>
+    </style>
+
+    <style name="ThemeOverlay.Aula.Profesor" parent="">
+        <item name="entityAccent">@color/entity_profesor</item>
+        <item name="entityAccentSoft">@color/entity_profesor_soft</item>
+        <item name="entityOnAccent">@color/entity_profesor_on</item>
+    </style>
+
+    <style name="ThemeOverlay.Aula.Materia" parent="">
+        <item name="entityAccent">@color/entity_materia</item>
+        <item name="entityAccentSoft">@color/entity_materia_soft</item>
+        <item name="entityOnAccent">@color/entity_materia_on</item>
+    </style>
+
+    <style name="ThemeOverlay.Aula.Instalacion" parent="">
+        <item name="entityAccent">@color/entity_instalacion</item>
+        <item name="entityAccentSoft">@color/entity_instalacion_soft</item>
+        <item name="entityOnAccent">@color/entity_instalacion_on</item>
+    </style>
+
+    <style name="ThemeOverlay.Aula.Administrador" parent="">
+        <item name="entityAccent">@color/entity_administrador</item>
+        <item name="entityAccentSoft">@color/entity_administrador_soft</item>
+        <item name="entityOnAccent">@color/entity_administrador_on</item>
+    </style>
+
+    <!-- Standard Entity Component Styles -->
+    <style name="Widget.Aula.Button.Entity" parent="Widget.Material3.Button">
+        <item name="backgroundTint">?attr/entityAccent</item>
+        <item name="android:textColor">?attr/entityOnAccent</item>
+        <item name="iconTint">?attr/entityOnAccent</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Bootstrap.Small</item>
+    </style>
+
+    <style name="Widget.Aula.Button.EntityOutlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="strokeColor">?attr/entityAccent</item>
+        <item name="strokeWidth">1.5dp</item>
+        <item name="android:textColor">?attr/entityAccent</item>
+        <item name="iconTint">?attr/entityAccent</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Bootstrap.Small</item>
+    </style>
+
+    <style name="TextAppearance.Aula.EntitySubtitle" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:textColor">?attr/entityAccent</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Aula.EntityCaption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textColor">?attr/entityAccent</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Widget.Aula.EntityChip" parent="Widget.Material3.Chip.Assist">
+        <item name="chipBackgroundColor">?attr/entityAccentSoft</item>
+        <item name="chipStrokeColor">@android:color/transparent</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="android:textColor">?attr/entityAccent</item>
+        <item name="iconTint">?attr/entityAccent</item>
     </style>
 </resources>

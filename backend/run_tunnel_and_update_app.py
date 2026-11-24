@@ -10,35 +10,34 @@ if hasattr(sys.stdout, 'reconfigure'):
     except Exception:
         pass
 
-def update_retrofit_client(tunnel_url):
+def update_local_properties(tunnel_url):
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    retrofit_file = os.path.join(
-        project_root,
-        "app", "src", "main", "java", "com", "aula", "virtual", "data", "RetrofitClient.java"
-    )
+    local_props_file = os.path.join(project_root, "local.properties")
 
-    if not os.path.exists(retrofit_file):
-        print(f"[!] No se encontro RetrofitClient.java en: {retrofit_file}", flush=True)
-        return False
-
-    with open(retrofit_file, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    pattern = r'(public|private)\s+static\s+final\s+String\s+BASE_URL\s*=\s*"(https?://[^"]+)";'
-    new_base_url = f'public static final String BASE_URL = "{tunnel_url}";'
-
-    if re.search(pattern, content):
-        new_content = re.sub(pattern, new_base_url, content)
-        with open(retrofit_file, "w", encoding="utf-8") as f:
-            f.write(new_content)
-        print("\n===================================================", flush=True)
-        print("[SUCCESS] RetrofitClient.java actualizado automaticamente!", flush=True)
-        print(f"[PUBLIC BASE_URL] {tunnel_url}", flush=True)
-        print("===================================================\n", flush=True)
-        return True
+    if not os.path.exists(local_props_file):
+        content = f"backend.url.debug={tunnel_url}\nbackend.url.release=https://api.tudominio.com/\n"
+        with open(local_props_file, "w", encoding="utf-8") as f:
+            f.write(content)
     else:
-        print("[!] No se pudo encontrar el patron BASE_URL en RetrofitClient.java", flush=True)
-        return False
+        with open(local_props_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        pattern = r'(?m)^backend\.url\.debug\s*=\s*.*$'
+        new_line = f'backend.url.debug={tunnel_url}'
+
+        if re.search(pattern, content):
+            new_content = re.sub(pattern, new_line, content)
+        else:
+            new_content = content.rstrip() + f"\nbackend.url.debug={tunnel_url}\n"
+
+        with open(local_props_file, "w", encoding="utf-8") as f:
+            f.write(new_content)
+
+    print("\n===================================================", flush=True)
+    print("[SUCCESS] local.properties (backend.url.debug) actualizado automaticamente!", flush=True)
+    print(f"[PUBLIC BASE_URL] {tunnel_url}", flush=True)
+    print("===================================================\n", flush=True)
+    return True
 
 def main():
     backend_dir = os.path.dirname(os.path.abspath(__file__))
@@ -81,7 +80,7 @@ def main():
                     tunnel_url = match.group(0)
                     if not tunnel_url.endswith("/"):
                         tunnel_url += "/"
-                    url_updated = update_retrofit_client(tunnel_url)
+                    url_updated = update_local_properties(tunnel_url)
                     print("[i] Túnel activo y operando en segundo plano.", flush=True)
 
         process.wait()

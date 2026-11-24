@@ -51,6 +51,12 @@ public class AdminSubjectListFragment extends Fragment {
         binding.tvHeaderTitle.setText("Materias");
         binding.tvTitle.setText("Listado de Materias");
         binding.tvSubtitle.setText("Gestiona el catálogo de materias y asignaturas del ciclo lectivo.");
+        EntityType type = EntityType.MATERIA;
+        binding.tvHeaderTitle.setTextColor(type.getAccentColor(requireContext()));
+        EntityTheme.applyToButton(binding.btnAdd, type, false);
+        binding.btnAdd.setText("+ Añadir materia");
+        if (binding.btnToggleSearch != null) binding.btnToggleSearch.setImageTintList(android.content.res.ColorStateList.valueOf(type.getAccentColor(requireContext())));
+
         adapter = new SubjectAdapter();
         adapter.setManageButtonText("Gestionar");
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));

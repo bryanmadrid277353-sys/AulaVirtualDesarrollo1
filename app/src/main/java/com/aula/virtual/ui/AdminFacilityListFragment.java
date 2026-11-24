@@ -47,6 +47,12 @@ public class AdminFacilityListFragment extends Fragment {
         binding.tvHeaderTitle.setText("Instalaciones");
         binding.tvTitle.setText("Listado de Instalaciones");
         binding.tvSubtitle.setText("Gestiona las aulas, laboratorios e instalaciones de la institución.");
+        EntityType type = EntityType.INSTALACION;
+        binding.tvHeaderTitle.setTextColor(type.getAccentColor(requireContext()));
+        EntityTheme.applyToButton(binding.btnAdd, type, false);
+        binding.btnAdd.setText("+ Añadir instalación");
+        if (binding.btnToggleSearch != null) binding.btnToggleSearch.setImageTintList(android.content.res.ColorStateList.valueOf(type.getAccentColor(requireContext())));
+
         adapter = new FacilityAdapter();
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);

@@ -81,7 +81,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="Asistencia: - %"
-                android:textColor="#10B981"
+                android:textColor="@color/entity_profesor"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -97,7 +97,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:text="Asistió: 0"
-                    android:textColor="#10B981"
+                    android:textColor="@color/entity_profesor"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -107,7 +107,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:text="No asistió: 0"
-                    android:textColor="#EF4444"
+                    android:textColor="@color/entity_administrador"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -117,7 +117,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:text="Justificado: 0"
-                    android:textColor="#06B6D4"
+                    android:textColor="@color/entity_materia"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 

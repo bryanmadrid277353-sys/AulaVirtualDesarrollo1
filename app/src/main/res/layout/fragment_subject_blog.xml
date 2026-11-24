@@ -96,7 +96,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Materia"
-                            android:textColor="@color/accent_cyan"
+                            android:textColor="@color/entity_materia"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
@@ -116,7 +116,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Sección: 01"
-                            android:textColor="@color/accent_cyan"
+                            android:textColor="@color/entity_materia"
                             android:textSize="12sp"
                             android:layout_marginTop="1dp"
                             tools:text="Sección: 01" />
@@ -137,18 +137,18 @@
                         android:layout_height="38dp"
                         android:layout_marginEnd="3dp"
                         android:text="Integrantes"
-                        android:textColor="@color/accent_cyan"
+                        android:textColor="@color/entity_materia"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_person_badge"
                         app:iconGravity="textStart"
                         app:iconSize="15dp"
-                        app:iconTint="@color/accent_cyan"
+                        app:iconTint="@color/entity_materia"
                         app:cornerRadius="10dp"
-                        app:strokeColor="@color/input_border"
+                        app:strokeColor="@color/entity_materia"
                         app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
+                        android:backgroundTint="@color/entity_materia_soft" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSubjectAttendanceBlog"
@@ -158,18 +158,18 @@
                         android:layout_height="38dp"
                         android:layout_marginHorizontal="2dp"
                         android:text="Notas"
-                        android:textColor="@color/accent_cyan"
+                        android:textColor="@color/entity_materia"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_sliders"
                         app:iconGravity="textStart"
                         app:iconSize="15dp"
-                        app:iconTint="@color/accent_cyan"
+                        app:iconTint="@color/entity_materia"
                         app:cornerRadius="10dp"
-                        app:strokeColor="@color/input_border"
+                        app:strokeColor="@color/entity_materia"
                         app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
+                        android:backgroundTint="@color/entity_materia_soft" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSubjectDetailBlog"
@@ -179,18 +179,18 @@
                         android:layout_height="38dp"
                         android:layout_marginStart="3dp"
                         android:text="Detalle"
-                        android:textColor="@color/accent_cyan"
+                        android:textColor="@color/entity_materia"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_open_book"
                         app:iconGravity="textStart"
                         app:iconSize="15dp"
-                        app:iconTint="@color/accent_cyan"
+                        app:iconTint="@color/entity_materia"
                         app:cornerRadius="10dp"
-                        app:strokeColor="@color/input_border"
+                        app:strokeColor="@color/entity_materia"
                         app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
+                        android:backgroundTint="@color/entity_materia_soft" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -216,7 +216,7 @@
                 android:textSize="15sp"
                 android:textStyle="bold"
                 app:cornerRadius="12dp"
-                app:backgroundTint="?attr/colorPrimary"
+                app:backgroundTint="@color/entity_materia"
                 app:elevation="0dp"
                 android:visibility="gone"
                 tools:visibility="visible" />
@@ -229,7 +229,7 @@
                 android:layout_marginStart="10dp"
                 android:background="@drawable/bg_input_field"
                 android:src="@drawable/ic_search"
-                app:tint="?attr/colorPrimary"
+                app:tint="@color/entity_materia"
                 android:contentDescription="Alternar búsqueda" />
         </LinearLayout>
 

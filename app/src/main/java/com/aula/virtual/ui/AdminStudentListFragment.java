@@ -78,12 +78,20 @@ public class AdminStudentListFragment extends Fragment {
             binding.tvTitle.setText("Listado de encargados");
             binding.tvSubtitle.setText("Gestiona los registros de familias y tutores de tus estudiantes.");
             binding.btnAdd.setText("+ Añadir encargado");
+            EntityType type = EntityType.ENCARGADO;
+            EntityTheme.applyToButton(binding.btnAdd, type, false);
+            binding.tvHeaderTitle.setTextColor(type.getAccentColor(requireContext()));
+            if (binding.btnToggleSearch != null) binding.btnToggleSearch.setImageTintList(android.content.res.ColorStateList.valueOf(type.getAccentColor(requireContext())));
         } else {
             binding.recyclerView.setAdapter(studentRecordAdapter);
             binding.tvHeaderTitle.setText("Alumnos");
             binding.tvTitle.setText("Listado de alumnos");
             binding.tvSubtitle.setText("Gestiona los registros de estudiantes de primaria.");
             binding.btnAdd.setText("+ Añadir alumno");
+            EntityType type = EntityType.ALUMNO;
+            EntityTheme.applyToButton(binding.btnAdd, type, false);
+            binding.tvHeaderTitle.setTextColor(type.getAccentColor(requireContext()));
+            if (binding.btnToggleSearch != null) binding.btnToggleSearch.setImageTintList(android.content.res.ColorStateList.valueOf(type.getAccentColor(requireContext())));
         }
 
         setupSearch();

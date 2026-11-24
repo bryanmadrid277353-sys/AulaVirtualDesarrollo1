@@ -27,6 +27,7 @@ Esta documentación técnica abarca la totalidad del sistema (Cliente Android na
 | **12** | [Recursos y Configuración](12_recursos_y_configuracion.md) | manifieso `AndroidManifest.xml`, permisos, tabla de dependencias Gradle, catálogo de recursos XML (colores, drawables, layouts) y archivos de backend. |
 | **13** | [Observaciones y Mejoras](13_observaciones_y_mejoras.md) | Análisis de arquitectura, oportunidades de refactorización y matriz de recomendaciones priorizadas por riesgo (Alto, Medio, Bajo). |
 | **14** | [Glosario](14_glosario.md) | Definición de conceptos técnicos (BCrypt, AES-256 GCM, Room, POI, Cloudflare, FCM) y del dominio académico institucional. |
+| **Manual** | [Manual de Uso Oficial](MANUAL_DE_USO.md) | Guía interactiva paso a paso para usuarios finales por rol (Padre/Encargado, Profesor y Administrador). |
 
 ---
 

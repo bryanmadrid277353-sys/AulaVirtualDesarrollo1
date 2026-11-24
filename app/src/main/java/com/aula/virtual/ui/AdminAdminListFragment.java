@@ -56,6 +56,12 @@ public class AdminAdminListFragment extends Fragment {
         binding.tvHeaderTitle.setText("Administradores");
         binding.tvTitle.setText("Listado de Administradores");
         binding.tvSubtitle.setText("Gestiona las cuentas con permisos de administración del sistema.");
+        EntityType type = EntityType.ADMINISTRADOR;
+        binding.tvHeaderTitle.setTextColor(type.getAccentColor(requireContext()));
+        EntityTheme.applyToButton(binding.btnAdd, type, false);
+        binding.btnAdd.setText("+ Añadir administrador");
+        if (binding.btnToggleSearch != null) binding.btnToggleSearch.setImageTintList(android.content.res.ColorStateList.valueOf(type.getAccentColor(requireContext())));
+
         adapter = new StudentAdapter();
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);

@@ -52,6 +52,12 @@ public class AdminProfessorListFragment extends Fragment {
         binding.tvHeaderTitle.setText("Profesores");
         binding.tvTitle.setText("Listado de Profesores");
         binding.tvSubtitle.setText("Gestiona los docentes y profesores de la institución.");
+        EntityType type = EntityType.PROFESOR;
+        binding.tvHeaderTitle.setTextColor(type.getAccentColor(requireContext()));
+        EntityTheme.applyToButton(binding.btnAdd, type, false);
+        binding.btnAdd.setText("+ Añadir profesor");
+        if (binding.btnToggleSearch != null) binding.btnToggleSearch.setImageTintList(android.content.res.ColorStateList.valueOf(type.getAccentColor(requireContext())));
+
         adapter = new StudentAdapter();
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);

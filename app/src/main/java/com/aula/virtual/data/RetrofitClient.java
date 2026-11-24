@@ -12,6 +12,13 @@ import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import com.aula.virtual.BuildConfig;
+import okhttp3.CipherSuite;
+import okhttp3.ConnectionPool;
+import okhttp3.ConnectionSpec;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.TlsVersion;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -22,7 +29,7 @@ public class RetrofitClient {
     private static final String KEY_SERVER_URL = "server_url";
 
     public static final String EMULATOR_URL = "http://10.0.2.2:8000/";
-    public static final String BASE_URL = "https://slides-eyed-knife-navy.trycloudflare.com/";
+    public static final String BASE_URL = BuildConfig.BASE_URL;
 
     private static Retrofit retrofit = null;
     private static String activeUrl = null;
@@ -84,6 +91,9 @@ public class RetrofitClient {
     public static ApiService getApiService(Context context) {
         String currentUrl = getActiveUrl(context);
         if (retrofit == null || !retrofit.baseUrl().toString().equalsIgnoreCase(currentUrl)) {
+            if (BuildConfig.DEBUG) {
+                android.util.Log.d("RetrofitClient", "Backend Mode: " + BuildConfig.BACKEND_MODE + ", Base URL: " + currentUrl);
+            }
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 

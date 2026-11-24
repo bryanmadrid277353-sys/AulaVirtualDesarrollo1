@@ -54,6 +54,10 @@ public class AdminFacilityDetailFragment extends Fragment {
         binding.btnSave.setEnabled(false);
         binding.btnDelete.setEnabled(false);
 
+        EntityType type = EntityType.INSTALACION;
+        binding.tvDetailTitle.setTextColor(type.getAccentColor(requireContext()));
+        EntityTheme.applyToButton(binding.btnSave, type, false);
+
         binding.btnSave.setOnClickListener(v -> saveChanges());
         binding.btnDelete.setOnClickListener(v -> showDeleteConfirmation());
     }
