@@ -580,12 +580,14 @@ public class VirtualAulaRepository {
                         String chosenColor = (usc != null && usc.color != null) ? usc.color : ((en.color != null && !en.color.isEmpty()) ? en.color : (sub != null ? sub.color : "BLUE"));
                         for (FacilitySchedule sch : schedules) {
                             User prof = db.userDao().getUserById(sch.professorId);
+                            Facility fac = db.facilityDao().getFacilityById(sch.facilityId);
                             ScheduleInfo info = new ScheduleInfo();
                             info.schedule = sch;
                             info.subjectName = sub != null ? sub.name : "";
                             info.subjectSection = sub != null ? sub.section : "01";
                             info.subjectColor = chosenColor;
                             info.professorName = prof != null ? prof.name : "";
+                            info.facilityName = fac != null ? fac.name : "N/A";
                             infos.add(info);
                         }
                     }
@@ -666,6 +668,7 @@ public class VirtualAulaRepository {
                     for (FacilitySchedule sch : schedules) {
                         Subject sub = db.subjectDao().getSubjectById(sch.subjectId);
                         User prof = db.userDao().getUserById(sch.professorId);
+                        Facility fac = db.facilityDao().getFacilityById(sch.facilityId);
                         UserSubjectColor usc = db.userSubjectColorDao().get(professorId, sch.subjectId);
                         String chosenColor = (usc != null && usc.color != null) ? usc.color : (sub != null ? sub.color : "BLUE");
                         ScheduleInfo info = new ScheduleInfo();
@@ -674,6 +677,7 @@ public class VirtualAulaRepository {
                         info.subjectSection = sub != null ? sub.section : "01";
                         info.subjectColor = chosenColor;
                         info.professorName = prof != null ? prof.name : "";
+                        info.facilityName = fac != null ? fac.name : "N/A";
                         infos.add(info);
                     }
                     if (!infos.isEmpty()) {
@@ -1126,7 +1130,21 @@ public class VirtualAulaRepository {
             });
         }
         if (isLocalMode()) return;
-        performCall(getApiService().getFacilityById(id), callback);
+        performCall(getApiService().getFacilityById(id), new Callback<Facility>() {
+            @Override
+            public void onResponse(Call<Facility> call, Response<Facility> response) {
+                if (response.isSuccessful() && response.body() != null && db != null) {
+                    Facility f = response.body();
+                    executor.execute(() -> db.facilityDao().insert(f));
+                }
+                if (callback != null) callback.onResponse(call, response);
+            }
+
+            @Override
+            public void onFailure(Call<Facility> call, Throwable t) {
+                if (callback != null) callback.onFailure(call, t);
+            }
+        });
     }
 
     public void getEnrollmentById(int id, Callback<Enrollment> callback) {
@@ -1413,12 +1431,14 @@ public class VirtualAulaRepository {
                             for (FacilitySchedule sch : schedules) {
                                 Subject sub = db.subjectDao().getSubjectById(sch.subjectId);
                                 User prof = db.userDao().getUserById(sch.professorId);
+                                Facility fac = db.facilityDao().getFacilityById(sch.facilityId);
                                 ScheduleInfo info = new ScheduleInfo();
                                 info.schedule = sch;
                                 info.subjectName = sub != null ? sub.name : "";
                                 info.subjectSection = sub != null ? sub.section : "01";
                                 info.subjectColor = (sch.color != null && !sch.color.isEmpty()) ? sch.color : (sub != null ? sub.color : "BLUE");
                                 info.professorName = prof != null ? prof.name : "";
+                                info.facilityName = fac != null ? fac.name : "N/A";
                                 infos.add(info);
                             }
                         }
@@ -1442,12 +1462,14 @@ public class VirtualAulaRepository {
                         for (FacilitySchedule sch : schedules) {
                             Subject sub = db.subjectDao().getSubjectById(sch.subjectId);
                             User prof = db.userDao().getUserById(sch.professorId);
+                            Facility fac = db.facilityDao().getFacilityById(sch.facilityId);
                             ScheduleInfo info = new ScheduleInfo();
                             info.schedule = sch;
                             info.subjectName = sub != null ? sub.name : "";
                             info.subjectSection = sub != null ? sub.section : "01";
                             info.subjectColor = (sch.color != null && !sch.color.isEmpty()) ? sch.color : (sub != null ? sub.color : "BLUE");
                             info.professorName = prof != null ? prof.name : "";
+                            info.facilityName = fac != null ? fac.name : "N/A";
                             infos.add(info);
                         }
                     }
@@ -1472,12 +1494,14 @@ public class VirtualAulaRepository {
                             for (FacilitySchedule sch : schedules) {
                                 Subject sub = db.subjectDao().getSubjectById(sch.subjectId);
                                 User prof = db.userDao().getUserById(sch.professorId);
+                                Facility fac = db.facilityDao().getFacilityById(sch.facilityId);
                                 ScheduleInfo info = new ScheduleInfo();
                                 info.schedule = sch;
                                 info.subjectName = sub != null ? sub.name : "";
                                 info.subjectSection = sub != null ? sub.section : "01";
                                 info.subjectColor = (sch.color != null && !sch.color.isEmpty()) ? sch.color : (sub != null ? sub.color : "BLUE");
                                 info.professorName = prof != null ? prof.name : "";
+                                info.facilityName = fac != null ? fac.name : "N/A";
                                 infos.add(info);
                             }
                         }

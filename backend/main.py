@@ -484,6 +484,7 @@ class ScheduleInfo(BaseModel):
     subjectSection: str = "01"
     subjectColor: str
     professorName: str
+    facilityName: Optional[str] = "N/A"
 
 class BlogCommentBase(BaseModel):
     blogEntryId: int
@@ -722,22 +723,24 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
 # --- User-specific Schedules ---
 @app.get("/users/student/{student_id}/schedules", response_model=List[ScheduleInfo])
 def get_student_timetable(student_id: int, db: Session = Depends(get_db)):
-    results = db.query(FacilityScheduleDB, SubjectDB, UserDB)\
+    results = db.query(FacilityScheduleDB, SubjectDB, UserDB, FacilityDB)\
         .join(SubjectDB, FacilityScheduleDB.subjectId == SubjectDB.id)\
         .join(UserDB, FacilityScheduleDB.professorId == UserDB.id)\
         .join(EnrollmentDB, SubjectDB.id == EnrollmentDB.subjectId)\
+        .outerjoin(FacilityDB, FacilityScheduleDB.facilityId == FacilityDB.id)\
         .filter(EnrollmentDB.studentId == student_id).all()
 
-    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": s.color, "professorName": u.name} for sch, s, u in results]
+    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": s.color, "professorName": u.name, "facilityName": f.name if f else "N/A"} for sch, s, u, f in results]
 
 @app.get("/users/professor/{professor_id}/schedules", response_model=List[ScheduleInfo])
 def get_professor_timetable(professor_id: int, db: Session = Depends(get_db)):
-    results = db.query(FacilityScheduleDB, SubjectDB, UserDB)\
+    results = db.query(FacilityScheduleDB, SubjectDB, UserDB, FacilityDB)\
         .join(SubjectDB, FacilityScheduleDB.subjectId == SubjectDB.id)\
         .join(UserDB, FacilityScheduleDB.professorId == UserDB.id)\
+        .outerjoin(FacilityDB, FacilityScheduleDB.facilityId == FacilityDB.id)\
         .filter(FacilityScheduleDB.professorId == professor_id).all()
 
-    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": s.color, "professorName": u.name} for sch, s, u in results]
+    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": s.color, "professorName": u.name, "facilityName": f.name if f else "N/A"} for sch, s, u, f in results]
 
 @app.post("/users", response_model=UserOut)
 def create_user(user: UserBase, db: Session = Depends(get_db)):
@@ -1141,6 +1144,13 @@ def delete_blog_comment(comment_id: int, db: Session = Depends(get_db)):
 def get_facilities(db: Session = Depends(get_db)):
     return db.query(FacilityDB).all()
 
+@app.get("/facilities/{fac_id}", response_model=Facility)
+def get_facility_by_id(fac_id: int, db: Session = Depends(get_db)):
+    db_fac = db.query(FacilityDB).filter(FacilityDB.id == fac_id).first()
+    if not db_fac:
+        raise HTTPException(status_code=404, detail="Instalación no encontrada")
+    return db_fac
+
 @app.post("/facilities", response_model=Facility)
 def create_facility(facility: FacilityBase, db: Session = Depends(get_db)):
     db_fac = FacilityDB(**to_dict(facility))
@@ -1176,12 +1186,13 @@ def delete_facility(fac_id: int, db: Session = Depends(get_db)):
 # --- Facility Schedules ---
 @app.get("/facilities/{fac_id}/schedules", response_model=List[ScheduleInfo])
 def get_facility_schedules(fac_id: int, db: Session = Depends(get_db)):
-    results = db.query(FacilityScheduleDB, SubjectDB, UserDB)\
+    results = db.query(FacilityScheduleDB, SubjectDB, UserDB, FacilityDB)\
         .join(SubjectDB, FacilityScheduleDB.subjectId == SubjectDB.id)\
         .join(UserDB, FacilityScheduleDB.professorId == UserDB.id)\
+        .outerjoin(FacilityDB, FacilityScheduleDB.facilityId == FacilityDB.id)\
         .filter(FacilityScheduleDB.facilityId == fac_id).all()
 
-    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": sch.color if sch.color else (s.color if s.color else "BLUE"), "professorName": u.name} for sch, s, u in results]
+    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": sch.color if sch.color else (s.color if s.color else "BLUE"), "professorName": u.name, "facilityName": f.name if f else "N/A"} for sch, s, u, f in results]
 
 def time_to_minutes(time_str: str) -> int:
     try:
@@ -1286,25 +1297,27 @@ def get_user_subject_color(user_id: int, subject_id: int, db: Session = Depends(
 
 @app.get("/users/student/{student_id}/schedules", response_model=List[ScheduleInfo])
 def get_student_personal_schedules(student_id: int, db: Session = Depends(get_db)):
-    results = db.query(FacilityScheduleDB, SubjectDB, UserDB, EnrollmentDB)\
+    results = db.query(FacilityScheduleDB, SubjectDB, UserDB, EnrollmentDB, FacilityDB)\
         .join(SubjectDB, FacilityScheduleDB.subjectId == SubjectDB.id)\
         .join(UserDB, FacilityScheduleDB.professorId == UserDB.id)\
         .join(EnrollmentDB, SubjectDB.id == EnrollmentDB.subjectId)\
+        .outerjoin(FacilityDB, FacilityScheduleDB.facilityId == FacilityDB.id)\
         .filter(EnrollmentDB.studentId == student_id).all()
 
-    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": e.color if e.color else (sch.color if sch.color else (s.color if s.color else "BLUE")), "professorName": u.name} for sch, s, u, e in results]
+    return [{"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": e.color if e.color else (sch.color if sch.color else (s.color if s.color else "BLUE")), "professorName": u.name, "facilityName": f.name if f else "N/A"} for sch, s, u, e, f in results]
 
 @app.get("/users/professor/{prof_id}/schedules", response_model=List[ScheduleInfo])
 def get_professor_personal_schedules(prof_id: int, db: Session = Depends(get_db)):
-    results = db.query(FacilityScheduleDB, SubjectDB, UserDB)\
+    results = db.query(FacilityScheduleDB, SubjectDB, UserDB, FacilityDB)\
         .join(SubjectDB, FacilityScheduleDB.subjectId == SubjectDB.id)\
         .join(UserDB, FacilityScheduleDB.professorId == UserDB.id)\
+        .outerjoin(FacilityDB, FacilityScheduleDB.facilityId == FacilityDB.id)\
         .filter(FacilityScheduleDB.professorId == prof_id).all()
 
     output = []
-    for sch, s, u in results:
+    for sch, s, u, f in results:
         color = sch.color if (sch and sch.color) else (s.color if s.color else "BLUE")
-        output.append({"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": color, "professorName": u.name})
+        output.append({"schedule": sch, "subjectName": s.name, "subjectSection": s.section if s.section else "01", "subjectColor": color, "professorName": u.name, "facilityName": f.name if f else "N/A"})
     return output
 
 @app.delete("/blog/entries/{entry_id}/comments")

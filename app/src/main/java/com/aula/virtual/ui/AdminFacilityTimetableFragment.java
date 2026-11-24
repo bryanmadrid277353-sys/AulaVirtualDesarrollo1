@@ -172,7 +172,9 @@ public class AdminFacilityTimetableFragment extends Fragment {
 
                     tvSubjectName.setText(info.subjectName != null && !info.subjectName.isEmpty() ? info.subjectName : "Sin Materia");
 
-                    String facName = (facility != null && facility.name != null && !facility.name.isEmpty()) ? facility.name : "N/A";
+                    String facName = (info.facilityName != null && !info.facilityName.isEmpty() && !"N/A".equalsIgnoreCase(info.facilityName))
+                            ? info.facilityName
+                            : ((facility != null && facility.name != null && !facility.name.isEmpty()) ? facility.name : "N/A");
                     tvFacilityName.setText(facName);
 
                     if (subject != null && subject.description != null && !subject.description.trim().isEmpty()) {

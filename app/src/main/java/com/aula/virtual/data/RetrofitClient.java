@@ -22,7 +22,7 @@ public class RetrofitClient {
     private static final String KEY_SERVER_URL = "server_url";
 
     public static final String EMULATOR_URL = "http://10.0.2.2:8000/";
-    public static final String BASE_URL = "https://movies-men-bits-css.trycloudflare.com/";
+    public static final String BASE_URL = "https://slides-eyed-knife-navy.trycloudflare.com/";
 
     private static Retrofit retrofit = null;
     private static String activeUrl = null;

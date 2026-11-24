@@ -8,4 +8,5 @@ public class ScheduleInfo {
     public String subjectSection;
     public String subjectColor;
     public String professorName;
+    public String facilityName;
 }
