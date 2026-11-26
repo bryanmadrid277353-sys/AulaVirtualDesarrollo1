@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Entity Type Theme Attributes -->
+    <attr name="entityAccent" format="color" />
+    <attr name="entityAccentSoft" format="color" />
+    <attr name="entityOnAccent" format="color" />
+</resources>
