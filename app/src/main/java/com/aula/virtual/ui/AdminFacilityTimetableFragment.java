@@ -157,6 +157,7 @@ public class AdminFacilityTimetableFragment extends Fragment {
                     TextView tvSectionBadge = dialogView.findViewById(R.id.tvSectionBadge);
                     TextView tvSubjectName = dialogView.findViewById(R.id.tvSubjectName);
                     TextView tvFacilityName = dialogView.findViewById(R.id.tvFacilityName);
+                    TextView tvFacilityCode = dialogView.findViewById(R.id.tvFacilityCode);
                     View layoutDescRow = dialogView.findViewById(R.id.layoutDescRow);
                     TextView tvSubjectDesc = dialogView.findViewById(R.id.tvSubjectDesc);
                     TextView tvProfessorName = dialogView.findViewById(R.id.tvProfessorName);
@@ -176,6 +177,13 @@ public class AdminFacilityTimetableFragment extends Fragment {
                             ? info.facilityName
                             : ((facility != null && facility.name != null && !facility.name.isEmpty()) ? facility.name : "N/A");
                     tvFacilityName.setText(facName);
+
+                    if (tvFacilityCode != null) {
+                        String fCode = (facility != null && facility.code != null && !facility.code.trim().isEmpty())
+                                ? facility.code
+                                : ("INSTA" + (facility != null ? facility.id : info.schedule.facilityId));
+                        tvFacilityCode.setText(fCode);
+                    }
 
                     if (subject != null && subject.description != null && !subject.description.trim().isEmpty()) {
                         tvSubjectDesc.setText(subject.description.trim());

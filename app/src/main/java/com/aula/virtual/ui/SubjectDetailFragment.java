@@ -5,6 +5,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.graphics.Typeface;
+import android.util.TypedValue;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -566,22 +567,30 @@ public class SubjectDetailFragment extends Fragment {
             TextView tvName = new TextView(parent.getContext());
             tvName.setTextSize(15f);
             tvName.setTypeface(null, Typeface.BOLD);
-            tvName.setTextColor(ThemeHelper.isDarkMode(parent.getContext()) ? 0xFFFFFFFF : 0xFF000000);
+            TypedValue typedValueName = new TypedValue();
+            parent.getContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValueName, true);
+            tvName.setTextColor(typedValueName.data);
 
             TextView tvSub = new TextView(parent.getContext());
             tvSub.setTextSize(13f);
-            tvSub.setTextColor(0xFF888888);
+            TypedValue typedValueSub = new TypedValue();
+            parent.getContext().getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValueSub, true);
+            tvSub.setTextColor(typedValueSub.data);
 
             textLayout.addView(tvName);
             textLayout.addView(tvSub);
 
-            MaterialButton btn = new MaterialButton(parent.getContext(), null, android.R.attr.borderlessButtonStyle);
+            MaterialButton btn = new MaterialButton(parent.getContext());
             btn.setText("Desinscribir");
             btn.setTextSize(12f);
+            btn.setTypeface(null, Typeface.BOLD);
             btn.setAllCaps(false);
+            btn.setCornerRadius((int) (8 * parent.getContext().getResources().getDisplayMetrics().density));
             btn.setTextColor(0xFFFFFFFF);
-            btn.setBackgroundTintList(ColorStateList.valueOf(0xFFDC3545));
-            int btnPad = (int) (8 * parent.getContext().getResources().getDisplayMetrics().density);
+            btn.setBackgroundTintList(ColorStateList.valueOf(0xFFEF4444));
+            btn.setInsetTop(0);
+            btn.setInsetBottom(0);
+            int btnPad = (int) (12 * parent.getContext().getResources().getDisplayMetrics().density);
             btn.setPadding(btnPad, 0, btnPad, 0);
 
             container.addView(textLayout);

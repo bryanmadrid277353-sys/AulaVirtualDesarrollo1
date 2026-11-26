@@ -132,16 +132,17 @@
                     android:layout_height="44dp"
                     android:text="Detalle"
                     android:textColor="@color/entity_encargado"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:textAllCaps="false"
                     app:icon="@drawable/ic_person_badge"
                     app:iconGravity="textStart"
                     app:iconSize="18dp"
+                    app:iconPadding="6dp"
                     app:iconTint="@color/entity_encargado"
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/entity_encargado"
-                    app:strokeWidth="1dp"
+                    app:strokeWidth="1.5dp"
                     android:backgroundTint="@color/entity_encargado_soft" />
 
             </LinearLayout>

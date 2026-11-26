@@ -31,7 +31,7 @@
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:background="@drawable/bg_badge_semester"
-                    android:backgroundTint="#3A2A10"
+                    android:backgroundTint="@color/entity_instalacion_soft"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true">
 
@@ -50,13 +50,13 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:text="SOBREESCRITURA"
-                    android:textColor="#F59E0B"
+                    android:textColor="@color/entity_instalacion"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="4dp"
                     android:background="@drawable/bg_badge_semester"
-                    android:backgroundTint="#3A2A10" />
+                    android:backgroundTint="@color/entity_instalacion_soft" />
             </RelativeLayout>
 
             <!-- Title -->
@@ -95,7 +95,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:background="@drawable/bg_badge_semester"
-                    android:backgroundTint="#172554"
+                    android:backgroundTint="@color/entity_alumno_soft"
                     android:layout_marginEnd="12dp">
 
                     <ImageView

@@ -31,7 +31,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:background="@drawable/bg_badge_semester"
-                    android:backgroundTint="#132540"
+                    android:backgroundTint="@color/entity_instalacion_soft"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true">
 
@@ -41,7 +41,7 @@
                         android:layout_height="24dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_timetable"
-                        app:tint="#38BDF8"
+                        app:tint="@color/entity_instalacion"
                         android:contentDescription="Horario" />
                 </FrameLayout>
 
@@ -51,13 +51,13 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:textColor="#38BDF8"
+                    android:textColor="@color/entity_materia"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="5dp"
                     android:background="@drawable/bg_badge_semester"
-                    android:backgroundTint="#132540"
+                    android:backgroundTint="@color/entity_materia_soft"
                     tools:text="Sección 01" />
             </RelativeLayout>
 
@@ -146,11 +146,25 @@
 
                     <TextView
                         android:id="@+id/tvFacilityName"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="?android:attr/textColorPrimary"
                         android:textSize="14sp"
                         tools:text="Aula Magna A-1" />
+
+                    <TextView
+                        android:id="@+id/tvFacilityCode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/entity_instalacion"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="8dp"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:background="@drawable/bg_badge_semester"
+                        android:backgroundTint="@color/entity_instalacion_soft"
+                        tools:text="INSTA12123" />
                 </LinearLayout>
 
                 <!-- Row 3: Descripción (Opcional) -->

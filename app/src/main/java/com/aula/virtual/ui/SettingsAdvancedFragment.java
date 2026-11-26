@@ -332,9 +332,9 @@ public class SettingsAdvancedFragment extends Fragment {
             String url = etServerUrl.getText().toString().trim();
 
             boolean isTailscale = url.contains("100.") || url.contains(".ts.net");
-            boolean isCloudflare = !isTailscale && (url.equals(RetrofitClient.BASE_URL) || url.contains("trycloudflare.com") || url.contains("https://"));
-            boolean isEmulator = !isTailscale && (url.equals(RetrofitClient.EMULATOR_URL) || url.contains("10.0.2.2"));
-            boolean isLocalNet = !isTailscale && (url.contains("192.168.") || url.contains("localhost"));
+            boolean isEmulator = !isTailscale && url.contains("10.0.2.2");
+            boolean isLocalNet = !isTailscale && !isEmulator && (url.contains("192.168.") || url.contains("localhost"));
+            boolean isCloudflare = !isTailscale && !isEmulator && !isLocalNet && (url.startsWith("https://") || url.contains("trycloudflare.com") || url.contains("cloudflare"));
 
             if (!isCloudflare && !isEmulator && !isLocalNet && !isTailscale) {
                 if (url.startsWith("https://")) {
@@ -402,7 +402,13 @@ public class SettingsAdvancedFragment extends Fragment {
         updateSelectionUI.run();
 
         cardCloudflare.setOnClickListener(v -> {
-            etServerUrl.setText(RetrofitClient.BASE_URL);
+            String currentText = etServerUrl.getText().toString().trim();
+            if (!currentText.startsWith("https://") && !currentText.contains("trycloudflare.com") && !currentText.contains("cloudflare")) {
+                etServerUrl.setText("https://aula-virtual.trycloudflare.com/");
+            }
+            if (etServerUrl.getText() != null) {
+                etServerUrl.setSelection(etServerUrl.getText().length());
+            }
             updateSelectionUI.run();
             Toast.makeText(getContext(), "Seleccionado: Servidor Nube (Cloudflare)", Toast.LENGTH_SHORT).show();
         });

@@ -117,6 +117,7 @@
                     tools:text="Aulas • Edificio Central, 1º Nivel. Capacidad para 40 alumnos con proyector multimedia." />
 
                 <!-- Action Buttons inside Card: Horario & Detalle -->
+                <!-- Action Buttons inside card -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -127,42 +128,44 @@
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="38dp"
-                        android:layout_marginEnd="4dp"
-                        android:text="Horario"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="12sp"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="6dp"
+                        android:text="Vista Horarios"
+                        android:textColor="@color/entity_instalacion"
+                        android:textSize="13sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_timetable"
                         app:iconGravity="textStart"
-                        app:iconSize="16dp"
+                        app:iconSize="18dp"
+                        app:iconPadding="6dp"
                         app:iconTint="@color/entity_instalacion"
-                        app:cornerRadius="10dp"
-                        app:strokeColor="@color/input_border"
-                        app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/entity_instalacion"
+                        app:strokeWidth="1.5dp"
+                        android:backgroundTint="@color/entity_instalacion_soft" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnHeaderDetail"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="38dp"
-                        android:layout_marginStart="4dp"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="6dp"
                         android:text="Detalle"
-                        android:textColor="?android:attr/textColorPrimary"
-                        android:textSize="12sp"
+                        android:textColor="@color/entity_instalacion"
+                        android:textSize="13sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_building"
                         app:iconGravity="textStart"
-                        app:iconSize="16dp"
+                        app:iconSize="18dp"
+                        app:iconPadding="6dp"
                         app:iconTint="@color/entity_instalacion"
-                        app:cornerRadius="10dp"
-                        app:strokeColor="@color/input_border"
-                        app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/entity_instalacion"
+                        app:strokeWidth="1.5dp"
+                        android:backgroundTint="@color/entity_instalacion_soft" />
                 </LinearLayout>
 
             </LinearLayout>

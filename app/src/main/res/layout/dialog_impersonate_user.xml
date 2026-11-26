@@ -35,9 +35,9 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#162235"
+            app:cardBackgroundColor="@color/input_bg"
             app:strokeWidth="1dp"
-            app:strokeColor="#233550">
+            app:strokeColor="@color/input_border">
 
             <LinearLayout
                 android:layout_width="match_parent"

@@ -38,16 +38,10 @@ public class RetrofitClient {
         if (context != null) {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String savedUrl = prefs.getString(KEY_SERVER_URL, null);
-
-            // Auto-sync Cloudflare Tunnel URL: if savedUrl is null or an ephemeral trycloudflare.com URL,
-            // always keep it synchronized with the latest BASE_URL updated by main.py
-            if (savedUrl == null || savedUrl.trim().isEmpty() || savedUrl.contains("trycloudflare.com")) {
-                if (savedUrl == null || !savedUrl.trim().equalsIgnoreCase(BASE_URL.trim())) {
-                    prefs.edit().putString(KEY_SERVER_URL, BASE_URL).apply();
-                }
-                activeUrl = BASE_URL;
-            } else {
+            if (savedUrl != null && !savedUrl.trim().isEmpty()) {
                 activeUrl = savedUrl.trim();
+            } else {
+                activeUrl = BASE_URL;
             }
         } else if (activeUrl == null) {
             activeUrl = BASE_URL;

@@ -113,7 +113,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="General"
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -161,7 +161,7 @@
                         android:layout_width="44dp"
                         android:layout_height="44dp"
                         android:background="@drawable/bg_badge_semester"
-                        android:backgroundTint="#2E1218"
+                        android:backgroundTint="@color/entity_administrador_soft"
                         android:layout_marginEnd="12dp">
 
                         <ImageView
@@ -259,7 +259,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Estudiantes (Encargados y Padres)"
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -328,7 +328,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Todos los Profesores"
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -397,7 +397,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Todos los Administradores"
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -467,7 +467,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Integrantes de una Materia..."
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -544,7 +544,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Integrantes de una Instalación..."
-                            android:textColor="@color/white"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -605,7 +605,7 @@
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     android:text="Aceptar"
-                    android:textColor="@color/white"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textAllCaps="false"

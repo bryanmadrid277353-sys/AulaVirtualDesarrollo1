@@ -127,69 +127,79 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnViewParticipantsBlog"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="38dp"
-                        android:layout_marginEnd="3dp"
-                        android:text="Integrantes"
-                        android:textColor="@color/entity_materia"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textAllCaps="false"
-                        app:icon="@drawable/ic_person_badge"
-                        app:iconGravity="textStart"
-                        app:iconSize="15dp"
-                        app:iconTint="@color/entity_materia"
-                        app:cornerRadius="10dp"
-                        app:strokeColor="@color/entity_materia"
-                        app:strokeWidth="1dp"
-                        android:backgroundTint="@color/entity_materia_soft" />
+                    <!-- Fila 1: Máximo 2 botones (Integrantes + Notas) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnSubjectAttendanceBlog"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="38dp"
-                        android:layout_marginHorizontal="2dp"
-                        android:text="Notas"
-                        android:textColor="@color/entity_materia"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textAllCaps="false"
-                        app:icon="@drawable/ic_sliders"
-                        app:iconGravity="textStart"
-                        app:iconSize="15dp"
-                        app:iconTint="@color/entity_materia"
-                        app:cornerRadius="10dp"
-                        app:strokeColor="@color/entity_materia"
-                        app:strokeWidth="1dp"
-                        android:backgroundTint="@color/entity_materia_soft" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnViewParticipantsBlog"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="6dp"
+                            android:text="Integrantes"
+                            android:textColor="@color/entity_materia"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textAllCaps="false"
+                            app:icon="@drawable/ic_person_badge"
+                            app:iconGravity="textStart"
+                            app:iconSize="18dp"
+                            app:iconPadding="6dp"
+                            app:iconTint="@color/entity_materia"
+                            app:cornerRadius="12dp"
+                            app:strokeColor="@color/entity_materia"
+                            app:strokeWidth="1.5dp"
+                            android:backgroundTint="@color/entity_materia_soft" />
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSubjectAttendanceBlog"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="44dp"
+                            android:layout_marginStart="6dp"
+                            android:text="Notas"
+                            android:textColor="@color/entity_materia"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textAllCaps="false"
+                            app:icon="@drawable/ic_sliders"
+                            app:iconGravity="textStart"
+                            app:iconSize="18dp"
+                            app:iconPadding="6dp"
+                            app:iconTint="@color/entity_materia"
+                            app:cornerRadius="12dp"
+                            app:strokeColor="@color/entity_materia"
+                            app:strokeWidth="1.5dp"
+                            android:backgroundTint="@color/entity_materia_soft" />
+                    </LinearLayout>
+
+                    <!-- Fila 2: Botón 3 que abarca la fila completa (Detalle) -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSubjectDetailBlog"
                         style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="38dp"
-                        android:layout_marginStart="3dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
                         android:text="Detalle"
                         android:textColor="@color/entity_materia"
-                        android:textSize="12sp"
+                        android:textSize="13sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_open_book"
                         app:iconGravity="textStart"
-                        app:iconSize="15dp"
+                        app:iconSize="18dp"
+                        app:iconPadding="6dp"
                         app:iconTint="@color/entity_materia"
-                        app:cornerRadius="10dp"
+                        app:cornerRadius="12dp"
                         app:strokeColor="@color/entity_materia"
-                        app:strokeWidth="1dp"
+                        app:strokeWidth="1.5dp"
                         android:backgroundTint="@color/entity_materia_soft" />
                 </LinearLayout>
 

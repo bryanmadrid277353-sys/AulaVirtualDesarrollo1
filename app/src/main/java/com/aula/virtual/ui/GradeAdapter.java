@@ -264,11 +264,17 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
         lp.setMargins(0, 0, 8 * density, 0);
         card.setLayoutParams(lp);
 
+        int cardBg = androidx.core.content.ContextCompat.getColor(ctx, R.color.input_bg);
+        int strokeCol = androidx.core.content.ContextCompat.getColor(ctx, R.color.input_border);
+        android.util.TypedValue typedVal = new android.util.TypedValue();
+        ctx.getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedVal, true);
+        int labelCol = typedVal.data;
+
         card.setRadius(10 * density);
         card.setCardElevation(0f);
-        card.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#162032")));
+        card.setCardBackgroundColor(ColorStateList.valueOf(cardBg));
         card.setStrokeWidth(1 * density);
-        card.setStrokeColor(ColorStateList.valueOf(Color.parseColor("#23334F")));
+        card.setStrokeColor(ColorStateList.valueOf(strokeCol));
 
         LinearLayout layout = new LinearLayout(ctx);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -281,7 +287,7 @@ public class GradeAdapter extends RecyclerView.Adapter<GradeAdapter.ViewHolder> 
         tvLabel.setText(label);
         tvLabel.setTextSize(10);
         tvLabel.setGravity(Gravity.CENTER);
-        tvLabel.setTextColor(Color.parseColor("#8E9BB0"));
+        tvLabel.setTextColor(labelCol);
 
         TextView tvVal = new TextView(ctx);
         tvVal.setText(val);

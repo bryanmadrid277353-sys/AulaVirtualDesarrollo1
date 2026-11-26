@@ -67,9 +67,14 @@ com.aula.virtual/
    - **Cards & Buttons:** MaterialCardView with `strokeWidth="0dp"` (flat design without outer border stroke).
    - **Icons:** Pure white tint (`app:tint="@color/white"`) across header action buttons, carnet buttons, book buttons, and bottom nav buttons.
 
-5. **Entity Color System & UI Conventions:**
+5. **Entity Color System & Management Action Grid Conventions:**
    - **Always use `EntityType` and `EntityTheme`:** Use `EntityType` enum and `EntityTheme` helper for all entity color decisions.
    - **Theme Attributes & Component Styles:** Use `?attr/entityAccent`, `?attr/entityAccentSoft`, `Widget.Aula.Button.Entity`, `Widget.Aula.Button.EntityOutlined`, `Widget.Aula.EntityChip`, `TextAppearance.Aula.EntitySubtitle`, `TextAppearance.Aula.EntityCaption`.
+   - **Management Header Action Cards (Reglamento de Botones):**
+     - Background: Soft entity color tint (`@color/entity_<tipo>_soft`).
+     - Stroke: 1.5dp stroke of entity color (`@color/entity_<tipo>`).
+     - Text & Icon: Entity color (`@color/entity_<tipo>`), `textSize="13sp"`, `textStyle="bold"`, `iconSize="18dp"`, `height="44dp"`, `cornerRadius="12dp"`.
+     - **Grid Rule:** MAX 2 buttons per row. If there are 3 buttons, Row 1 has 2 buttons (50/50), Row 2 has 1 button spanning the full width (`match_parent`).
    - **NO Hardcoded Colors:** Never hardcode hex color strings (`#RRGGBB`) in layouts or Java code for entity types.
    - **Golden Rule:** The element's color is defined by the **ENTITY TYPE IT ACTS UPON**, not by the container fragment. (See `GUIA_DE_COLORES.md` for full design rules).
 

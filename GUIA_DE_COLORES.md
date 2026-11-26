@@ -31,7 +31,28 @@ Los colores de registro son **fijos e inmutables**; no varían si la aplicación
 
 ---
 
-## 3. Catálogo de Componentes Estándar
+## 3. Reglamento para Botones de Tarjetas de Gestión (Header Action Cards)
+
+Todas las pantallas de Gestión de la aplicación (Encargado, Estudiante, Profesor, Materia e Instalación) aplican estrictamente el siguiente reglamento visual para los botones de su tarjeta superior:
+
+### Especificación Visual
+* **Fondo:** Tono difuminado tenue con ~15% de opacidad (`@color/entity_<tipo>_soft`).
+* **Borde / Stroke:** Trazo de 1.5dp con el color de la entidad (`@color/entity_<tipo>`).
+* **Texto e Ícono:** Mismo color que la entidad (`@color/entity_<tipo>`).
+* **Radio de Esquina (`cornerRadius`):** `12dp` (borde redondeado elegante).
+* **Altura Fija (`layout_height`):** `44dp` en todos los casos.
+* **Tipografía e Ícono:** `textSize="13sp"`, `textStyle="bold"`, `textAllCaps="false"`, `iconSize="18dp"`, `iconPadding="6dp"`.
+
+### Regla Grid de Filas (Máximo 2 Botones por Fila)
+1. **1 solo Botón (ej. Encargado):** Abarca toda la fila (`android:layout_width="match_parent"`).
+2. **2 Botones (ej. Estudiante, Profesor, Instalación):** 1 sola fila con 2 botones de ancho equivalente (`50%` / `50%`), usando `android:layout_width="0dp"` y `android:layout_weight="1"`.
+3. **3 Botones (ej. Materia: Integrantes + Notas + Detalle):**
+   * **Fila 1:** 2 botones ("Integrantes" y "Notas") al 50%/50%.
+   * **Fila 2:** 1 botón ("Detalle") que abarca la fila completa (`match_parent`), manteniendo el mismo tamaño y estilo.
+
+---
+
+## 4. Catálogo de Componentes Estándar
 
 ### Estilos XML Reutilizables
 

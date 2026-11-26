@@ -68,12 +68,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="CITAR >"
-        android:textColor="#FF5252"
+        android:textColor="@color/entity_administrador"
         android:textSize="11sp"
         android:textStyle="bold"
         android:paddingHorizontal="8dp"
         android:paddingVertical="4dp"
         android:background="@drawable/bg_badge_semester"
-        android:backgroundTint="#2E1218" />
+        android:backgroundTint="@color/entity_administrador_soft" />
 
 </LinearLayout>

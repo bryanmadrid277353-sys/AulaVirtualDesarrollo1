@@ -98,7 +98,7 @@
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:background="@drawable/bg_badge_semester"
-                    android:backgroundTint="#172554"
+                    android:backgroundTint="@color/entity_materia_soft"
                     android:layout_marginEnd="10dp">
 
                     <ImageView
@@ -146,10 +146,10 @@
                     app:iconGravity="textStart"
                     app:iconPadding="0dp"
                     app:iconSize="18dp"
-                    app:iconTint="#10B981"
+                    app:iconTint="@color/entity_profesor"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#064E3B"
-                    android:backgroundTint="#064E3B"
+                    app:strokeColor="@color/input_border"
+                    android:backgroundTint="@color/input_bg"
                     android:layout_marginEnd="8dp"
                     android:contentDescription="Editar horario" />
 
@@ -170,10 +170,10 @@
                     app:iconGravity="textStart"
                     app:iconPadding="0dp"
                     app:iconSize="18dp"
-                    app:iconTint="#FF5252"
+                    app:iconTint="@color/entity_administrador"
                     app:strokeWidth="1dp"
-                    app:strokeColor="#7F1D1D"
-                    android:backgroundTint="#2E1218"
+                    app:strokeColor="@color/input_border"
+                    android:backgroundTint="@color/input_bg"
                     android:contentDescription="Eliminar horario" />
             </LinearLayout>
 

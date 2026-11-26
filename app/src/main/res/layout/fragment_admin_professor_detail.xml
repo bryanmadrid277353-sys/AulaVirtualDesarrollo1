@@ -70,9 +70,11 @@
                     android:layout_marginBottom="16dp">
 
                     <FrameLayout
+                        android:id="@+id/layoutProfessorAvatar"
                         android:layout_width="44dp"
                         android:layout_height="44dp"
                         android:background="@drawable/bg_circle_primary"
+                        android:backgroundTint="@color/entity_profesor"
                         android:layout_marginEnd="12dp">
 
                         <TextView
@@ -96,7 +98,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Profesor"
-                            android:textColor="@color/accent_green"
+                            android:textColor="@color/entity_profesor"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -116,7 +118,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Carnet: PROF144444"
-                            android:textColor="@color/accent_green"
+                            android:textColor="@color/entity_profesor"
                             android:textSize="13sp"
                             android:layout_marginTop="2dp"
                             tools:text="Carnet: PROF144444" />
@@ -137,18 +139,19 @@
                         android:layout_height="44dp"
                         android:layout_marginEnd="6dp"
                         android:text="Horario"
-                        android:textColor="@color/accent_green"
-                        android:textSize="14sp"
+                        android:textColor="@color/entity_profesor"
+                        android:textSize="13sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_timetable"
                         app:iconGravity="textStart"
                         app:iconSize="18dp"
-                        app:iconTint="@color/accent_green"
+                        app:iconPadding="6dp"
+                        app:iconTint="@color/entity_profesor"
                         app:cornerRadius="12dp"
-                        app:strokeColor="@color/input_border"
-                        app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
+                        app:strokeColor="@color/entity_profesor"
+                        app:strokeWidth="1.5dp"
+                        android:backgroundTint="@color/entity_profesor_soft" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnHeaderDetail"
@@ -158,18 +161,19 @@
                         android:layout_height="44dp"
                         android:layout_marginStart="6dp"
                         android:text="Detalle"
-                        android:textColor="@color/accent_green"
-                        android:textSize="14sp"
+                        android:textColor="@color/entity_profesor"
+                        android:textSize="13sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_person_badge"
                         app:iconGravity="textStart"
                         app:iconSize="18dp"
-                        app:iconTint="@color/accent_green"
+                        app:iconPadding="6dp"
+                        app:iconTint="@color/entity_profesor"
                         app:cornerRadius="12dp"
-                        app:strokeColor="@color/input_border"
-                        app:strokeWidth="1dp"
-                        android:backgroundTint="@color/input_bg" />
+                        app:strokeColor="@color/entity_profesor"
+                        app:strokeWidth="1.5dp"
+                        android:backgroundTint="@color/entity_profesor_soft" />
                 </LinearLayout>
 
             </LinearLayout>

@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -173,10 +174,13 @@ public class AdminFacilitySchedulesFragment extends Fragment {
         binding.tvRecordCount.setText(filtered.size() + (filtered.size() == 1 ? " horario programado" : " horarios programados"));
     }
 
+    private Facility currentFacility;
+
     private void observeViewModel() {
         viewModel.getAllFacilities().observe(getViewLifecycleOwner(), facilities -> {
             for (Facility f : facilities) {
                 if (f.id == facilityId) {
+                    currentFacility = f;
                     if (binding.tvFacilityName != null) {
                         binding.tvFacilityName.setText(f.name);
                     }
@@ -199,20 +203,70 @@ public class AdminFacilitySchedulesFragment extends Fragment {
     }
 
     private void showAddScheduleDialog(@Nullable FacilitySchedule existing) {
-        MaterialAlertDialogBuilder builder = DialogUtils.createMaterialDialog(requireContext(), existing == null ? "Nueva Programación" : "Editar Programación");
-        
-        LinearLayout layout = DialogUtils.createDialogContainer(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_schedule, null);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.Theme_MyApplication_Dialog);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvFacilityCodeBadge = dialogView.findViewById(R.id.tvFacilityCodeBadge);
+        TextView tvDialogTitle = dialogView.findViewById(R.id.tvDialogTitle);
+        TextView tvDialogSubtitle = dialogView.findViewById(R.id.tvDialogSubtitle);
+
+        TextView tvSubjectText = dialogView.findViewById(R.id.tvSubjectText);
+        TextView tvProfessorText = dialogView.findViewById(R.id.tvProfessorText);
+        TextView tvDaysText = dialogView.findViewById(R.id.tvDaysText);
+        TextView tvStartText = dialogView.findViewById(R.id.tvStartText);
+        TextView tvEndText = dialogView.findViewById(R.id.tvEndText);
+        TextView tvColorText = dialogView.findViewById(R.id.tvColorText);
+
+        View btnSelectSubject = dialogView.findViewById(R.id.btnSelectSubject);
+        View btnSelectProfessor = dialogView.findViewById(R.id.btnSelectProfessor);
+        View btnSelectDays = dialogView.findViewById(R.id.btnSelectDays);
+        View btnSelectStart = dialogView.findViewById(R.id.btnSelectStart);
+        View btnSelectEnd = dialogView.findViewById(R.id.btnSelectEnd);
+        View btnSelectColor = dialogView.findViewById(R.id.btnSelectColor);
+
+        View btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        View btnSave = dialogView.findViewById(R.id.btnSaveScheduleDialog);
+
+        String fCode = (currentFacility != null && currentFacility.code != null && !currentFacility.code.trim().isEmpty())
+                ? currentFacility.code
+                : ("INSTA" + facilityId);
+        String fName = (currentFacility != null && currentFacility.name != null) ? currentFacility.name : "Instalación";
+
+        if (tvFacilityCodeBadge != null) tvFacilityCodeBadge.setText(fCode);
+        if (tvDialogTitle != null) tvDialogTitle.setText(existing == null ? "Nueva Programación" : "Editar Programación");
+        if (tvDialogSubtitle != null) tvDialogSubtitle.setText(fName + " (" + fCode + ") • Configuración de Horario");
 
         final int[] selectedSubId = {existing != null ? existing.subjectId : -1};
         final int[] selectedProfId = {existing != null ? existing.professorId : -1};
         final String[] selectedDays = {existing != null ? existing.days : ""};
+        final String[] selectedColor = {existing != null ? existing.color : null};
 
         professorSchedules = new ArrayList<>();
 
-        final TextView tvSubject = DialogUtils.createDialogOptionButton(requireContext(), "Seleccionar Materia...", existing == null);
-        final TextView tvProfessor = DialogUtils.createDialogOptionButton(requireContext(), "Profesor: (Seleccione una materia)", true);
-        tvProfessor.setOnClickListener(v -> 
-            Toast.makeText(getContext(), "El profesor único se asigna desde el menú de Inscripción de Materias del Profesor", Toast.LENGTH_SHORT).show()
+        if (existing != null) {
+            if (existing.days != null && !existing.days.trim().isEmpty()) {
+                tvDaysText.setText("Días: " + existing.days);
+            }
+            if (existing.startTime != null) {
+                tvStartText.setText("Hora Inicio: " + existing.startTime);
+            }
+            if (existing.endTime != null) {
+                tvEndText.setText("Hora Fin: " + existing.endTime);
+            }
+            if (existing.color != null) {
+                tvColorText.setText("Color en esta Aula: " + existing.color);
+            }
+        }
+
+        btnSelectProfessor.setOnClickListener(v ->
+                Toast.makeText(getContext(), "El profesor único se asigna desde el menú de Inscripción de Materias del Profesor", Toast.LENGTH_SHORT).show()
         );
 
         MainViewModel.DataCallback<Integer> loadProfForSubject = (subId) -> {
@@ -224,12 +278,13 @@ public class AdminFacilitySchedulesFragment extends Fragment {
                         if (getActivity() == null) return;
                         getActivity().runOnUiThread(() -> {
                             if (u != null) {
-                                tvProfessor.setError(null);
-                                DialogUtils.setOptionState(tvProfessor, "Profesor Asignado: " + u.name + " [" + u.carnet + "]", false, requireContext());
+                                tvProfessorText.setError(null);
+                                tvProfessorText.setText("Profesor Asignado: " + u.name + " [" + u.carnet + "]");
+                                tvProfessorText.setTextColor(ContextCompat.getColor(requireContext(), R.color.entity_profesor));
                             } else {
                                 selectedProfId[0] = 0;
-                                tvProfessor.setError(null);
-                                DialogUtils.setOptionState(tvProfessor, "Profesor: Sin Profesor Asignado", false, requireContext());
+                                tvProfessorText.setError(null);
+                                tvProfessorText.setText("Profesor: Sin Profesor Asignado");
                             }
                         });
                     });
@@ -240,8 +295,8 @@ public class AdminFacilitySchedulesFragment extends Fragment {
                     selectedProfId[0] = 0;
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
-                            tvProfessor.setError(null);
-                            DialogUtils.setOptionState(tvProfessor, "Profesor: Sin Profesor Asignado", false, requireContext());
+                            tvProfessorText.setError(null);
+                            tvProfessorText.setText("Profesor: Sin Profesor Asignado");
                         });
                     }
                     professorSchedules = new ArrayList<>();
@@ -253,90 +308,72 @@ public class AdminFacilitySchedulesFragment extends Fragment {
             viewModel.getSubjectById(existing.subjectId, s -> {
                 if (s != null) {
                     String sec = s.section != null ? s.section : "01";
-                    DialogUtils.setOptionState(tvSubject, "Materia: " + s.name + " (Sec " + sec + ")", false, requireContext());
+                    tvSubjectText.setText("Materia: " + s.name + " (Sec " + sec + ")");
                     loadProfForSubject.onResult(s.id);
                 }
             });
         }
 
-        tvSubject.setOnClickListener(v -> showSubjectSearchDialog((item) -> {
+        btnSelectSubject.setOnClickListener(v -> showSubjectSearchDialog((item) -> {
             selectedSubId[0] = item.id;
-            tvSubject.setError(null);
-            DialogUtils.setOptionState(tvSubject, "Materia: " + item.text + " (" + item.subtext + ")", false, requireContext());
+            tvSubjectText.setError(null);
+            tvSubjectText.setText("Materia: " + item.text + " (" + item.subtext + ")");
             loadProfForSubject.onResult(item.id);
         }));
-        layout.addView(tvSubject);
-        layout.addView(tvProfessor);
 
-        final TextView tvDays = DialogUtils.createDialogOptionButton(requireContext(), selectedDays[0].isEmpty() ? "Seleccionar Días..." : "Días: " + selectedDays[0], selectedDays[0].isEmpty());
-        tvDays.setOnClickListener(v -> showDaysPickerDialog(selectedDays[0], result -> {
+        btnSelectDays.setOnClickListener(v -> showDaysPickerDialog(selectedDays[0], result -> {
             selectedDays[0] = result;
-            tvDays.setError(null);
-            DialogUtils.setOptionState(tvDays, "Días: " + result, false, requireContext());
+            tvDaysText.setError(null);
+            tvDaysText.setText("Días: " + result);
         }));
-        layout.addView(tvDays);
 
-        final TextView tvStart = DialogUtils.createDialogOptionButton(requireContext(), existing != null ? "Hora Inicio: " + existing.startTime : "Hora Inicio (Click aquí)", existing == null);
-        tvStart.setOnClickListener(v -> {
-            tvStart.setError(null);
-            showTimePicker(tvStart);
+        btnSelectStart.setOnClickListener(v -> {
+            tvStartText.setError(null);
+            showTimePicker(tvStartText);
         });
-        layout.addView(tvStart);
 
-        final TextView tvEnd = DialogUtils.createDialogOptionButton(requireContext(), existing != null ? "Hora Fin: " + existing.endTime : "Hora Fin (Click aquí)", existing == null);
-        tvEnd.setOnClickListener(v -> {
-            tvEnd.setError(null);
-            showTimePicker(tvEnd);
+        btnSelectEnd.setOnClickListener(v -> {
+            tvEndText.setError(null);
+            showTimePicker(tvEndText);
         });
-        layout.addView(tvEnd);
 
-        final String[] selectedColor = {existing != null ? existing.color : null};
-        final TextView tvColor = DialogUtils.createDialogOptionButton(requireContext(),
-                existing != null && existing.color != null ? "Color en esta Aula: " + existing.color : "Seleccionar Color en esta Aula...",
-                existing == null || existing.color == null);
-        tvColor.setOnClickListener(v -> showColorPickerDialog(selectedColor[0] != null ? selectedColor[0] : "BLUE", colorName -> {
+        btnSelectColor.setOnClickListener(v -> showColorPickerDialog(selectedColor[0] != null ? selectedColor[0] : "BLUE", colorName -> {
             selectedColor[0] = colorName;
-            tvColor.setError(null);
-            DialogUtils.setOptionState(tvColor, "Color en esta Aula: " + colorName, false, requireContext());
+            tvColorText.setError(null);
+            tvColorText.setText("Color en esta Aula: " + colorName);
         }));
-        layout.addView(tvColor);
 
-        builder.setView(layout);
-        builder.setPositiveButton("Guardar", null); // Set to null to handle manually
-        builder.setNegativeButton("Cancelar", null);
-        
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+        btnSave.setOnClickListener(v -> {
             boolean isValid = true;
 
             if (selectedSubId[0] == -1) {
-                tvSubject.setError("Debe seleccionar una materia");
+                tvSubjectText.setError("Debe seleccionar una materia");
                 isValid = false;
             }
             if (selectedProfId[0] < 0) {
                 selectedProfId[0] = 0;
             }
             if (selectedDays[0].isEmpty()) {
-                tvDays.setError("Debe seleccionar al menos un día");
+                tvDaysText.setError("Debe seleccionar al menos un día");
                 isValid = false;
             }
 
-            String startStr = tvStart.getText().toString();
-            String endStr = tvEnd.getText().toString();
+            String startStr = tvStartText.getText().toString();
+            String endStr = tvEndText.getText().toString();
 
-            if (startStr.contains("Click") || startStr.contains("Seleccionar")) {
-                tvStart.setError("Debe seleccionar la hora de inicio");
+            if (startStr.contains("Click") || startStr.equalsIgnoreCase("Hora Inicio")) {
+                tvStartText.setError("Debe seleccionar la hora de inicio");
                 isValid = false;
             }
-            if (endStr.contains("Click") || endStr.contains("Seleccionar")) {
-                tvEnd.setError("Debe seleccionar la hora de fin");
+            if (endStr.contains("Click") || endStr.equalsIgnoreCase("Hora Fin")) {
+                tvEndText.setError("Debe seleccionar la hora de fin");
                 isValid = false;
             }
 
             if (selectedColor[0] == null) {
-                tvColor.setError("Debe seleccionar un color");
+                tvColorText.setError("Debe seleccionar un color");
                 isValid = false;
             }
 
@@ -344,15 +381,10 @@ public class AdminFacilitySchedulesFragment extends Fragment {
                 return;
             }
 
-            String start = startStr.replace("Hora Inicio: ", "");
-            String end = endStr.replace("Hora Fin: ", "");
+            String start = startStr.replace("Hora Inicio: ", "").replace("Hora Inicio", "").trim();
+            String end = endStr.replace("Hora Fin: ", "").replace("Hora Fin", "").trim();
 
-            if (selectedColor[0] == null) {
-                tvColor.setError("Debe seleccionar un color");
-                return;
-            }
-
-            if (start.equals("00:00") || end.equals("00:00")) {
+            if (start.isEmpty() || end.isEmpty() || start.equals("00:00") || end.equals("00:00")) {
                 Toast.makeText(getContext(), "Debe definir un horario válido", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -384,6 +416,8 @@ public class AdminFacilitySchedulesFragment extends Fragment {
                 });
             }
         });
+
+        dialog.show();
     }
 
     private void showColorPickerDialog(String currentColor, MainViewModel.DataCallback<String> onSelected) {

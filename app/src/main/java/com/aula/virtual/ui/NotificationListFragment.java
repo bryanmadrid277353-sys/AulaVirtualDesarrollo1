@@ -630,16 +630,21 @@ public class NotificationListFragment extends Fragment {
 
                 boolean isSupport = n.targetType != null && "SUPPORT".equalsIgnoreCase(n.targetType.trim());
 
+                int btnBgColor = isDark ? 0xFF131B2E : ContextCompat.getColor(requireContext(), R.color.input_bg);
+                int btnBorderColor = isDark ? 0xFF1E293B : ContextCompat.getColor(requireContext(), R.color.input_border);
+                int btnTextColor = isDark ? 0xFF8E9BB0 : ContextCompat.getColor(requireContext(), R.color.bs_dark);
+                int btnDeleteIconColor = isDark ? 0xFFFFB4AB : ContextCompat.getColor(requireContext(), R.color.accent_red);
+
                 if (isSupport) {
                     MaterialButton btnProfile = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
                     btnProfile.setText("👤 Ver Perfil");
                     btnProfile.setTextSize(12);
                     btnProfile.setAllCaps(false);
-                    btnProfile.setTextColor(0xFF38BDF8);
+                    btnProfile.setTextColor(0xFF2563EB);
                     btnProfile.setCornerRadius((int) (10 * getResources().getDisplayMetrics().density));
-                    btnProfile.setStrokeColor(ColorStateList.valueOf(0xFF1E293B));
+                    btnProfile.setStrokeColor(ColorStateList.valueOf(btnBorderColor));
                     btnProfile.setStrokeWidth((int) (1 * getResources().getDisplayMetrics().density));
-                    btnProfile.setBackgroundTintList(ColorStateList.valueOf(0xFF131B2E));
+                    btnProfile.setBackgroundTintList(ColorStateList.valueOf(btnBgColor));
                     btnProfile.setInsetTop(0);
                     btnProfile.setInsetBottom(0);
                     btnProfile.setOnClickListener(v -> navigateToUserProfile(n.senderName));
@@ -648,17 +653,17 @@ public class NotificationListFragment extends Fragment {
                     MaterialButton btnEdit = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
                     btnEdit.setText("Editar");
                     btnEdit.setTextSize(12);
-                    btnEdit.setTextColor(0xFF8E9BB0);
+                    btnEdit.setTextColor(btnTextColor);
                     btnEdit.setAllCaps(false);
                     btnEdit.setIconResource(R.drawable.ic_edit);
-                    btnEdit.setIconTint(ColorStateList.valueOf(0xFF8E9BB0));
+                    btnEdit.setIconTint(ColorStateList.valueOf(btnTextColor));
                     btnEdit.setIconSize((int) (15 * getResources().getDisplayMetrics().density));
                     btnEdit.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_START);
                     btnEdit.setIconPadding((int) (6 * getResources().getDisplayMetrics().density));
                     btnEdit.setCornerRadius((int) (10 * getResources().getDisplayMetrics().density));
-                    btnEdit.setStrokeColor(ColorStateList.valueOf(0xFF1E293B));
+                    btnEdit.setStrokeColor(ColorStateList.valueOf(btnBorderColor));
                     btnEdit.setStrokeWidth((int) (1 * getResources().getDisplayMetrics().density));
-                    btnEdit.setBackgroundTintList(ColorStateList.valueOf(0xFF131B2E));
+                    btnEdit.setBackgroundTintList(ColorStateList.valueOf(btnBgColor));
                     btnEdit.setInsetTop(0);
                     btnEdit.setInsetBottom(0);
                     btnEdit.setPadding((int) (12 * getResources().getDisplayMetrics().density), 0, (int) (12 * getResources().getDisplayMetrics().density), 0);
@@ -675,14 +680,14 @@ public class NotificationListFragment extends Fragment {
                 MaterialButton btnDelete = new MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
                 btnDelete.setText("");
                 btnDelete.setIconResource(R.drawable.ic_delete);
-                btnDelete.setIconTint(ColorStateList.valueOf(0xFFFFB4AB));
+                btnDelete.setIconTint(ColorStateList.valueOf(btnDeleteIconColor));
                 btnDelete.setIconSize((int) (18 * getResources().getDisplayMetrics().density));
                 btnDelete.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_START);
                 btnDelete.setIconPadding(0);
                 btnDelete.setCornerRadius((int) (10 * getResources().getDisplayMetrics().density));
-                btnDelete.setStrokeColor(ColorStateList.valueOf(0xFF1E293B));
+                btnDelete.setStrokeColor(ColorStateList.valueOf(btnBorderColor));
                 btnDelete.setStrokeWidth((int) (1 * getResources().getDisplayMetrics().density));
-                btnDelete.setBackgroundTintList(ColorStateList.valueOf(0xFF131B2E));
+                btnDelete.setBackgroundTintList(ColorStateList.valueOf(btnBgColor));
                 btnDelete.setInsetTop(0);
                 btnDelete.setInsetBottom(0);
                 btnDelete.setPadding(0, 0, 0, 0);
@@ -870,8 +875,8 @@ public class NotificationListFragment extends Fragment {
                     selectedIconType[0] = "GENERAL";
                 }
 
-                int activeBorder = Color.parseColor("#38BDF8");
-                int inactiveBorder = Color.parseColor("#1E293B");
+                int activeBorder = ContextCompat.getColor(requireContext(), R.color.entity_materia);
+                int inactiveBorder = ContextCompat.getColor(requireContext(), R.color.input_border);
 
                 boolean isGen = "GENERAL".equals(selectedIconType[0]);
                 boolean isAcad = "ACADEMIC".equals(selectedIconType[0]);
